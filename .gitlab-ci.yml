@@ -11,6 +11,7 @@ create_venv:
     - cd /builds/ai/bots/psychedelic-bot
     - python -m venv venv
     - . venv/bin/activate
+    - git clone https://github.com/Vaelor/python-mattermost-driver
     - pip install -r requirements.txt
   artifacts:
     paths:
