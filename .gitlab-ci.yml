@@ -1,12 +1,25 @@
 image: python:3.10
-deploy:
+cache:
+  paths:
+    - venv
+stages:
+  - build
+  - deploy
+create_venv:
+  stage: build
+  script:
+    - cd /builds/ai/bots/psychedelic-bot
+    - pip install venv
+    - python -m venv venv
+    - . venv/bin/activate
+    - pip install -r requirements.txt
+run_service:
   stage: deploy
   environment:
     name: $CI_COMMIT_REF_NAME
   needs:
-    - build
+    - create_venv
   script:
-    - cd /builds/ai/bots/psychedelic-bot
-    - pip install -r requirements.txt
+    - . venv/bin/activate
     - python app.py
   when: manual
