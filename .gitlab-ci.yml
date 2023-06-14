@@ -1,4 +1,4 @@
-image: python:3.10
+image: debian:bookworm
 build:
   environment:
     name: $CI_COMMIT_REF_NAME
