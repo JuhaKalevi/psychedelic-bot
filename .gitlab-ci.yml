@@ -3,6 +3,7 @@ build:
   environment:
     name: $CI_COMMIT_REF_NAME
   script:
+    - apt -y install python3-venv
     - cd /builds/ai/bots/psychedelic-bot
     - python -m venv venv
     - . venv/bin/activate
