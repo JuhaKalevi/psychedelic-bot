@@ -1,4 +1,4 @@
-image: debian:bookworm
+image: debian:bullseye
 build:
   environment:
     name: $CI_COMMIT_REF_NAME
