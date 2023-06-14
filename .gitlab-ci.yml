@@ -8,7 +8,7 @@ stages:
 build:
   stage: build
   script:
-    - cd /builds/ai/psychedelic-bot
+    - cd /builds/ai/bots/psychedelic-bot
     - pip install -r requirements.txt
   artifacts:
     untracked: true
