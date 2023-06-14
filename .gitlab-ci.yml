@@ -12,6 +12,9 @@ create_venv:
     - python -m venv venv
     - . venv/bin/activate
     - git clone https://github.com/Vaelor/python-mattermost-driver
+    - cd python-mattermost-driver
+    - python setup.py install
+    - cd ..
     - pip install -r requirements.txt
   artifacts:
     paths:
