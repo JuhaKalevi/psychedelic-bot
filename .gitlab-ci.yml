@@ -1,7 +1,7 @@
 image: python:3.10
 cache:
   paths:
-    - .cache/pip
+    - $CI_PROJECT_DIR/.cache/pip
 stages:
   - build
   - deploy
