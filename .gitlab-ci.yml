@@ -21,4 +21,7 @@ run_service:
   script:
     - . venv/bin/activate
     - python app.py
+  artifacts:
+    paths:
+      - venv
   when: manual
