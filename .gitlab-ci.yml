@@ -9,7 +9,6 @@ create_venv:
   stage: build
   script:
     - cd /builds/ai/bots/psychedelic-bot
-    - pip install venv
     - python -m venv venv
     - . venv/bin/activate
     - pip install -r requirements.txt
