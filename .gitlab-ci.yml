@@ -6,12 +6,12 @@ build:
     - apt-get update
     - apt-get -y install python3-venv
     - cd /builds/ai/bots/psychedelic-bot
-    - python -m venv venv
+    - python3 -m venv venv
     - . venv/bin/activate
     - git clone https://github.com/Vaelor/python-mattermost-driver
     - cd python-mattermost-driver
-    - python setup.py install
+    - python3 setup.py install
     - cd ..
     - pip install -r requirements.txt
-    - python app.py
+    - python3 app.py
   when: manual
