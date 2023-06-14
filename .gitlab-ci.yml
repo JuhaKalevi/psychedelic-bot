@@ -1,5 +1,5 @@
 image: python:3.10
-run_service:
+deploy:
   stage: deploy
   environment:
     name: $CI_COMMIT_REF_NAME
