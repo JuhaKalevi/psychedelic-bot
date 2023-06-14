@@ -1,0 +1,4 @@
+[FORMAT]
+indent-string='  '
+indent-after-paren=2
+max-line-length=240

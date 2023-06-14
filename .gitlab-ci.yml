@@ -1,0 +1,23 @@
+image: python:3.10
+cache:
+  paths:
+    - node_modules
+stages:
+  - build
+  - deploy
+build:
+  stage: build
+  script:
+    - cd /builds/ai/psychedelic-bot
+    - pip install -r requirements.txt
+  artifacts:
+    untracked: true
+deploy:
+  stage: deploy
+  environment:
+    name: $CI_COMMIT_REF_NAME
+  needs:
+    - build
+  script:
+    - python app.py
+  when: manual
