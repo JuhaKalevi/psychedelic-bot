@@ -4,7 +4,7 @@ build:
     name: $CI_COMMIT_REF_NAME
   script:
     - apt-get update
-    - apt-get -y install build-essential git python3.10-venv
+    - apt-get -y install build-essential git python3-venv
     - cd /builds/ai/bots/psychedelic-bot
     - python3 -m venv venv
     - . venv/bin/activate
