@@ -12,6 +12,9 @@ create_venv:
     - python -m venv venv
     - . venv/bin/activate
     - pip install -r requirements.txt
+  artifacts:
+    paths:
+      - venv
 run_service:
   stage: deploy
   environment:
@@ -21,7 +24,4 @@ run_service:
   script:
     - . venv/bin/activate
     - python app.py
-  artifacts:
-    paths:
-      - venv
   when: manual
