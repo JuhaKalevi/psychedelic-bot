@@ -10,6 +10,7 @@ build:
     - . venv/bin/activate
     - git clone https://github.com/Vaelor/python-mattermost-driver
     - cd python-mattermost-driver
+    - pip install -r requirements.txt
     - python3 setup.py install
     - cd ..
     - pip install -r requirements.txt
