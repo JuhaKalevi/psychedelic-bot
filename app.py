@@ -23,6 +23,12 @@ async def context_manager(event):
     else:
       thread_id = post['root_id']
       context = mm.posts.get_thread(post['id'])
+      skip = True
+      for post in context['posts']:
+        if environ['MATTERMOST_BOTNAME'] in post['message']:
+          skip = False
+      if skip:
+        return
     context['order'].sort(key=lambda x: context['posts'][x]['create_at'])
     messages = []
     for post_id in context['order']:
