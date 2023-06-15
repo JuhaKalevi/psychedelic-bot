@@ -29,7 +29,7 @@ async def context_manager(event):
       else:
         role = 'user'
       messages.append({'role': role, 'content': context['posts'][post_id]['message']})
-    openai_response = openai.ChatCompletion.create(model=environ['OPENAI_API_KEY'], messages=messages)
+    openai_response = openai.ChatCompletion.create(model=environ['OPENAI_MODEL_NAME'], messages=messages)
     mm.posts.create_post(options={
       'channel_id': post['channel_id'],
       'message': openai_response['choices'][0]['message']['content'],
