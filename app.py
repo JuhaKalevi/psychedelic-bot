@@ -24,7 +24,7 @@ async def context_manager(event):
       thread_id = post['root_id']
       context = mm.posts.get_thread(post['id'])
       skip = True
-      for post in context['posts']:
+      for context_post in context['posts'].values():
         if environ['MATTERMOST_BOTNAME'] in post['message']:
           skip = False
       if skip:
