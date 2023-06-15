@@ -1,6 +1,7 @@
 stages:
   - test
   - deploy
+
 test:
   image: python:3.9
   interruptible: true
@@ -8,21 +9,28 @@ test:
     - cd /builds/ai/bots/psychedelic-bot
     - pip install openai mattermostdriver pylint
     - pylint app.py
+
 deploy:
-  image: debian:bullseye
+  image: docker:stable
   interruptible: true
+  variables:
+    BUILDKIT_INLINE_CACHE: "1"
   environment:
     name: $CI_COMMIT_REF_NAME
+  before_script:
+    - apk add buildah
   script:
-    - apt-get update
-    - apt-get -y install build-essential git python3-dev python3-venv python3-wheel
     - cd /builds/ai/bots/psychedelic-bot
-    - python3 -m venv venv
-    - . venv/bin/activate
-    - git clone https://github.com/Vaelor/python-mattermost-driver
-    - cd python-mattermost-driver
-    - pip install -r requirements.txt
-    - python3 setup.py install
-    - cd ..
-    - pip install openai
-    - python3 app.py
+    - echo "Building Docker image..."
+    - export DOCKER_CLI_EXPERIMENTAL=enabled
+    - |
+      buildah bud \
+        --layers \
+        --tag $CI_REGISTRY_IMAGE:latest \
+        --format docker .
+    - echo "Pushing Docker image to registry..."
+    - echo "$CI_REGISTRY_PASSWORD" | buildah login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+    - buildah push $CI_REGISTRY_IMAGE:latest
+    - echo "Docker image pushed successfully."
+    - echo "Running application..."
+    - docker run -it $CI_REGISTRY_IMAGE:latest python app.py
