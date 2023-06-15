@@ -13,7 +13,7 @@ mm = mattermostdriver.Driver({
 
 async def context_manager(event):
   event = loads(event)
-  if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != '@testgpt':
+  if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != environ['MATTERMOST_BOTNAME']:
     post = loads(event['data']['post'])
     if post['root_id'] == "":
       thread_id = post['id']
