@@ -1,3 +1,4 @@
+from datetime import datetime
 from json import loads
 from os import environ
 import mattermostdriver
@@ -26,6 +27,7 @@ async def context_manager(event):
     context['order'].sort(key=lambda x: context['posts'][x]['create_at'])
     messages = []
     for post_id in context['order']:
+      message_content = f"{context['posts'][post_id]['props']['displayname']} {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} {context['posts'][post_id]['message']}"
       if 'from_bot' in context['posts'][post_id]['props']:
         role = 'assistant'
       else:
