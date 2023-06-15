@@ -1,5 +1,16 @@
-image: debian:bullseye
-build:
+stages:
+  - test
+  - deploy
+test:
+  image: python:3.9
+  interruptible: true
+  script:
+    - cd /builds/ai/bots/psychedelic-bot
+    - pip install openai mattermostdriver
+    - pylint app.py
+deploy:
+  image: debian:bullseye
+  interruptible: true
   environment:
     name: $CI_COMMIT_REF_NAME
   script:
@@ -13,7 +24,5 @@ build:
     - pip install -r requirements.txt
     - python3 setup.py install
     - cd ..
-    - pip install -r requirements.txt
-    - pylint app.py
+    - pip install openai
     - python3 app.py
-  interruptible: true
