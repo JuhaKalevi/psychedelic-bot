@@ -6,7 +6,7 @@ test:
   interruptible: true
   script:
     - cd /builds/ai/bots/psychedelic-bot
-    - pip install openai mattermostdriver
+    - pip install openai mattermostdriver pylint
     - pylint app.py
 deploy:
   image: debian:bullseye
