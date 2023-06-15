@@ -16,6 +16,8 @@ async def context_manager(event):
   if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != environ['MATTERMOST_BOTNAME']:
     post = loads(event['data']['post'])
     if post['root_id'] == "":
+      if environ['MATTERMOST_BOTNAME'] not in post['message']:
+        return
       thread_id = post['id']
       context = {'order': [post['id']], 'posts': {post['id']: post}}
     else:
