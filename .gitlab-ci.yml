@@ -16,12 +16,12 @@ deploy:
   - eval $(ssh-agent -s)
   - chmod 400 "$SSH_DEPLOY_KEY"
   - ssh-add "$SSH_DEPLOY_KEY"
-  - mkdir -p ~/.ssh
-  - chmod 700 ~/.ssh
+  - mkdir -pm 700 ~/.ssh
   environment:
     name: $CI_COMMIT_BRANCH
   interruptible: true
   needs:
   - test
   script:
-  - ssh -oStrictHostKeyChecking=no psychedelic-bot@ai.psychedelic.fi touch foo
+  - scp -oStrictHostKeyChecking=no -pr $DEPLOY_ENVIRONMENT psychedelic-bot@ai.psychedelic.fi:$MATTERMOST_BOTNAME.env
+  - ssh -oStrictHostKeyChecking=no psychedelic-bot@ai.psychedelic.fi $MATTERMOST_BOTNAME
