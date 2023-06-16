@@ -2,7 +2,7 @@ FROM debian:bullseye
 RUN apt-get update
 RUN apt-get -y install --no-install-recommends curl gcc git jq python3-dev python3-pip python3-venv python3-wheel
 WORKDIR /app
-COPY app.py .pylintrc /app/
+COPY app.py docker-compose.yml Dockerfile .gitlab-ci.yml .pylintrc /app/
 RUN python3 -m venv venv
 RUN . venv/bin/activate
 RUN git clone https://github.com/Vaelor/python-mattermost-driver
