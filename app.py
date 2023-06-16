@@ -8,7 +8,7 @@ code_files = [
   "Dockerfile",
   "app.py",
   "docker-compose.yml",
-  ".pylintrc"
+  ".pylintrc",
   "update.sh",
 ]
 code_snippets = []
