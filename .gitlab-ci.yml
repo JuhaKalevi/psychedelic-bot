@@ -1,27 +1,33 @@
 stages:
-  - test
-  - deploy
+- test
+- deploy
 
 test:
   image: python:3.9
   interruptible: true
   script:
-    - cd /builds/ai/bots/psychedelic-bot
-    - pip install openai mattermostdriver pylint
-    - pylint app.py
+  - cd /builds/ai/bots/psychedelic-bot
+  - pip install openai mattermostdriver pylint
+  - pylint app.py
 
 deploy:
   allow_failure: true
   before_script:
-    - |
-      if [ "$CI_PIPELINE_SOURCE" == "push" ]; then
-        curl --fail --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" "https://gitlab.psychedelic.fi/api/v4/projects/$CI_PROJECT_ID/pipelines?ref=$CI_COMMIT_BRANCH&status=running" | jq -r ".[] | select(.id != $CI_JOB_ID) | .id" | xargs -I {} curl --request POST --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" "https://gitlab.psychedelic.fi/api/v4/projects/$CI_PROJECT_ID/pipelines/{}/cancel"
+  - |
+    if [ "$CI_PIPELINE_SOURCE" == "push" ]; then
+      pipelines=$(curl --fail --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" "https://gitlab.psychedelic.fi/api/v4/projects/$CI_PROJECT_ID/pipelines?ref=$CI_COMMIT_BRANCH&status=running")
+      if [ ! -z "$pipelines" ] && [ "$pipelines" != "[]" ]; then
+        echo "Canceling other pipelines on branch $CI_COMMIT_BRANCH"
+        echo "$pipelines" | jq -r ".[] | select(.id != $CI_JOB_ID) | .id" | xargs -I {} curl --request POST --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" "https://gitlab.psychedelic.fi/api/v4/projects/$CI_PROJECT_ID/pipelines/{}/cancel"
+      else
+        echo "No pipelines to cancel"
       fi
+    fi
   environment:
     name: $CI_COMMIT_BRANCH
   image: gitlab.psychedelic.fi:5050/ai/bots/psychedelic-bot:latest
   needs:
-    - test
+  - test
   interruptible: true
   script:
-    - python3 app.py
+  - python3 app.py
