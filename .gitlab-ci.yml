@@ -11,12 +11,17 @@ test:
   - pylint app.py
 
 deploy:
-  allow_failure: true
+  before_script:
+  - 'command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )'
+  - eval $(ssh-agent -s)
+  - chmod 400 "$SSH_DEPLOY_KEY"
+  - ssh-add "$SSH_DEPLOY_KEY"
+  - mkdir -p ~/.ssh
+  - chmod 700 ~/.ssh
   environment:
     name: $CI_COMMIT_BRANCH
-  image: gitlab.psychedelic.fi:5050/ai/bots/psychedelic-bot:latest
+  interruptible: true
   needs:
   - test
-  interruptible: true
   script:
-  - python3 app.py
+  - ssh psychedelic-bot@ai.psychedelic.fi touch foo
