@@ -12,6 +12,7 @@ code_files = [
   "update.sh",
 ]
 code_keyword = "@self-analysis"
+code_snippets = []
 openai.api_key = environ['OPENAI_API_KEY']
 
 mm = mattermostdriver.Driver({
@@ -37,7 +38,7 @@ async def context_manager(event):
     for file_path in code_files:
       with open(file_path, "r", encoding="utf-8") as file:
         code = file.read()
-      code_snippets.append(f"--- {filename} ---\n{code}\n")
+      code_snippets.append(f"--- {file_path} ---\n{code}\n")
     self_analysis = "```".join(code_snippets)
     print(self_analysis)
     context['order'].sort(key=lambda x: context['posts'][x]['create_at'])
