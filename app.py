@@ -1,8 +1,17 @@
 from json import loads
+from pathlib import Path
 from os import environ
 import mattermostdriver
 import openai
 
+code_files = []
+  ".gitlab-ci.yml",
+  "Dockerfile",
+  "app.py",
+  "docker-compose.yml",
+  "update.sh",
+]
+code_keyword = "@self-analysis"
 openai.api_key = environ['OPENAI_API_KEY']
 
 mm = mattermostdriver.Driver({
@@ -25,6 +34,12 @@ async def context_manager(event):
       context = mm.posts.get_thread(post['id'])
       if not any(environ['MATTERMOST_BOTNAME'] in post['message'] for post in context['posts'].values()):
         return
+    for filename, file_path in code_files.items():
+      with open(file_path, "r") as file:
+        code = file.read()
+      code_snippets.append(f"--- {filename} ---\n{code}\n")
+    self_analysis = "```".join(code_snippets)
+    print(self_analysis)
     context['order'].sort(key=lambda x: context['posts'][x]['create_at'])
     messages = []
     for post_id in context['order']:
