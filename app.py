@@ -4,10 +4,10 @@ import mattermostdriver
 import openai
 
 code_files = [
-  ".gitlab-ci.yml",
-  "Dockerfile",
   "app.py",
   "docker-compose.yml",
+  "Dockerfile",
+  ".gitlab-ci.yml",
   ".pylintrc",
   "update.sh",
 ]
