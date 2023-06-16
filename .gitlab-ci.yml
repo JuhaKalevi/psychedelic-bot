@@ -12,7 +12,7 @@ test:
 
 deploy:
   before_script:
-  - 'command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )'
+  - 'command -v ssh-agent >/dev/null || (apt-get update -y && apt-get install openssh-client -y)'
   - eval $(ssh-agent -s)
   - chmod 400 "$SSH_DEPLOY_KEY"
   - ssh-add "$SSH_DEPLOY_KEY"
@@ -23,5 +23,4 @@ deploy:
   needs:
   - test
   script:
-  - scp -oStrictHostKeyChecking=no -pr $DEPLOY_ENVIRONMENT psychedelic-bot@ai.psychedelic.fi:$OPENAI_MODEL_NAME.env
   - ssh psychedelic-bot@ai.psychedelic.fi $OPENAI_MODEL_NAME
