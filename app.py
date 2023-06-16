@@ -4,7 +4,7 @@ from os import environ
 import mattermostdriver
 import openai
 
-code_files = []
+code_files = [
   ".gitlab-ci.yml",
   "Dockerfile",
   "app.py",
