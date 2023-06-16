@@ -1,7 +1,6 @@
 stages:
 - test
 - deploy
-
 test:
   image: python:3.9
   interruptible: true
@@ -9,7 +8,6 @@ test:
   - cd /builds/ai/bots/psychedelic-bot
   - pip install openai mattermostdriver pylint
   - pylint app.py
-
 deploy:
   before_script:
   - 'command -v ssh-agent >/dev/null || (apt-get update -y && apt-get install openssh-client -y)'
@@ -23,4 +21,4 @@ deploy:
   needs:
   - test
   script:
-  - ssh psychedelic-bot@ai.psychedelic.fi $OPENAI_MODEL_NAME
+  - ssh -oStrictHostKeyChecking=no psychedelic-bot@ai.psychedelic.fi $OPENAI_MODEL_NAME
