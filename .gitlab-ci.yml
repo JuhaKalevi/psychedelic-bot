@@ -11,9 +11,9 @@ test:
     - pylint app.py
 
 deploy:
-  image: psychedelic-bot:latest
+  image: gitlab.psychedelic.fi:5050/ai/bots/psychedelic-bot:latest
   interruptible: true
   environment:
-    name: $CI_COMMIT_REF_NAME
+    name: $CI_COMMIT_BRANCH
   script:
     - python3 app.py
