@@ -15,10 +15,10 @@ deploy:
   before_script:
   - |
     if [ "$CI_PIPELINE_SOURCE" == "push" ]; then
-      pipelines=$(curl --fail --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" "https://gitlab.psychedelic.fi/api/v4/projects/$CI_PROJECT_ID/pipelines?ref=$CI_COMMIT_BRANCH&status=running")
+      pipelines=$(curl -s -H "PRIVATE-TOKEN: $CI_PROJECT_ACCESS_TOKEN" "https://gitlab.psychedelic.fi/api/v4/projects/$CI_PROJECT_ID/pipelines?ref=$CI_COMMIT_BRANCH&status=running")
       if [ ! -z "$pipelines" ] && [ "$pipelines" != "[]" ]; then
         echo "Canceling other pipelines on branch $CI_COMMIT_BRANCH"
-        echo "$pipelines" | jq -r ".[] | select(.id != $CI_JOB_ID) | .id" | xargs -I {} curl --request POST --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" "https://gitlab.psychedelic.fi/api/v4/projects/$CI_PROJECT_ID/pipelines/{}/cancel"
+        echo "$pipelines"|jq -r ".[]|select(.id!=$CI_JOB_ID)|.id"|xargs -I {} curl -s -X POST -H "PRIVATE-TOKEN: $CI_JOB_TOKEN" "https://gitlab.psychedelic.fi/api/v4/projects/$CI_PROJECT_ID/pipelines/{}/cancel"
       else
         echo "No pipelines to cancel"
       fi
