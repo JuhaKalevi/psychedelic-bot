@@ -11,26 +11,9 @@ test:
     - pylint app.py
 
 deploy:
-  image: docker:stable
+  image: psychedelic-bot:latest
   interruptible: true
-  variables:
-    BUILDKIT_INLINE_CACHE: "1"
   environment:
     name: $CI_COMMIT_REF_NAME
-  before_script:
-    - apk add buildah
   script:
-    - cd /builds/ai/bots/psychedelic-bot
-    - echo "Building Docker image..."
-    - export DOCKER_CLI_EXPERIMENTAL=enabled
-    - |
-      buildah bud \
-        --layers \
-        --tag $CI_REGISTRY_IMAGE:latest \
-        --format docker .
-    - echo "Pushing Docker image to registry..."
-    - echo "$CI_REGISTRY_PASSWORD" | buildah login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-    - buildah push $CI_REGISTRY_IMAGE:latest
-    - echo "Docker image pushed successfully."
-    - echo "Running application..."
-    - docker run -it $CI_REGISTRY_IMAGE:latest python app.py
+    - python3 app.py
