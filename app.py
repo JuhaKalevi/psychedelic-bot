@@ -39,7 +39,6 @@ async def context_manager(event):
         code = file.read()
       code_snippets.append(f"--- {file_path} ---\n{code}\n")
     messages = [{'role':'user', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them.'+'```'.join(code_snippets)}]
-    print(self_analysis)
     context['order'].sort(key=lambda x: context['posts'][x]['create_at'])
     for post_id in context['order']:
       if 'from_bot' in context['posts'][post_id]['props']:
