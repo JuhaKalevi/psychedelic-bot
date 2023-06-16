@@ -23,5 +23,5 @@ deploy:
   needs:
   - test
   script:
-  - scp -oStrictHostKeyChecking=no -pr $DEPLOY_ENVIRONMENT psychedelic-bot@ai.psychedelic.fi:$MATTERMOST_BOTNAME.env
-  - ssh -oStrictHostKeyChecking=no psychedelic-bot@ai.psychedelic.fi $MATTERMOST_BOTNAME
+  - scp -oStrictHostKeyChecking=no -pr $DEPLOY_ENVIRONMENT psychedelic-bot@ai.psychedelic.fi:$OPENAI_MODEL_NAME.env
+  - ssh psychedelic-bot@ai.psychedelic.fi $OPENAI_MODEL_NAME
