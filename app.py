@@ -1,5 +1,4 @@
 from json import loads
-from pathlib import Path
 from os import environ
 import mattermostdriver
 import openai
@@ -11,7 +10,6 @@ code_files = [
   "docker-compose.yml",
   "update.sh",
 ]
-code_keyword = "@self-analysis"
 code_snippets = []
 openai.api_key = environ['OPENAI_API_KEY']
 
