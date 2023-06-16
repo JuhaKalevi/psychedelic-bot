@@ -38,16 +38,15 @@ async def context_manager(event):
       with open(file_path, "r", encoding="utf-8") as file:
         code = file.read()
       code_snippets.append(f"--- {file_path} ---\n{code}\n")
-    self_analysis = "```".join(code_snippets)
+    messages = [{'role':'user', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them.'+'```'.join(code_snippets)}]
     print(self_analysis)
     context['order'].sort(key=lambda x: context['posts'][x]['create_at'])
-    messages = []
     for post_id in context['order']:
       if 'from_bot' in context['posts'][post_id]['props']:
         role = 'assistant'
       else:
         role = 'user'
-      messages.append({'role': role, 'content': context['posts'][post_id]['message']})
+      messages.append({'role':role, 'content':context['posts'][post_id]['message']})
     openai_response = openai.ChatCompletion.create(model=environ['OPENAI_MODEL_NAME'], messages=messages)
     mm.posts.create_post(options={
       'channel_id': post['channel_id'],
