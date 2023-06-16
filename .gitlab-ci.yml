@@ -16,7 +16,7 @@ deploy:
     - |
       if [ "$CI_PIPELINE_SOURCE" == "push" ]; then
         echo "Canceling other pipelines on branch $CI_COMMIT_BRANCH"
-        curl --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" "https://gitlab.psychedelic.fi/api/v4/projects/$CI_PROJECT_ID/pipelines?ref=$CI_COMMIT_BRANCH&status=running" | jq -r ".[] | select(.id != $CI_PIPELINE_ID) | .id" | xargs -I {} curl --request POST --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" "https://gitlab.psychedelic.fi/api/v4/projects/$CI_PROJECT_ID/pipelines/{}/cancel"
+        curl --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" "https://gitlab.psychedelic.fi/api/v4/projects/$CI_PROJECT_ID/pipelines?ref=$CI_COMMIT_BRANCH&status=running" | jq -r ".[] | select(.id != $CI_JOB_ID) | .id" | xargs -I {} curl --request POST --header "PRIVATE-TOKEN: $CI_JOB_TOKEN" "https://gitlab.psychedelic.fi/api/v4/projects/$CI_PROJECT_ID/pipelines/{}/cancel"
       fi
   environment:
     name: $CI_COMMIT_BRANCH
