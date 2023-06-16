@@ -34,7 +34,7 @@ async def context_manager(event):
       context = mm.posts.get_thread(post['id'])
       if not any(environ['MATTERMOST_BOTNAME'] in post['message'] for post in context['posts'].values()):
         return
-    for filename, file_path in code_files.items():
+    for file_path in code_files:
       with open(file_path, "r") as file:
         code = file.read()
       code_snippets.append(f"--- {filename} ---\n{code}\n")
