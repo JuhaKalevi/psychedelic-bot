@@ -24,4 +24,4 @@ deploy:
   needs:
   - test
   script:
-  - ssh psychedelic-bot@ai.psychedelic.fi touch foo
+  - ssh -oStrictHostKeyChecking=no psychedelic-bot@ai.psychedelic.fi touch foo
