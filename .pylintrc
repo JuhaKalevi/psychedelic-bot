@@ -1,3 +1,8 @@
+[MASTER]
+disable=
+    C0114, # missing-module-docstring
+    C0116, # missing-function-docstring
+max-branches=42
 [FORMAT]
 indent-string='  '
 indent-after-paren=2
