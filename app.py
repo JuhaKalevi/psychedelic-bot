@@ -55,7 +55,7 @@ async def context_manager(event):
     except openai.error.APIConnectionError as err:
       openai_response_content = f"OpenAI API request failed to connect: {err}"
     except openai.error.InvalidRequestError as err:
-      popenai_response_content = f"OpenAI API request was invalid: {err}"
+      openai_response_content = f"OpenAI API request was invalid: {err}"
     except openai.error.AuthenticationError as err:
       openai_response_content = f"OpenAI API request was not authorized: {err}"
     except openai.error.PermissionError as err:
