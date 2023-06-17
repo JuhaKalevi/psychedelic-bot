@@ -8,7 +8,6 @@ code_files = [
   "docker-compose.yml",
   "Dockerfile",
   ".gitlab-ci.yml",
-  ".pylintrc",
   "update.sh",
 ]
 code_snippets = []
@@ -38,7 +37,7 @@ async def context_manager(event):
       with open(file_path, "r", encoding="utf-8") as file:
         code = file.read()
       code_snippets.append(f"--- {file_path} ---\n{code}\n")
-    messages = [{'role':'user', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them.'+'```'.join(code_snippets)}]
+    messages = [{'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them.'+'```'.join(code_snippets)}]
     context['order'].sort(key=lambda x: context['posts'][x]['create_at'])
     for post_id in context['order']:
       if 'from_bot' in context['posts'][post_id]['props']:
