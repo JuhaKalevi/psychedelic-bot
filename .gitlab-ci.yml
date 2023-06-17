@@ -22,3 +22,6 @@ deploy:
   - test
   script:
   - ssh -oStrictHostKeyChecking=no psychedelic-bot@ai.psychedelic.fi $OPENAI_MODEL_NAME
+  rules:
+  - if: $CI_COMMIT_TAG
+    when: never 
