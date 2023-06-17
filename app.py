@@ -49,26 +49,19 @@ async def context_manager(event):
     try:
       openai_response_content = openai.ChatCompletion.create(model=environ['OPENAI_MODEL_NAME'], messages=messages)['choices'][0]['message']['content']
     except openai.error.Timeout as err:
-      print(f"OpenAI API request timed out: {err}")
-      pass
+      openai_response_content = f"OpenAI API request timed out: {err}"
     except openai.error.APIError as err:
-      print(f"OpenAI API returned an API Error: {err}")
-      pass
+      openai_response_content = f"OpenAI API returned an API Error: {err}"
     except openai.error.APIConnectionError as err:
-      print(f"OpenAI API request failed to connect: {err}")
-      pass
+      openai_response_content = f"OpenAI API request failed to connect: {err}"
     except openai.error.InvalidRequestError as err:
-      print(f"OpenAI API request was invalid: {err}")
-      pass
+      popenai_response_content = f"OpenAI API request was invalid: {err}"
     except openai.error.AuthenticationError as err:
-      print(f"OpenAI API request was not authorized: {err}")
-      pass
+      openai_response_content = f"OpenAI API request was not authorized: {err}"
     except openai.error.PermissionError as err:
-      print(f"OpenAI API request was not permitted: {err}")
-      pass
+      openai_response_content = f"OpenAI API request was not permitted: {err}"
     except openai.error.RateLimitError as err:
-      print(f"OpenAI API request exceeded rate limit: {err}")
-      pass    
+      openai_response_content = f"OpenAI API request exceeded rate limit: {err}"
     mm.posts.create_post(options={
       'channel_id': post['channel_id'],
       'message': openai_response_content,
