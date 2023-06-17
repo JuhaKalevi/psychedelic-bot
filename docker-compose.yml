@@ -3,3 +3,7 @@ services:
     build: .
     env_file: gpt-3.5-turbo-16k.env
     restart: always
+  gpt-4:
+    build: .
+    env_file: gpt-4.env
+    restart: always
