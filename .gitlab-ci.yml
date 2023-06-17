@@ -1,18 +1,28 @@
-image: debian:bullseye
-build:
-  environment:
-    name: $CI_COMMIT_REF_NAME
+stages:
+- test
+- deploy
+test:
+  image: python:3.9
+  interruptible: true
   script:
-    - apt-get update
-    - apt-get -y install build-essential git python3-dev python3-venv python3-wheel
-    - cd /builds/ai/bots/psychedelic-bot
-    - python3 -m venv venv
-    - . venv/bin/activate
-    - git clone https://github.com/Vaelor/python-mattermost-driver
-    - cd python-mattermost-driver
-    - pip install -r requirements.txt
-    - python3 setup.py install
-    - cd ..
-    - pip install -r requirements.txt
-    - python3 app.py
-  when: manual
+  - cd /builds/ai/bots/psychedelic-bot
+  - pip install openai mattermostdriver pylint
+  - pylint app.py
+deploy:
+  before_script:
+  - 'command -v ssh-agent >/dev/null || (apt-get update -y && apt-get install openssh-client -y)'
+  - eval $(ssh-agent -s)
+  - chmod 400 "$SSH_DEPLOY_KEY"
+  - ssh-add "$SSH_DEPLOY_KEY"
+  - mkdir -pm 700 ~/.ssh
+  environment:
+    name: $CI_COMMIT_BRANCH
+  interruptible: true
+  needs:
+  - test
+  script:
+  - ssh -oStrictHostKeyChecking=no psychedelic-bot@ai.psychedelic.fi $OPENAI_MODEL_NAME
+  rules:
+  - if: $CI_COMMIT_TAG
+    when: never
+  - when: always
