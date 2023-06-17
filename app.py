@@ -48,26 +48,26 @@ async def context_manager(event):
       messages.append({'role':role, 'content':context['posts'][post_id]['message']})
     try:
       openai_response_content = openai.ChatCompletion.create(model=environ['OPENAI_MODEL_NAME'], messages=messages)['choices'][0]['message']['content']
-    except openai.error.Timeout as e:
-      print(f"OpenAI API request timed out: {e}")
+    except openai.error.Timeout as err:
+      print(f"OpenAI API request timed out: {err}")
       pass
-    except openai.error.APIError as e:
-      print(f"OpenAI API returned an API Error: {e}")
+    except openai.error.APIError as err:
+      print(f"OpenAI API returned an API Error: {err}")
       pass
-    except openai.error.APIConnectionError as e:
-      print(f"OpenAI API request failed to connect: {e}")
+    except openai.error.APIConnectionError as err:
+      print(f"OpenAI API request failed to connect: {err}")
       pass
-    except openai.error.InvalidRequestError as e:
-      print(f"OpenAI API request was invalid: {e}")
+    except openai.error.InvalidRequestError as err:
+      print(f"OpenAI API request was invalid: {err}")
       pass
-    except openai.error.AuthenticationError as e:
-      print(f"OpenAI API request was not authorized: {e}")
+    except openai.error.AuthenticationError as err:
+      print(f"OpenAI API request was not authorized: {err}")
       pass
-    except openai.error.PermissionError as e:
-      print(f"OpenAI API request was not permitted: {e}")
+    except openai.error.PermissionError as err:
+      print(f"OpenAI API request was not permitted: {err}")
       pass
-    except openai.error.RateLimitError as e:
-      print(f"OpenAI API request exceeded rate limit: {e}")
+    except openai.error.RateLimitError as err:
+      print(f"OpenAI API request exceeded rate limit: {err}")
       pass    
     mm.posts.create_post(options={
       'channel_id': post['channel_id'],
