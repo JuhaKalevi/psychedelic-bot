@@ -10,7 +10,6 @@ code_files = [
   ".gitlab-ci.yml",
   "update.sh",
 ]
-code_snippets = []
 openai.api_key = environ['OPENAI_API_KEY']
 
 mm = mattermostdriver.Driver({
@@ -20,6 +19,7 @@ mm = mattermostdriver.Driver({
 })
 
 async def context_manager(event):
+  code_snippets = []
   event = loads(event)
   if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != environ['MATTERMOST_BOTNAME']:
     post = loads(event['data']['post'])
