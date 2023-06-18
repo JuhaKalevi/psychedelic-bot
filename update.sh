@@ -1,6 +1,6 @@
 #!/bin/bash
 case "$SSH_ORIGINAL_COMMAND" in
-  gpt-3.5-turbo-16k)
+  gpt-3.5-turbo-16k|gpt-4)
     git fetch --all
     git checkout $SSH_ORIGINAL_COMMAND
     git pull
