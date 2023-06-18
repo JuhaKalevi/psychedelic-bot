@@ -40,7 +40,7 @@ async def context_manager(event):
     messages = [{'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them.'+'```'.join(code_snippets)}]
     context['order'].sort(key=lambda x: context['posts'][x]['create_at'])
     for post_id in context['order']:
-      post_username = mm.users.get(context['posts'][post_id]['user_id'])['username']
+      post_username = mm.users.get_user(context['posts'][post_id]['user_id'])['username']
       if 'from_bot' in context['posts'][post_id]['props']:
         role = 'assistant'
       else:
