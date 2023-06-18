@@ -40,11 +40,12 @@ async def context_manager(event):
     messages = [{'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them.'+'```'.join(code_snippets)}]
     context['order'].sort(key=lambda x: context['posts'][x]['create_at'])
     for post_id in context['order']:
-      if 'from_bot' in context['posts'][post_id]['props']:
+      post_user_id = context['posts'][post_id]['user_id']
+      post_user = mm.users.get_user(post_user_id)
+      if post_user['is_bot'] or 'from_bot' in context['posts'][post_id]['props']:
         role = 'assistant'
       else:
         role = 'user'
-      messages.append({'role':role, 'content':context['posts'][post_id]['message']})
     try:
       openai_response_content = openai.ChatCompletion.create(model=environ['OPENAI_MODEL_NAME'], messages=messages)['choices'][0]['message']['content']
     except openai.error.Timeout as err:
