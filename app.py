@@ -46,9 +46,9 @@ async def context_manager(event):
         role = 'assistant'
       else:
         role = 'user'
+    messages.append({'role': role, 'content': context['posts'][post_id]['message']})
     try:
       openai_response_content = openai.ChatCompletion.create(model=environ['OPENAI_MODEL_NAME'], messages=messages)['choices'][0]['message']['content']
-    messages.append({'role': role, 'content': context['posts'][post_id]['message']})
     except openai.error.Timeout as err:
       openai_response_content = f"OpenAI API request timed out: {err}"
     except openai.error.APIError as err:
