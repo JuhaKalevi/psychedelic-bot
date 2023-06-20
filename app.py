@@ -33,11 +33,13 @@ async def context_manager(event):
       context = mm.posts.get_thread(post['id'])
       if not any(environ['MATTERMOST_BOTNAME'] in post['message'] for post in context['posts'].values()):
         return
-    for file_path in code_files:
-      with open(file_path, "r", encoding="utf-8") as file:
-        code = file.read()
-      code_snippets.append(f"--- {file_path} ---\n{code}\n")
-    messages = [{'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them.'+'```'.join(code_snippets)}]
+    messages = []
+    if '@code-analysis' in post['message']:
+      for file_path in code_files:
+        with open(file_path, "r", encoding="utf-8") as file:
+          code = file.read()
+        code_snippets.append(f"--- {file_path} ---\n{code}\n")
+      messages.append({'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them.'+'```'.join(code_snippets)})
     context['order'].sort(key=lambda x: context['posts'][x]['create_at'])
     for post_id in context['order']:
       post_username = mm.users.get_user(context['posts'][post_id]['user_id'])['username']
