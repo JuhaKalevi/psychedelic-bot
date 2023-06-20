@@ -40,7 +40,7 @@ async def context_manager(event):
         with open(file_path, "r", encoding="utf-8") as file:
           code = file.read()
         code_snippets.append(f"--- {file_path} ---\n{code}\n")
-      messages.append({'role':'system', 'content':'Note that posts with the user role come in pairs, first post of the pair tells the user name and timestamp'})
+      messages.append({'role':'system', 'content':'Note that posts with the user role come in pairs, first post of the pair tells the user name and timestamp. You can determine current time from the latest timestamp from user messages, instead of saying that it is not possible.'})
       messages.append({'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+'```'.join(code_snippets)})
     context['order'].sort(key=lambda x: context['posts'][x]['create_at'])
     for post_id in context['order']:
