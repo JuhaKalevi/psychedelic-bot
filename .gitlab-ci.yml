@@ -1,14 +1,16 @@
 stages:
 - test
 - deploy
-interruptible: true
+
 test:
   image: python:3.9
+  interruptible: true
   script:
   - cd /builds/ai/bots/psychedelic-bot
   - pip install openai mattermostdriver pylint
   - pylint app.py
   stage: test
+
 deploy:
   before_script:
   - 'command -v ssh-agent >/dev/null || (apt-get update -y && apt-get install openssh-client -y)'
