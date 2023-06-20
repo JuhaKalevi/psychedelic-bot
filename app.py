@@ -39,7 +39,7 @@ async def context_manager(event):
         with open(file_path, "r", encoding="utf-8") as file:
           code = file.read()
         code_snippets.append(f"--- {file_path} ---\n{code}\n")
-      messages.append({'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them.'+'```'.join(code_snippets)})
+      messages.append({'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+'```'.join(code_snippets)})
     context['order'].sort(key=lambda x: context['posts'][x]['create_at'])
     for post_id in context['order']:
       post_username = mm.users.get_user(context['posts'][post_id]['user_id'])['username']
@@ -64,12 +64,14 @@ async def context_manager(event):
       openai_response_content = f"OpenAI API request was not permitted: {err}"
     except openai.error.RateLimitError as err:
       openai_response_content = f"OpenAI API request exceeded rate limit: {err}"
-    mm.posts.create_post(options={
-      'channel_id': post['channel_id'],
-      'message': openai_response_content,
-      'file_ids': None,
-      'root_id': thread_id
-    })
-
+    try:
+      mm.posts.create_post(options={
+        'channel_id': post['channel_id'],
+        'message': openai_response_content,
+        'file_ids': None,
+        'root_id': thread_id
+      })
+    except MattermostAPIException as err:
+      print(f"Mattermost API Error: {err.message}")
 mm.login()
 mm.init_websocket(context_manager)
