@@ -17,7 +17,6 @@ deploy:
   - mkdir -pm 700 ~/.ssh
   environment:
     name: $CI_COMMIT_BRANCH
-  interruptible: true
   needs:
   - test
   script:
