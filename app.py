@@ -1,3 +1,4 @@
+from datetime import datetime
 from json import loads
 from os import environ
 from mattermostdriver.exceptions import InvalidOrMissingParameters, ResourceNotFound
@@ -49,7 +50,7 @@ async def context_manager(event):
         role = 'assistant'
       else:
         role = 'user'
-        messages.append({'role': role, 'content': f'The following message is from user {post_username}, timestamp '+str(post['create_at'])})
+        messages.append({'role': role, 'content': f'The following message is from user {post_username}, timestamp '+datetime.fromtimestamp(post['create_at'])})
 
     messages.append({'role': role, 'content': context['posts'][post_id]['message']})
     try:
