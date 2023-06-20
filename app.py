@@ -1,6 +1,6 @@
 from json import loads
 from os import environ
-import mattermostdriver
+from mattermostdriver import Driver, InvalidOrMissingParameters, ResourceNotFound
 import openai
 
 code_files = [
@@ -71,7 +71,7 @@ async def context_manager(event):
         'file_ids': None,
         'root_id': thread_id
       })
-    except mattermostdriver.exceptions.MattermostAPIException as err:
+    except (InvalidOrMissingParameters, ResourceNotFound) as err:
       print(f"Mattermost API Error: {err.message}")
 mm.login()
 mm.init_websocket(context_manager)
