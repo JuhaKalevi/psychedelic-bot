@@ -49,7 +49,7 @@ async def context_manager(event):
         role = 'assistant'
       else:
         role = 'user'
-        messages.append({'role': 'user', 'content': f'The following message is from user named {post_username}, timestamp '+str(datetime.fromtimestamp(post['create_at']/1000).strftime("%Y-%m-%d %H:%M"))})
+        messages.append({'role': 'user', 'content': f'The following message is from user named {post_username}, timestamp '+str(datetime.fromtimestamp(context['posts'][post_id]['create_at']/1000).strftime("%Y-%m-%d %H:%M"))})
     messages.append({'role': role, 'content': context['posts'][post_id]['message']})
     try:
       openai_response_content = openai.ChatCompletion.create(model=environ['OPENAI_MODEL_NAME'], messages=messages)['choices'][0]['message']['content']
