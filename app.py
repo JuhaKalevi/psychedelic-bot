@@ -50,7 +50,7 @@ async def context_manager(event):
         role = 'assistant'
       else:
         role = 'user'
-        messages.append({'role': role, 'content': f'The following message is from user {post_username}, timestamp '+datetime.fromtimestamp(post['create_at'])})
+        messages.append({'role': role, 'content': f'The following message is from user {post_username}, timestamp '+datetime.fromtimestamp(post['create_at']/1000)})
 
     messages.append({'role': role, 'content': context['posts'][post_id]['message']})
     try:
