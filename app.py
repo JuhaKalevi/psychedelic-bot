@@ -2,7 +2,6 @@ from json import loads
 from os import environ
 from mattermostdriver.exceptions import InvalidOrMissingParameters, ResourceNotFound
 from mattermostdriver import Driver
-from openai.error import APIConnectionError, APIError, AuthenticationError, InvalidRequestError, PermissionError, RateLimitError, Timeout
 import openai
 
 code_files = [
@@ -52,7 +51,7 @@ async def context_manager(event):
     messages.append({'role': role, 'content': f'@{post_username}: '+context['posts'][post_id]['message']})
     try:
       openai_response_content = openai.ChatCompletion.create(model=environ['OPENAI_MODEL_NAME'], messages=messages)['choices'][0]['message']['content']
-    except (APIConnectionError, APIError, AuthenticationError, InvalidRequestError, PermissionError, RateLimitError, Timeout) as err:
+    except (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.Timeout) as err:
       openai_response_content = f"OpenAI API Error: {err}"
     try:
       mm.posts.create_post(options={
