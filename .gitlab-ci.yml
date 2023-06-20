@@ -1,6 +1,7 @@
 stages:
 - test
 - deploy
+interruptible: true
 test:
   image: python:3.9
   script:
@@ -17,6 +18,7 @@ deploy:
   - mkdir -pm 700 ~/.ssh
   environment:
     name: $CI_COMMIT_BRANCH
+  interruptible: true
   needs:
   - test
   script:
