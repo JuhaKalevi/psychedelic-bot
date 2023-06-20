@@ -1,6 +1,7 @@
 from json import loads
 from os import environ
-from mattermostdriver import Driver, InvalidOrMissingParameters, ResourceNotFound
+from mattermostdriver.exceptions import InvalidOrMissingParameters, ResourceNotFound
+from mattermostdriver import Driver
 import openai
 
 code_files = [
@@ -12,7 +13,7 @@ code_files = [
 ]
 openai.api_key = environ['OPENAI_API_KEY']
 
-mm = mattermostdriver.Driver({
+mm = Driver({
   'url': environ['MATTERMOST_URL'],
   'token': environ['MATTERMOST_TOKEN'],
   'port': 443,
