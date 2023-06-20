@@ -3,7 +3,6 @@ stages:
 - deploy
 test:
   image: python:3.9
-  interruptible: true
   script:
   - cd /builds/ai/bots/psychedelic-bot
   - pip install openai mattermostdriver pylint
@@ -18,7 +17,6 @@ deploy:
   - mkdir -pm 700 ~/.ssh
   environment:
     name: $CI_COMMIT_BRANCH
-  interruptible: true
   needs:
   - test
   script:
