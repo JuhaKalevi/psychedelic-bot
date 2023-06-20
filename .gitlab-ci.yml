@@ -3,7 +3,6 @@ stages:
 - deploy
 test:
   image: python:3.9
-  interruptible: true
   script:
   - cd /builds/ai/bots/psychedelic-bot
   - pip install openai mattermostdriver pylint
