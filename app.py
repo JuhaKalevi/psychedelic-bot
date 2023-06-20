@@ -45,7 +45,7 @@ async def context_manager(event):
         role = 'assistant'
       else:
         role = 'user'
-    messages.append({'role': role, 'content': post_username+': '+context['posts'][post_id]['message']})
+    messages.append({'role': role, 'content': f'@{post_username}: {context['posts'][post_id]['message']}'})
     try:
       openai_response_content = openai.ChatCompletion.create(model=environ['OPENAI_MODEL_NAME'], messages=messages)['choices'][0]['message']['content']
     except openai.error.Timeout as err:
