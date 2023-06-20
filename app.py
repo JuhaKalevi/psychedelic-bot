@@ -40,6 +40,7 @@ async def context_manager(event):
         with open(file_path, "r", encoding="utf-8") as file:
           code = file.read()
         code_snippets.append(f"--- {file_path} ---\n{code}\n")
+      messages.append({'role':'system', 'content':'Note that posts with the user role come in pairs, first post of the pair tells the user name and timestamp'})
       messages.append({'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+'```'.join(code_snippets)})
     context['order'].sort(key=lambda x: context['posts'][x]['create_at'])
     for post_id in context['order']:
@@ -48,7 +49,9 @@ async def context_manager(event):
         role = 'assistant'
       else:
         role = 'user'
-    messages.append({'role': role, 'content': f'@{post_username}: '+context['posts'][post_id]['message']})
+        messages.append({'role': role, 'content': f'The following message is from user {post_username}, timestamp '+post['create_at']})
+
+    messages.append({'role': role, 'content': context['posts'][post_id]['message']})
     try:
       openai_response_content = openai.ChatCompletion.create(model=environ['OPENAI_MODEL_NAME'], messages=messages)['choices'][0]['message']['content']
     except (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.Timeout) as err:
