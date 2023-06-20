@@ -2,6 +2,7 @@ from json import loads
 from os import environ
 from mattermostdriver.exceptions import InvalidOrMissingParameters, ResourceNotFound
 from mattermostdriver import Driver
+from openai.error import APIConnectionError, APIError, AuthenticationError, InvalidRequestError, PermissionError, RateLimitError, Timeout
 import openai
 
 code_files = [
@@ -51,20 +52,8 @@ async def context_manager(event):
     messages.append({'role': role, 'content': f'@{post_username}: '+context['posts'][post_id]['message']})
     try:
       openai_response_content = openai.ChatCompletion.create(model=environ['OPENAI_MODEL_NAME'], messages=messages)['choices'][0]['message']['content']
-    except openai.error.Timeout as err:
-      openai_response_content = f"OpenAI API request timed out: {err}"
-    except openai.error.APIError as err:
-      openai_response_content = f"OpenAI API returned an API Error: {err}"
-    except openai.error.APIConnectionError as err:
-      openai_response_content = f"OpenAI API request failed to connect: {err}"
-    except openai.error.InvalidRequestError as err:
-      openai_response_content = f"OpenAI API request was invalid: {err}"
-    except openai.error.AuthenticationError as err:
-      openai_response_content = f"OpenAI API request was not authorized: {err}"
-    except openai.error.PermissionError as err:
-      openai_response_content = f"OpenAI API request was not permitted: {err}"
-    except openai.error.RateLimitError as err:
-      openai_response_content = f"OpenAI API request exceeded rate limit: {err}"
+    except (APIConnectionError, APIError, AuthenticationError, InvalidRequestError, PermissionError, RateLimitError, Timeout) as err:
+      openai_response_content = f"OpenAI API Error: {err}"
     try:
       mm.posts.create_post(options={
         'channel_id': post['channel_id'],
