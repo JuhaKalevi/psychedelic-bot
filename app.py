@@ -23,7 +23,12 @@ webui_api = webuiapi.WebUIApi(host='kallio.psychedelic.fi', port=7860)
 webui_api.set_auth('useri', 'passu')
 
 def generate_image(user_prompt):
-  result = webui_api.txt2img(prompt=user_prompt, negative_prompt="ugly, out of frame")
+  result = webui_api.txt2img(
+    prompt = user_prompt,
+    negative_prompt = "ugly, out of frame",
+    steps = 30,
+    sampler = 'UniPC',
+  )
   result.image.save("result.png")
 
 def generate_text(user_post, context):
