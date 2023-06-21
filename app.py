@@ -4,6 +4,14 @@ from os import environ
 from mattermostdriver.exceptions import InvalidOrMissingParameters, ResourceNotFound
 from mattermostdriver import Driver
 import openai
+import webuiapi
+
+def generate_image(user_prompt):
+  result = api.txt2img(
+    prompt=user_prompt,
+    negative_prompt="ugly, out of frame",
+  )
+  result.image.save("result.png")
 
 code_files = [
   "app.py",
@@ -13,21 +21,27 @@ code_files = [
   "update.sh",
 ]
 openai.api_key = environ['OPENAI_API_KEY']
-
 mm = Driver({
   'url': environ['MATTERMOST_URL'],
   'token': environ['MATTERMOST_TOKEN'],
   'port': 443,
 })
+webui_api = webuiapi.WebUIApi(host='kallio.psychedelic.fi', port=7860)
+webui_api.set_auth('useri', 'passu')
 
 async def context_manager(event):
   code_snippets = []
+  file_ids = []
   event = loads(event)
   if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != environ['MATTERMOST_BOTNAME']:
     post = loads(event['data']['post'])
     if post['root_id'] == "":
       if environ['MATTERMOST_BOTNAME'] not in post['message']:
         return
+      elif post['message'].startswith('@generate-image'):
+        generate_image(post['message'].removeprefix('@generate-image'))
+        file_ids.append(mm.files.upload_file(post['channel_id'], 'result.png')['file_infos'][0]['id'])
+        openai_response_content = "Here is the generated image:"
       thread_id = post['id']
       context = {'order': [post['id']], 'posts': {post['id']: post}}
     else:
@@ -59,12 +73,11 @@ async def context_manager(event):
       mm.posts.create_post(options={
         'channel_id': post['channel_id'],
         'message': openai_response_content,
-        'file_ids': None,
+        'file_ids': file_ids,
         'root_id': thread_id
       })
     except (InvalidOrMissingParameters, ResourceNotFound) as err:
       print(f"Mattermost API Error: {err}")
-  else:
-    print(dumps(event))
+
 mm.login()
 mm.init_websocket(context_manager)
