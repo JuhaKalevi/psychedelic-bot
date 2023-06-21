@@ -40,7 +40,8 @@ async def context_manager(event):
         return
       if post['message'].startswith('@generate-image'):
         generate_image(post['message'].removeprefix('@generate-image'))
-        file_ids.append(mm.files.upload_file(post['channel_id'], 'result.png')['file_infos'][0]['id'])
+        file_info = mm.files.upload_file(post['channel_id'], 'result.png')
+        file_ids.append(response['file_infos'][0]['id'])
         openai_response_content = "Here is the generated image:"
       else:
         thread_id = post['id']
