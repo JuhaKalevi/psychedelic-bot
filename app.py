@@ -28,7 +28,7 @@ def generate_image(user_prompt):
 
 def generate_text(user_post):
   messages = []
-  if '@code-analysis' in user_prompt:
+  if '@code-analysis' in user_post:
     for file_path in code_files:
       with open(file_path, "r", encoding="utf-8") as file:
         code = file.read()
