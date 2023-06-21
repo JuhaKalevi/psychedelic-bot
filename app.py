@@ -63,11 +63,11 @@ async def context_manager(event):
       if environ['MATTERMOST_BOTNAME'] not in post['message']:
         return
       thread_id = post['id']
-      if post['message'].startswith('@generate-image'):
-        generate_image(post['message'].removeprefix('@generate-image'), file_ids, post)
-        openai_response_content = None
-      elif post['message'].startswith('@generate-images'):
+      if post['message'].startswith('@generate-images'):
         generate_images(post['message'].removeprefix('@generate-images'), file_ids, post)
+        openai_response_content = None
+      elif post['message'].startswith('@generate-image'):
+        generate_image(post['message'].removeprefix('@generate-image'), file_ids, post)
         openai_response_content = None
       else:
         context = {'order': [post['id']], 'posts': {post['id']: post}}
