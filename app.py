@@ -20,8 +20,12 @@ def generate_image(user_prompt):
     negative_prompt = "ugly, out of frame",
     steps = 42,
     sampler_name = 'UniPC',
+    batch_size = 8,
   )
-  result.image.save("result.png")
+  for image in result.images:
+    image.save("result.png")
+    with open('result.png', 'rb') as image_file:
+      file_ids.append(mm.files.upload_file(post['channel_id'], files={'files': ('result.png', image_file)})['file_infos'][0]['id'])
 
 def generate_text(context):
   messages = []
@@ -49,8 +53,6 @@ async def context_manager(event):
       thread_id = post['id']
       if post['message'].startswith('@generate-image'):
         generate_image(post['message'].removeprefix('@generate-image'))
-        with open('result.png', 'rb') as image_file:
-          file_ids.append(mm.files.upload_file(post['channel_id'], files={'files': ('result.png', image_file)})['file_infos'][0]['id'])
         openai_response_content = None
       else:
         context = {'order': [post['id']], 'posts': {post['id']: post}}
