@@ -26,7 +26,7 @@ def generate_image(user_prompt):
   result = webui_api.txt2img(
     prompt = user_prompt,
     negative_prompt = "ugly, out of frame",
-    steps = 30,
+    steps = 42,
     sampler_name = 'UniPC',
   )
   result.image.save("result.png")
@@ -34,12 +34,6 @@ def generate_image(user_prompt):
 def generate_text(user_post, context):
   code_snippets = []
   messages = []
-  if '@code-analysis' in user_post:
-    for file_path in code_files:
-      with open(file_path, "r", encoding="utf-8") as file:
-        code = file.read()
-      code_snippets.append(f"--- {file_path} ---\n{code}\n")
-    messages.append({'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+'```'.join(code_snippets)})
   context['order'].sort(key=lambda x: context['posts'][x]['create_at'])
   for post_id in context['order']:
     post_username = mm.users.get_user(context['posts'][post_id]['user_id'])['username']
@@ -47,10 +41,7 @@ def generate_text(user_post, context):
       role = 'assistant'
     else:
       role = 'user'
-      messages.append({'role': 'user', 'content': f'The following message is from user named {post_username}, timestamp '+str(datetime.fromtimestamp(context['posts'][post_id]['create_at']/1000).strftime("%Y-%m-%d %H:%M"))})
-      print(f'The following message is from user named {post_username}, timestamp '+str(datetime.fromtimestamp(context['posts'][post_id]['create_at']/1000).strftime("%Y-%m-%d %H:%M")))
     messages.append({'role': role, 'content': context['posts'][post_id]['message']})
-    print(context['posts'][post_id]['message'])
   try:
     openai_response_content = openai.ChatCompletion.create(model=environ['OPENAI_MODEL_NAME'], messages=messages)['choices'][0]['message']['content']
   except (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.Timeout) as err:
@@ -70,7 +61,7 @@ async def context_manager(event):
         generate_image(post['message'].removeprefix('@generate-image'))
         with open('result.png', 'rb') as image_file:
           file_ids.append(mm.files.upload_file(post['channel_id'], files={'files': ('result.png', image_file)})['file_infos'][0]['id'])
-        openai_response_content = "Here is the generated image:"
+        openai_response_content = None
       else:
         context = {'order': [post['id']], 'posts': {post['id']: post}}
         openai_response_content = generate_text(post, context)
