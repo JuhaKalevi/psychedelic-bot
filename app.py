@@ -21,7 +21,18 @@ def generate_image(user_prompt, file_ids, post):
     steps = 42,
     sampler_name = 'UniPC',
     batch_size = 8,
-    n_iter = 13,
+  )
+  result.image.save("result.png")
+  with open('result.png', 'rb') as image_file:
+    file_ids.append(mm.files.upload_file(post['channel_id'], files={'files': ('result.png', image_file)})['file_infos'][0]['id'])
+
+def generate_images(user_prompt, file_ids, post):
+  result = webui_api.txt2img(
+    prompt = user_prompt,
+    negative_prompt = "ugly, out of frame",
+    steps = 42,
+    sampler_name = 'UniPC',
+    batch_size = 8,
   )
   for image in result.images:
     image.save("result.png")
@@ -54,6 +65,9 @@ async def context_manager(event):
       thread_id = post['id']
       if post['message'].startswith('@generate-image'):
         generate_image(post['message'].removeprefix('@generate-image'), file_ids, post)
+        openai_response_content = None
+      if post['message'].startswith('@generate-images'):
+        generate_images(post['message'].removeprefix('@generate-images'), file_ids, post)
         openai_response_content = None
       else:
         context = {'order': [post['id']], 'posts': {post['id']: post}}
