@@ -65,13 +65,13 @@ async def context_manager(event):
       else:
         thread_id = post['id']
         context = {'order': [post['id']], 'posts': {post['id']: post}}
-        generate_text(post)
+        generate_text(post, context)
     else:
       thread_id = post['root_id']
       context = mm.posts.get_thread(post['id'])
       if not any(environ['MATTERMOST_BOTNAME'] in post['message'] for post in context['posts'].values()):
         return
-      generate_text(post)
+      generate_text(post, context)
     try:
       mm.posts.create_post(options={
         'channel_id': post['channel_id'],
