@@ -1,5 +1,5 @@
 from datetime import datetime
-from json import dumps, loads
+from json import loads
 from os import environ
 from mattermostdriver.exceptions import InvalidOrMissingParameters, ResourceNotFound
 from mattermostdriver import Driver
@@ -42,8 +42,9 @@ async def context_manager(event):
         generate_image(post['message'].removeprefix('@generate-image'))
         file_ids.append(mm.files.upload_file(post['channel_id'], 'result.png')['file_infos'][0]['id'])
         openai_response_content = "Here is the generated image:"
-      thread_id = post['id']
-      context = {'order': [post['id']], 'posts': {post['id']: post}}
+      else:
+        thread_id = post['id']
+        context = {'order': [post['id']], 'posts': {post['id']: post}}
     else:
       thread_id = post['root_id']
       context = mm.posts.get_thread(post['id'])
