@@ -55,13 +55,13 @@ async def context_manager(event):
         openai_response_content = None
       else:
         context = {'order': [post['id']], 'posts': {post['id']: post}}
-        openai_response_content = generate_text(post, context)
+        openai_response_content = generate_text(context)
     else:
       thread_id = post['root_id']
       context = mm.posts.get_thread(post['id'])
       if not any(environ['MATTERMOST_BOTNAME'] in post['message'] for post in context['posts'].values()):
         return
-      openai_response_content = generate_text(post, context)
+      openai_response_content = generate_text(context)
     try:
       mm.posts.create_post(options={
         'channel_id': post['channel_id'],
