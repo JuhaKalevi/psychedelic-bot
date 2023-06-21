@@ -11,4 +11,4 @@ RUN python3 setup.py install
 WORKDIR /app
 RUN pip install openai webuiapi
 COPY app.py docker-compose.yml Dockerfile .gitlab-ci.yml .pylintrc update.sh /app/
-CMD python3 app.py
+CMD python3 -u app.py
