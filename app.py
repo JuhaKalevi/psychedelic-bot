@@ -27,7 +27,7 @@ def generate_image(user_prompt):
     prompt = user_prompt,
     negative_prompt = "ugly, out of frame",
     steps = 30,
-    sampler = 'UniPC',
+    sampler_name = 'UniPC',
   )
   result.image.save("result.png")
 
