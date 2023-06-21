@@ -58,13 +58,13 @@ async def context_manager(event):
     if post['root_id'] == "":
       if environ['MATTERMOST_BOTNAME'] not in post['message']:
         return
+      thread_id = post['id']
       if post['message'].startswith('@generate-image'):
         generate_image(post['message'].removeprefix('@generate-image'))
         with open('result.png', 'rb') as image_file:
           file_ids.append(mm.files.upload_file(post['channel_id'], files={'files': ('result.png', image_file)})['file_infos'][0]['id'])
         openai_response_content = "Here is the generated image:"
       else:
-        thread_id = post['id']
         context = {'order': [post['id']], 'posts': {post['id']: post}}
         openai_response_content = generate_text(post, context)
     else:
