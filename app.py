@@ -1,5 +1,5 @@
 from datetime import datetime
-from json import loads
+from json import dumps, loads
 from os import environ
 from mattermostdriver.exceptions import InvalidOrMissingParameters, ResourceNotFound
 from mattermostdriver import Driver
@@ -65,6 +65,6 @@ async def context_manager(event):
     except (InvalidOrMissingParameters, ResourceNotFound) as err:
       print(f"Mattermost API Error: {err}")
   else:
-    print(event)
+    print(dumps(event))
 mm.login()
 mm.init_websocket(context_manager)
