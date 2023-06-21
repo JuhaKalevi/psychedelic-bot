@@ -21,6 +21,7 @@ def generate_image(user_prompt, file_ids, post):
     steps = 42,
     sampler_name = 'UniPC',
     batch_size = 8,
+    n_iter = 13,
   )
   for image in result.images:
     image.save("result.png")
