@@ -27,7 +27,6 @@ def generate_text(context):
   messages = []
   context['order'].sort(key=lambda x: context['posts'][x]['create_at'])
   for post_id in context['order']:
-    post_username = mm.users.get_user(context['posts'][post_id]['user_id'])['username']
     if 'from_bot' in context['posts'][post_id]['props']:
       role = 'assistant'
     else:
