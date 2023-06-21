@@ -14,7 +14,7 @@ mm = Driver({
 webui_api = webuiapi.WebUIApi(host='kallio.psychedelic.fi', port=7860)
 webui_api.set_auth('useri', 'passu')
 
-def generate_image(user_prompt):
+def generate_image(user_prompt, file_ids):
   result = webui_api.txt2img(
     prompt = user_prompt,
     negative_prompt = "ugly, out of frame",
@@ -52,7 +52,7 @@ async def context_manager(event):
         return
       thread_id = post['id']
       if post['message'].startswith('@generate-image'):
-        generate_image(post['message'].removeprefix('@generate-image'))
+        generate_image(post['message'].removeprefix('@generate-image'), file_ids)
         openai_response_content = None
       else:
         context = {'order': [post['id']], 'posts': {post['id']: post}}
