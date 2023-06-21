@@ -6,13 +6,6 @@ from mattermostdriver import Driver
 import openai
 import webuiapi
 
-def generate_image(user_prompt):
-  result = webui_api.txt2img(
-    prompt=user_prompt,
-    negative_prompt="ugly, out of frame",
-  )
-  result.image.save("result.png")
-
 code_files = [
   "app.py",
   "docker-compose.yml",
@@ -28,6 +21,32 @@ mm = Driver({
 })
 webui_api = webuiapi.WebUIApi(host='kallio.psychedelic.fi', port=7860)
 webui_api.set_auth('useri', 'passu')
+
+def generate_image(user_prompt):
+  result = webui_api.txt2img(prompt=user_prompt, negative_prompt="ugly, out of frame")
+  result.image.save("result.png")
+
+def generate_text(user_post):
+  messages = []
+  if '@code-analysis' in user_prompt:
+    for file_path in code_files:
+      with open(file_path, "r", encoding="utf-8") as file:
+        code = file.read()
+      code_snippets.append(f"--- {file_path} ---\n{code}\n")
+    messages.append({'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+'```'.join(code_snippets)})
+  context['order'].sort(key=lambda x: context['posts'][x]['create_at'])
+  for post_id in context['order']:
+    post_username = mm.users.get_user(context['posts'][post_id]['user_id'])['username']
+    if 'from_bot' in context['posts'][post_id]['props']:
+      role = 'assistant'
+    else:
+      role = 'user'
+      messages.append({'role': 'user', 'content': f'The following message is from user named {post_username}, timestamp '+str(datetime.fromtimestamp(context['posts'][post_id]['create_at']/1000).strftime("%Y-%m-%d %H:%M"))})
+  messages.append({'role': role, 'content': context['posts'][post_id]['message']})
+  try:
+    openai_response_content = openai.ChatCompletion.create(model=environ['OPENAI_MODEL_NAME'], messages=messages)['choices'][0]['message']['content']
+  except (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.Timeout) as err:
+    openai_response_content = f"OpenAI API Error: {err}"
 
 async def context_manager(event):
   code_snippets = []
@@ -46,31 +65,13 @@ async def context_manager(event):
       else:
         thread_id = post['id']
         context = {'order': [post['id']], 'posts': {post['id']: post}}
+        generate_text(post)
     else:
       thread_id = post['root_id']
       context = mm.posts.get_thread(post['id'])
       if not any(environ['MATTERMOST_BOTNAME'] in post['message'] for post in context['posts'].values()):
         return
-    messages = []
-    if '@code-analysis' in post['message']:
-      for file_path in code_files:
-        with open(file_path, "r", encoding="utf-8") as file:
-          code = file.read()
-        code_snippets.append(f"--- {file_path} ---\n{code}\n")
-      messages.append({'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+'```'.join(code_snippets)})
-    context['order'].sort(key=lambda x: context['posts'][x]['create_at'])
-    for post_id in context['order']:
-      post_username = mm.users.get_user(context['posts'][post_id]['user_id'])['username']
-      if 'from_bot' in context['posts'][post_id]['props']:
-        role = 'assistant'
-      else:
-        role = 'user'
-        messages.append({'role': 'user', 'content': f'The following message is from user named {post_username}, timestamp '+str(datetime.fromtimestamp(context['posts'][post_id]['create_at']/1000).strftime("%Y-%m-%d %H:%M"))})
-    messages.append({'role': role, 'content': context['posts'][post_id]['message']})
-    try:
-      openai_response_content = openai.ChatCompletion.create(model=environ['OPENAI_MODEL_NAME'], messages=messages)['choices'][0]['message']['content']
-    except (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.Timeout) as err:
-      openai_response_content = f"OpenAI API Error: {err}"
+      generate_text(post)
     try:
       mm.posts.create_post(options={
         'channel_id': post['channel_id'],
