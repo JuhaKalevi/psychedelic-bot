@@ -43,7 +43,7 @@ def generate_text(user_post, context):
     else:
       role = 'user'
       messages.append({'role': 'user', 'content': f'The following message is from user named {post_username}, timestamp '+str(datetime.fromtimestamp(context['posts'][post_id]['create_at']/1000).strftime("%Y-%m-%d %H:%M"))})
-      print(f'The following message is from user named {post_username}, timestamp '+str(datetime.fromtimestamp(context['posts'][post_id]['create_at']/1000).strftime("%Y-%m-%d %H:%M")
+      print(f'The following message is from user named {post_username}, timestamp '+str(datetime.fromtimestamp(context['posts'][post_id]['create_at']/1000).strftime("%Y-%m-%d %H:%M")))
     messages.append({'role': role, 'content': context['posts'][post_id]['message']})
     print(context['posts'][post_id]['message'])
   try:
