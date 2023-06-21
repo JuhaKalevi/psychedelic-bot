@@ -7,7 +7,7 @@ test:
   interruptible: true
   script:
   - cd /builds/ai/bots/psychedelic-bot
-  - pip install openai mattermostdriver pylint
+  - pip install openai mattermostdriver pylint webuiapi
   - pylint app.py
   stage: test
 
