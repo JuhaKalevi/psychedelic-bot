@@ -64,5 +64,7 @@ async def context_manager(event):
       })
     except (InvalidOrMissingParameters, ResourceNotFound) as err:
       print(f"Mattermost API Error: {err}")
+  else:
+    print(event)
 mm.login()
 mm.init_websocket(context_manager)
