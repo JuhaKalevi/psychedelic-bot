@@ -1,4 +1,3 @@
-from datetime import datetime
 from json import loads
 from os import environ
 from mattermostdriver.exceptions import InvalidOrMissingParameters, ResourceNotFound
@@ -6,13 +5,6 @@ from mattermostdriver import Driver
 import openai
 import webuiapi
 
-code_files = [
-  "app.py",
-  "docker-compose.yml",
-  "Dockerfile",
-  ".gitlab-ci.yml",
-  "update.sh",
-]
 openai.api_key = environ['OPENAI_API_KEY']
 mm = Driver({
   'url': environ['MATTERMOST_URL'],
@@ -31,8 +23,7 @@ def generate_image(user_prompt):
   )
   result.image.save("result.png")
 
-def generate_text(user_post, context):
-  code_snippets = []
+def generate_text(context):
   messages = []
   context['order'].sort(key=lambda x: context['posts'][x]['create_at'])
   for post_id in context['order']:
