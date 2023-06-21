@@ -7,7 +7,7 @@ import openai
 import webuiapi
 
 def generate_image(user_prompt):
-  result = api.txt2img(
+  result = webui_api.txt2img(
     prompt=user_prompt,
     negative_prompt="ugly, out of frame",
   )
@@ -38,7 +38,7 @@ async def context_manager(event):
     if post['root_id'] == "":
       if environ['MATTERMOST_BOTNAME'] not in post['message']:
         return
-      elif post['message'].startswith('@generate-image'):
+      if post['message'].startswith('@generate-image'):
         generate_image(post['message'].removeprefix('@generate-image'))
         file_ids.append(mm.files.upload_file(post['channel_id'], 'result.png')['file_infos'][0]['id'])
         openai_response_content = "Here is the generated image:"
