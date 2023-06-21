@@ -66,7 +66,7 @@ async def context_manager(event):
       if post['message'].startswith('@generate-image'):
         generate_image(post['message'].removeprefix('@generate-image'), file_ids, post)
         openai_response_content = None
-      if post['message'].startswith('@generate-images'):
+      elif post['message'].startswith('@generate-images'):
         generate_images(post['message'].removeprefix('@generate-images'), file_ids, post)
         openai_response_content = None
       else:
