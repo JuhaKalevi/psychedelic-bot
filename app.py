@@ -48,6 +48,7 @@ def generate_text(user_post, context):
     openai_response_content = openai.ChatCompletion.create(model=environ['OPENAI_MODEL_NAME'], messages=messages)['choices'][0]['message']['content']
   except (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.Timeout) as err:
     openai_response_content = f"OpenAI API Error: {err}"
+  return openai_response_content
 
 async def context_manager(event):
   file_ids = []
@@ -65,13 +66,13 @@ async def context_manager(event):
       else:
         thread_id = post['id']
         context = {'order': [post['id']], 'posts': {post['id']: post}}
-        generate_text(post, context)
+        openai_response_content = generate_text(post, context)
     else:
       thread_id = post['root_id']
       context = mm.posts.get_thread(post['id'])
       if not any(environ['MATTERMOST_BOTNAME'] in post['message'] for post in context['posts'].values()):
         return
-      generate_text(post, context)
+      openai_response_content = generate_text(post, context)
     try:
       mm.posts.create_post(options={
         'channel_id': post['channel_id'],
