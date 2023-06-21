@@ -26,7 +26,8 @@ def generate_image(user_prompt):
   result = webui_api.txt2img(prompt=user_prompt, negative_prompt="ugly, out of frame")
   result.image.save("result.png")
 
-def generate_text(user_post, context, code_snippets):
+def generate_text(user_post, context):
+  code_snippets = []
   messages = []
   if '@code-analysis' in user_post:
     for file_path in code_files:
@@ -49,7 +50,6 @@ def generate_text(user_post, context, code_snippets):
     openai_response_content = f"OpenAI API Error: {err}"
 
 async def context_manager(event):
-  code_snippets = []
   file_ids = []
   event = loads(event)
   if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != environ['MATTERMOST_BOTNAME']:
@@ -65,13 +65,13 @@ async def context_manager(event):
       else:
         thread_id = post['id']
         context = {'order': [post['id']], 'posts': {post['id']: post}}
-        generate_text(post, context, code_snippets)
+        generate_text(post, context)
     else:
       thread_id = post['root_id']
       context = mm.posts.get_thread(post['id'])
       if not any(environ['MATTERMOST_BOTNAME'] in post['message'] for post in context['posts'].values()):
         return
-      generate_text(post, context, code_snippets)
+      generate_text(post, context)
     try:
       mm.posts.create_post(options={
         'channel_id': post['channel_id'],
