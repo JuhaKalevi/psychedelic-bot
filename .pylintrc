@@ -2,6 +2,7 @@
 disable=
     C0114, # missing-module-docstring
     C0116, # missing-function-docstring
+    R0914, # too-many-locals
 max-branches=42
 [FORMAT]
 indent-string='  '
