@@ -1,12 +1,13 @@
-from json import loads
-from os import environ
-from mattermostdriver.exceptions import InvalidOrMissingParameters, ResourceNotFound
-from mattermostdriver import Driver
+import chardet
+import langdetect
+import json
+import os
+import mattermostdriver
 import openai
 import webuiapi
 
 openai.api_key = environ['OPENAI_API_KEY']
-mm = Driver({
+mm = mattermostdriver.Driver({
   'url': environ['MATTERMOST_URL'],
   'token': environ['MATTERMOST_TOKEN'],
   'port': 443,
@@ -14,7 +15,12 @@ mm = Driver({
 webui_api = webuiapi.WebUIApi(host='kallio.psychedelic.fi', port=7860)
 webui_api.set_auth('useri', 'passu')
 
+def is_mainly_english(text):
+  return langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
+
 def generate_images(user_prompt, file_ids, post, count):
+  if not is_mainly_english(user_prompt):
+    return "Please use english only when generating images, for now."
   result = webui_api.txt2img(
     prompt = user_prompt,
     negative_prompt = "ugly, out of frame",
@@ -44,19 +50,17 @@ def generate_text(context):
 
 async def context_manager(event):
   file_ids = []
-  event = loads(event)
+  event = json.loads(event)
   if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != environ['MATTERMOST_BOTNAME']:
-    post = loads(event['data']['post'])
+    post = json.loads(event['data']['post'])
     if post['root_id'] == "":
       if environ['MATTERMOST_BOTNAME'] not in post['message']:
         return
       thread_id = post['id']
-      if post['message'].startswith('@generate-images'):
-        generate_images(post['message'].removeprefix('@generate-images'), file_ids, post, 8)
-        openai_response_content = None
-      elif post['message'].startswith('@generate-image'):
-        generate_images(post['message'].removeprefix('@generate-image'), file_ids, post, 1)
-        openai_response_content = None
+      if post['message'].startswith('@generate-images'):        
+        openai_response_content = generate_images(post['message'].removeprefix('@generate-images'), file_ids, post, 8)
+      elif post['message'].startswith('@generate-image'):        
+        openai_response_content = generate_images(post['message'].removeprefix('@generate-image'), file_ids, post, 1)
       else:
         context = {'order': [post['id']], 'posts': {post['id']: post}}
         openai_response_content = generate_text(context)
@@ -73,7 +77,7 @@ async def context_manager(event):
         'file_ids': file_ids,
         'root_id': thread_id
       })
-    except (InvalidOrMissingParameters, ResourceNotFound) as err:
+    except (mattermostdriver.exceptions.InvalidOrMissingParameters, mattermostdriver.exceptions.ResourceNotFound) as err:
       print(f"Mattermost API Error: {err}")
 
 mm.login()
