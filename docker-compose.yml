@@ -1,8 +1,4 @@
 services:
-  code-davinci-002:
-    build: .
-    env_file: code-davinci-002.env
-    restart: always
   gpt-3.5-turbo-16k:
     build: .
     env_file: gpt-3.5-turbo-16k.env
@@ -10,8 +6,4 @@ services:
   gpt-4:
     build: .
     env_file: gpt-4.env
-    restart: always
-  testgpt:
-    build: .
-    env_file: testgpt.env
     restart: always
