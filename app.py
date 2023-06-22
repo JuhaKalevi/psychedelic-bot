@@ -30,7 +30,7 @@ def openai_chat_completion(messages):
 
 def generate_images(user_prompt, file_ids, post, count):
   if not is_mainly_english(user_prompt.encode('utf-8')):
-    return translate_text(user_prompt)
+    user_prompt = fix_image_generation_prompt(user_prompt)
   result = webui_api.txt2img(
     prompt = user_prompt,
     negative_prompt = "ugly, out of frame",
@@ -56,8 +56,8 @@ def generate_text(context):
     messages.append({'role': role, 'content': context['posts'][post_id]['message']})
   return openai_chat_completion(messages)
 
-def translate_text(text, target_language='english'):
-  messages = [{'role': 'user', 'content': f'Translate the following text to {target_language}: {text}'}]
+def fix_image_generation_prompt(prompt):
+  messages = [{'role': 'user', 'content': f"convert this to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features and you don't have to use full sentences, just a few keywords, separating these aspects by commas. Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally: {prompt}"}]
   return openai_chat_completion(messages)
 
 async def context_manager(event):
