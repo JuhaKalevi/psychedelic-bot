@@ -16,10 +16,10 @@ webui_api = webuiapi.WebUIApi(host='kallio.psychedelic.fi', port=7860)
 webui_api.set_auth('useri', 'passu')
 
 def is_asking_for_image_generation(message):
-  return generate_text_from_message('Is this a message where an image is requested? Answer only True or False: ') == 'True'
+  return generate_text_from_message('Is this a message where an image is requested? Answer only True or False: {message}') == 'True'
 
 def is_asking_for_multiple_images(message):
-  return generate_text_from_message('Is this a message where multiple images are requested? Answer only True or False: ') == 'True'
+  return generate_text_from_message('Is this a message where multiple images are requested? Answer only True or False: {message}') == 'True'
 
 def is_mainly_english(text):
   language = langdetect.detect(text.decode(chardet.detect(text)["encoding"]))
