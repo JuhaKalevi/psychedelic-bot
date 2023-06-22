@@ -1,7 +1,7 @@
-import chardet
-import langdetect
 import json
 import os
+import chardet
+import langdetect
 import mattermostdriver
 import openai
 import webuiapi
@@ -57,9 +57,9 @@ async def context_manager(event):
       if os.environ['MATTERMOST_BOTNAME'] not in post['message']:
         return
       thread_id = post['id']
-      if post['message'].startswith('@generate-images'):        
+      if post['message'].startswith('@generate-images'):
         openai_response_content = generate_images(post['message'].removeprefix('@generate-images'), file_ids, post, 8)
-      elif post['message'].startswith('@generate-image'):        
+      elif post['message'].startswith('@generate-image'):
         openai_response_content = generate_images(post['message'].removeprefix('@generate-image'), file_ids, post, 1)
       else:
         context = {'order': [post['id']], 'posts': {post['id']: post}}
