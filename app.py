@@ -30,7 +30,7 @@ def openai_chat_completion(messages):
 
 def generate_images(user_prompt, file_ids, post, count):
   if not is_mainly_english(user_prompt.encode('utf-8')):
-    return translate_text(text)
+    return translate_text(user_prompt)
   result = webui_api.txt2img(
     prompt = user_prompt,
     negative_prompt = "ugly, out of frame",
