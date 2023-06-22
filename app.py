@@ -16,7 +16,10 @@ webui_api = webuiapi.WebUIApi(host='kallio.psychedelic.fi', port=7860)
 webui_api.set_auth('useri', 'passu')
 
 def is_mainly_english(text):
-  return langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
+  encoding = chardet.detect(text)["encoding"]
+  decoded_text = text.decode(encoding)
+  language = detect(decoded_text)
+  return language == "en"
 
 def generate_images(user_prompt, file_ids, post, count):
   if not is_mainly_english(user_prompt):
