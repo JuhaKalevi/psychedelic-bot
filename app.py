@@ -21,9 +21,9 @@ def is_mainly_english(text):
   language = langdetect.detect(decoded_text)
   return language == "en"
 
-def openai_chat_completion(messages):
+def openai_chat_completion(messages, model=os.environ['OPENAI_MODEL_NAME']):
   try:
-    openai_response_content = openai.ChatCompletion.create(model=os.environ['OPENAI_MODEL_NAME'], messages=messages)['choices'][0]['message']['content']
+    openai_response_content = openai.ChatCompletion.create(model=model, messages=messages)['choices'][0]['message']['content']
   except (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.Timeout) as err:
     openai_response_content = f"OpenAI API Error: {err}"
   return openai_response_content
@@ -59,7 +59,7 @@ def generate_text(context):
 
 def fix_image_generation_prompt(prompt):
   messages = [{'role': 'user', 'content': f"convert this to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features and you don't have to use full sentences, just a few keywords, separating these aspects by commas. Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally: {prompt}"}]
-  return openai_chat_completion(messages)
+  return openai_chat_completion(messages, 'gpt-4')
 
 async def context_manager(event):
   file_ids = []
