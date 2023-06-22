@@ -30,6 +30,7 @@ def generate_images(user_prompt, file_ids, post, count):
     steps = 42,
     sampler_name = 'UniPC',
     batch_size = count,
+    restore_faces = True
   )
   for image in result.images:
     image.save("result.png")
