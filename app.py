@@ -10,7 +10,7 @@ openai.api_key = os.environ['OPENAI_API_KEY']
 mm = mattermostdriver.Driver({
   'url': os.environ['MATTERMOST_URL'],
   'token': os.environ['MATTERMOST_TOKEN'],
-  'port': 443,
+  'port': 443
 })
 webui_api = webuiapi.WebUIApi(host='kallio.psychedelic.fi', port=7860)
 webui_api.set_auth('useri', 'passu')
@@ -21,9 +21,16 @@ def is_mainly_english(text):
   language = langdetect.detect(decoded_text)
   return language == "en"
 
+def openai_chat_completion(messages)
+  try:
+    openai_response_content = openai.ChatCompletion.create(model=os.environ['OPENAI_MODEL_NAME'], messages=messages)['choices'][0]['message']['content']
+  except (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.Timeout) as err:
+    openai_response_content = f"OpenAI API Error: {err}"
+  return openai_response_content
+
 def generate_images(user_prompt, file_ids, post, count):
   if not is_mainly_english(user_prompt.encode('utf-8')):
-    return "Please use english only when generating images, for now."
+    return translate_text(text)
   result = webui_api.txt2img(
     prompt = user_prompt,
     negative_prompt = "ugly, out of frame",
@@ -47,11 +54,11 @@ def generate_text(context):
     else:
       role = 'user'
     messages.append({'role': role, 'content': context['posts'][post_id]['message']})
-  try:
-    openai_response_content = openai.ChatCompletion.create(model=os.environ['OPENAI_MODEL_NAME'], messages=messages)['choices'][0]['message']['content']
-  except (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.Timeout) as err:
-    openai_response_content = f"OpenAI API Error: {err}"
-  return openai_response_content
+  return openai_chat_completion(messages)
+
+def translate_text(text, target_language='english'):
+  messages = {'role': role, 'content': f'Please translate the following text to {target_language}: {text}'}
+  return openai_chat_completion(messages)
 
 async def context_manager(event):
   file_ids = []
