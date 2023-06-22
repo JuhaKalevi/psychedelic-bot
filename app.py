@@ -16,7 +16,7 @@ webui_api = webuiapi.WebUIApi(host=os.environ['STABLE_DIFFUSION_WEBUI_HOST'], po
 webui_api.set_auth('psychedelic-bot', os.environ['STABLE_DIFFUSION_WEBUI_API_KEY'])
 
 def is_asking_for_image_generation(message):
-  return generate_text_from_message(f'Is this a message where an image might be requested? Answer only True or False: {message}') == 'True'
+  return generate_text_from_message(f'Is this a message where an image is probably requested? Answer only True or False: {message}') == 'True'
 
 def is_asking_for_multiple_images(message):
   return generate_text_from_message(f'Is this a message where multiple images are requested? Answer only True or False: {message}') == 'True'
