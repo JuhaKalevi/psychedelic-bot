@@ -43,7 +43,7 @@ def generate_images(user_prompt, file_ids, post, count):
     image.save("result.png")
     with open('result.png', 'rb') as image_file:
       file_ids.append(mm.files.upload_file(post['channel_id'], files={'files': ('result.png', image_file)})['file_infos'][0]['id'])
-  return None
+  return ''
 
 def generate_text(context):
   messages = []
