@@ -16,10 +16,10 @@ webui_api = webuiapi.WebUIApi(host='kallio.psychedelic.fi', port=7860)
 webui_api.set_auth('useri', 'passu')
 
 def is_asking_for_image_generation(message):
-  return generate_text_from_message(f'Is this a message where an image is requested? Answer only True or False: {message}') == 'True'
+  return generate_text_from_message(f'Is this a message where an image is requested? Answer only True or False: {message}', 'gpt-4') == 'True'
 
 def is_asking_for_multiple_images(message):
-  return generate_text_from_message(f'Is this a message where multiple images are requested? Answer only True or False: {message}') == 'True'
+  return generate_text_from_message(f'Is this a message where multiple images are requested? Answer only True or False: {message}', 'gpt-4') == 'True'
 
 def is_mainly_english(text):
   language = langdetect.detect(text.decode(chardet.detect(text)["encoding"]))
@@ -84,12 +84,12 @@ def generate_text_from_context(context):
     else:
       role = 'user'
     messages.append({'role': role, 'content': context['posts'][post_id]['message']})
-  return openai_chat_completion(messages)
+  return openai_chat_completion(messages, os.environ['OPENAI_MODEL'])
 
-def generate_text_from_message(message):
-  return openai_chat_completion([{'role': 'user', 'content': message}])
+def generate_text_from_message(message, model):
+  return openai_chat_completion([{'role': 'user', 'content': message}], model)
 
-def openai_chat_completion(messages, model=os.environ['OPENAI_MODEL_NAME']):
+def openai_chat_completion(messages, model):
   try:
     openai_response_content = openai.ChatCompletion.create(model=model, messages=messages)['choices'][0]['message']['content']
   except (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.Timeout) as err:
