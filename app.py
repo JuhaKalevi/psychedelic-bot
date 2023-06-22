@@ -6,10 +6,10 @@ import mattermostdriver
 import openai
 import webuiapi
 
-openai.api_key = environ['OPENAI_API_KEY']
+openai.api_key = os.environ['OPENAI_API_KEY']
 mm = mattermostdriver.Driver({
-  'url': environ['MATTERMOST_URL'],
-  'token': environ['MATTERMOST_TOKEN'],
+  'url': os.environ['MATTERMOST_URL'],
+  'token': os.environ['MATTERMOST_TOKEN'],
   'port': 443,
 })
 webui_api = webuiapi.WebUIApi(host='kallio.psychedelic.fi', port=7860)
@@ -43,7 +43,7 @@ def generate_text(context):
       role = 'user'
     messages.append({'role': role, 'content': context['posts'][post_id]['message']})
   try:
-    openai_response_content = openai.ChatCompletion.create(model=environ['OPENAI_MODEL_NAME'], messages=messages)['choices'][0]['message']['content']
+    openai_response_content = openai.ChatCompletion.create(model=os.environ['OPENAI_MODEL_NAME'], messages=messages)['choices'][0]['message']['content']
   except (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.Timeout) as err:
     openai_response_content = f"OpenAI API Error: {err}"
   return openai_response_content
@@ -51,10 +51,10 @@ def generate_text(context):
 async def context_manager(event):
   file_ids = []
   event = json.loads(event)
-  if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != environ['MATTERMOST_BOTNAME']:
+  if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != os.environ['MATTERMOST_BOTNAME']:
     post = json.loads(event['data']['post'])
     if post['root_id'] == "":
-      if environ['MATTERMOST_BOTNAME'] not in post['message']:
+      if os.environ['MATTERMOST_BOTNAME'] not in post['message']:
         return
       thread_id = post['id']
       if post['message'].startswith('@generate-images'):        
@@ -67,7 +67,7 @@ async def context_manager(event):
     else:
       thread_id = post['root_id']
       context = mm.posts.get_thread(post['id'])
-      if not any(environ['MATTERMOST_BOTNAME'] in post['message'] for post in context['posts'].values()):
+      if not any(os.environ['MATTERMOST_BOTNAME'] in post['message'] for post in context['posts'].values()):
         return
       openai_response_content = generate_text(context)
     try:
