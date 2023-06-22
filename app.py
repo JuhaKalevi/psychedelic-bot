@@ -57,7 +57,7 @@ def generate_text(context):
   return openai_chat_completion(messages)
 
 def translate_text(text, target_language='english'):
-  messages = {'role': 'user', 'content': f'Please translate the following text to {target_language}: {text}'}
+  messages = [{'role': 'user', 'content': f'Translate the following text to {target_language}: {text}'}]
   return openai_chat_completion(messages)
 
 async def context_manager(event):
