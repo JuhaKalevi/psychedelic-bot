@@ -18,7 +18,7 @@ webui_api.set_auth('useri', 'passu')
 def is_mainly_english(text):
   encoding = chardet.detect(text)["encoding"]
   decoded_text = text.decode(encoding)
-  language = detect(decoded_text)
+  language = langdetect.detect(decoded_text)
   return language == "en"
 
 def generate_images(user_prompt, file_ids, post, count):
