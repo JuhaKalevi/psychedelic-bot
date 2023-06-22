@@ -29,8 +29,9 @@ def openai_chat_completion(messages):
   return openai_response_content
 
 def generate_images(user_prompt, file_ids, post, count):
+  comment = ''
   if not is_mainly_english(user_prompt.encode('utf-8')):
-    user_prompt = fix_image_generation_prompt(user_prompt)
+    comment = user_prompt = fix_image_generation_prompt(user_prompt)
   result = webui_api.txt2img(
     prompt = user_prompt,
     negative_prompt = "ugly, out of frame",
@@ -43,7 +44,7 @@ def generate_images(user_prompt, file_ids, post, count):
     image.save("result.png")
     with open('result.png', 'rb') as image_file:
       file_ids.append(mm.files.upload_file(post['channel_id'], files={'files': ('result.png', image_file)})['file_infos'][0]['id'])
-  return ''
+  return comment
 
 def generate_text(context):
   messages = []
