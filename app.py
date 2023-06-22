@@ -84,7 +84,7 @@ def generate_text_from_context(context):
     else:
       role = 'user'
     messages.append({'role': role, 'content': context['posts'][post_id]['message']})
-  return openai_chat_completion(messages, os.environ['OPENAI_MODEL'])
+  return openai_chat_completion(messages, os.environ['OPENAI_MODEL_NAME'])
 
 def generate_text_from_message(message, model):
   return openai_chat_completion([{'role': 'user', 'content': message}], model)
