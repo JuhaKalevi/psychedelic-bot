@@ -22,7 +22,7 @@ def is_mainly_english(text):
   return language == "en"
 
 def generate_images(user_prompt, file_ids, post, count):
-  if not is_mainly_english(user_prompt):
+  if not is_mainly_english(user_prompt.encode('utf-8')):
     return "Please use english only when generating images, for now."
   result = webui_api.txt2img(
     prompt = user_prompt,
