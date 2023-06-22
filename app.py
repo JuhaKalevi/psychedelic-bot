@@ -16,8 +16,7 @@ webui_api = webuiapi.WebUIApi(host='kallio.psychedelic.fi', port=7860)
 webui_api.set_auth('useri', 'passu')
 
 def is_mainly_english(text):
-  decoded_text = text.decode(chardet.detect(text)["encoding"])
-  language = langdetect.detect(decoded_text)
+  language = langdetect.detect(text.decode(chardet.detect(text)["encoding"]))
   return language == "en"
 
 def openai_chat_completion(messages, model=os.environ['OPENAI_MODEL_NAME']):
