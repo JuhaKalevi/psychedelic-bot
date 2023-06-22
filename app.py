@@ -14,25 +14,13 @@ mm = Driver({
 webui_api = webuiapi.WebUIApi(host='kallio.psychedelic.fi', port=7860)
 webui_api.set_auth('useri', 'passu')
 
-def generate_image(user_prompt, file_ids, post):
+def generate_images(user_prompt, file_ids, post, count):
   result = webui_api.txt2img(
     prompt = user_prompt,
     negative_prompt = "ugly, out of frame",
     steps = 42,
     sampler_name = 'UniPC',
-    batch_size = 8,
-  )
-  result.image.save("result.png")
-  with open('result.png', 'rb') as image_file:
-    file_ids.append(mm.files.upload_file(post['channel_id'], files={'files': ('result.png', image_file)})['file_infos'][0]['id'])
-
-def generate_images(user_prompt, file_ids, post):
-  result = webui_api.txt2img(
-    prompt = user_prompt,
-    negative_prompt = "ugly, out of frame",
-    steps = 42,
-    sampler_name = 'UniPC',
-    batch_size = 8,
+    batch_size = count,
   )
   for image in result.images:
     image.save("result.png")
@@ -64,10 +52,10 @@ async def context_manager(event):
         return
       thread_id = post['id']
       if post['message'].startswith('@generate-images'):
-        generate_images(post['message'].removeprefix('@generate-images'), file_ids, post)
+        generate_images(post['message'].removeprefix('@generate-images'), file_ids, post, 8)
         openai_response_content = None
       elif post['message'].startswith('@generate-image'):
-        generate_image(post['message'].removeprefix('@generate-image'), file_ids, post)
+        generate_images(post['message'].removeprefix('@generate-image'), file_ids, post, 1)
         openai_response_content = None
       else:
         context = {'order': [post['id']], 'posts': {post['id']: post}}
