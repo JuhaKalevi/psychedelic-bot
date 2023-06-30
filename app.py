@@ -31,8 +31,6 @@ def upscale_image(file_ids, post, resize_w: int = 1024, resize_h: int = 1024, up
     image_path = mm.files.get_file(file_id=post_file_id)
     print(image_path)
     try:
-      with open(image_path, 'wb') as image_file:
-        image_file.write(image_binary)
       result = webui_api.extra_single_image(
         image_path,
         upscaling_resize=2,
