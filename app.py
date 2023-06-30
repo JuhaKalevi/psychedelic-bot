@@ -113,7 +113,7 @@ def generate_images(file_ids, post, count):
 def select_system_message(message):
   system_message = []
   code_snippets = []
-  if generate_text_from_message(f"Is this a message where knowledge of your code is requested? Don't care whether you know about the files or not yet, you have a function that we will use later on if needed. Answer only True or False!: {message}").starswith('True'):
+  if generate_text_from_message(f"Is this a message where knowledge of your code is requested? Don't care whether you know about the files or not yet, you have a function that we will use later on if needed. Answer only True or False!: {message}").startswith('True'):
     for file_path in ['app.py']:
       with open(file_path, "r", encoding="utf-8") as file:
         code = file.read()
