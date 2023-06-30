@@ -27,8 +27,8 @@ def is_mainly_english(text):
 def upscale_image(post, file_ids, resize_w: int = 1024, resize_h: int = 1024, upscaler="R-ESRGAN 4x+"):
   comment = ''
   if post['file_ids']:
-    image_file_info = mm.files.get_post_file_info(post['id'], post['file_ids'][0])
-    image_binary = mm.files.get_file(image_file_info['id'])    
+    image_file_info = mm.files.get_file_info(post['file_ids'][0])
+    image_binary = mm.files.get_file(file_ids)
     image_path = os.path.join('/tmp', image_file_info['id'])
     try:
       with open(image_path, 'wb') as image_file:
@@ -63,6 +63,8 @@ async def context_manager(event):
   event = json.loads(event)
   if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != os.environ['MATTERMOST_BOTNAME']:
     post = json.loads(event['data']['post'])
+    if 'file_ids' in data:
+            file_ids = data['file_ids']
     if post['root_id'] == "":
       if os.environ['MATTERMOST_BOTNAME'] not in post['message']:
         return
