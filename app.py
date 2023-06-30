@@ -66,6 +66,7 @@ async def context_manager(event):
     post = json.loads(event['data']['post'])
     if 'file_ids' in post:
       file_ids = post['file_ids']
+      print(file_ids)
     if post['root_id'] == "":
       if os.environ['MATTERMOST_BOTNAME'] not in post['message']:
         return
