@@ -26,30 +26,14 @@ def is_mainly_english(text):
 
 def upscale_image(file_ids, post, resize_w: int = 1024, resize_h: int = 1024, upscaler="R-ESRGAN 4x+"):
   comment = ''
-  filename = resp['filename']
-  filename = "%03d" % post_file_id + "_" + filename
-  for post_file_id in post['file_ids']:
-    resp, response = mm.files.get_file(post_file_id)
-    if response:
-      print(response)
-      if isinstance(resp, dict):
-          while True:
-              try:
-                  with open(filename, "w") as file_handler:
-                      json.dump(resp, file_handler)
-                  break
-              except IOError:
-                  print("Writing file failed")
-      else:
-          while True:
-              try:
-                  with open(filename, "wb") as file_handler:
-                      file_handler.write(resp.content)
-                  image_path = filename
-                  break
-              except IOError:
-                  print("Writing file failed")
+  if post['file_ids']:
+    image_file_info = mm.files.get_file(post['file_ids'][0])
+    print(image_file_info)
+    image_binary = mm.files.get_file(file_id=image_file_info['id'])
+    image_path = image_file_info['id']
     try:
+      with open(image_path, 'wb') as image_file:
+        image_file.write(image_binary)
       result = webui_api.extra_single_image(
         image_path,
         upscaling_resize=2,
@@ -71,6 +55,8 @@ def upscale_image(file_ids, post, resize_w: int = 1024, resize_h: int = 1024, up
       os.remove(image_path)
       if os.path.exists('upscaled_result.png'):
         os.remove('upscaled_result.png')
+  else:
+    comment = "No image file attached in the post"
   return comment
 
 async def context_manager(event):
@@ -111,7 +97,7 @@ def generate_images(file_ids, post, count):
   if not is_mainly_english(post['message'].encode('utf-8')):
     comment = post['message'] = fix_image_generation_prompt(post['message'])
   result = webui_api.txt2img(
-    prompt = post['message'],
+    prompt = user_prompt,
     negative_prompt = "(unfinished:1.5), (sloppy and messy:1.5), (incoherent:1.5), (deformed:1.5)",
     steps = 42,
     sampler_name = 'UniPC',
