@@ -24,6 +24,40 @@ def is_asking_for_multiple_images(message):
 def is_mainly_english(text):
   return langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
 
+def upscale_image(post, file_ids, resize: int = 2, resize_w: int = 1024, resize_h: int = 1024, upscaler="R-ESRGAN 4x+"):
+    comment = ''
+    if post['file_ids']:
+        image_file_info = mm.files.get_file_info(post['file_ids'][0])
+        image = os.path.join(mm.files.get_file(image_file_info['id'])).decode()
+
+        try:
+            result = webui_api.extra_single_image(
+                image,
+                upscaling_resize=resize,
+                upscaling_resize_w=resize_w,
+                upscaling_resize_h=resize_h,
+                upscaler_1=upscaler,
+            )
+            result.image.save("upscaled_result.png")
+
+            with open('upscaled_result.png', 'rb') as image_file:
+                file_ids.append(
+                    mm.files.upload_file(
+                        post['channel_id'],
+                        files={'files': ('upscaled_result.png', image_file)}
+                    )['file_infos'][0]['id']
+                )
+
+            comment += "Image upscaled successfully"
+        
+        except Exception as e:
+            comment += f"Error while upscaling image: {e}"
+
+    else:
+        comment = "No image file attached in the post"
+    
+    return comment
+
 async def context_manager(event):
   file_ids = []
   event = json.loads(event)
@@ -34,7 +68,7 @@ async def context_manager(event):
         return
       thread_id = post['id']
       if post['message'].lower().startswith("4x"):
-        openai_response_content = "You have entered the 4x upscaling command. It has not been implemented yet. Please try again later."
+        openai_response_content = upscale_image(file_ids, post)
       elif is_asking_for_image_generation(post['message']):
         if is_asking_for_multiple_images(post['message']):
           openai_response_content = generate_images(post['message'], file_ids, post, 8)
