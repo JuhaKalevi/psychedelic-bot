@@ -1,4 +1,3 @@
-# Import required modules
 import json
 import os
 import chardet
@@ -7,33 +6,24 @@ import mattermostdriver
 import openai
 import webuiapi
 
-# Set OpenAI's API 
 openai.api_key = os.environ['OPENAI_API_KEY']
-
-# Initialize the Mattermost Driver with the required information 
 mm = mattermostdriver.Driver({
   'url': os.environ['MATTERMOST_URL'],
   'token': os.environ['MATTERMOST_TOKEN'],
   'port': 443
 })
-
-# Initialize the WebUI API and set its authentication
 webui_api = webuiapi.WebUIApi(host=os.environ['STABLE_DIFFUSION_WEBUI_HOST'], port=7860)
 webui_api.set_auth('psychedelic-bot', os.environ['STABLE_DIFFUSION_WEBUI_API_KEY'])
 
-# Function to check if a message is asking for image generation
 def is_asking_for_image_generation(message):
   return generate_text_from_message(f'Is this a message where an image is probably requested? Answer only True or False: {message}') == 'True'
 
-# Function to check if a message is asking for generating multiple images
 def is_asking_for_multiple_images(message):
   return generate_text_from_message(f'Is this a message where multiple images are requested? Answer only True or False: {message}') == 'True'
 
-# Function to check if a text is mainly in English
 def is_mainly_english(text):
   return langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
 
-# Function to manage context of events
 async def context_manager(event):
   file_ids = []
   event = json.loads(event)
@@ -43,7 +33,6 @@ async def context_manager(event):
       if os.environ['MATTERMOST_BOTNAME'] not in post['message']:
         return
       thread_id = post['id']
-      # Check for "hi" at the start of the message first
       if post['message'].lower().startswith("4x"):  
         openai_response_content = "You have entered the 4x upscaling command. It has not been implemented yet. Please try again later."
       elif is_asking_for_image_generation(post['message']):
@@ -65,14 +54,11 @@ async def context_manager(event):
     except (mattermostdriver.exceptions.InvalidOrMissingParameters, mattermostdriver.exceptions.ResourceNotFound) as err:
       print(f"Mattermost API Error: {err}")
 
-# Function to fix image generation prompt
 def fix_image_generation_prompt(prompt):
   return generate_text_from_message(f"convert this to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features and you don't have to use full sentences, just a few keywords, separating these aspects by commas. Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally: {prompt}")
 
-# Function to generate images
 def generate_images(user_prompt, file_ids, post, count):
   comment = ''
-  # check if the main language is not english- if it isn't then fix the image generation prompt
   if not is_mainly_english(user_prompt.encode('utf-8')):
     comment = user_prompt = fix_image_generation_prompt(user_prompt)
   result = webui_api.txt2img(
@@ -83,14 +69,12 @@ def generate_images(user_prompt, file_ids, post, count):
     batch_size = count,
     restore_faces = True
   )
-  # Save the generated image, then upload to the File Server and append the file id for Mattermost
   for image in result.images:
     image.save("result.png")
     with open('result.png', 'rb') as image_file:
       file_ids.append(mm.files.upload_file(post['channel_id'], files={'files': ('result.png', image_file)})['file_infos'][0]['id'])
   return comment
 
-# Function to generate text from the context of a conversation
 def generate_text_from_context(context):
   messages = []
   context['order'].sort(key=lambda x: context['posts'][x]['create_at'])
@@ -102,11 +86,9 @@ def generate_text_from_context(context):
     messages.append({'role': role, 'content': context['posts'][post_id]['message']})
   return openai_chat_completion(messages, os.environ['OPENAI_MODEL_NAME'])
 
-# Function to generate text from a message
 def generate_text_from_message(message, model='gpt-4'):
   return openai_chat_completion([{'role': 'user', 'content': message}], model)
 
-# Function to create a conversation and return the result from OpenAI
 def openai_chat_completion(messages, model='gpt-4'):
   try:
     openai_response_content = openai.ChatCompletion.create(model=model, messages=messages)['choices'][0]['message']['content']
@@ -114,8 +96,5 @@ def openai_chat_completion(messages, model='gpt-4'):
     openai_response_content = f"OpenAI API Error: {err}"
   return openai_response_content
 
-# Logging in to the Mattermost driver
 mm.login()
-
-# Initialize the Mattermost's websocket and start listening to it
 mm.init_websocket(context_manager)
