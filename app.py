@@ -17,10 +17,10 @@ webui_api = webuiapi.WebUIApi(host=os.environ['STABLE_DIFFUSION_WEBUI_HOST'], po
 webui_api.set_auth('psychedelic-bot', os.environ['STABLE_DIFFUSION_WEBUI_API_KEY'])
 
 def is_asking_for_image_generation(message):
-  return generate_text_from_message(f'Is this a message where an image is probably requested? Answer only True or False: {message}') == 'True'
+  return generate_text_from_message(f'Is this a message where an image is probably requested? Answer only True or False: {message}').startswith('True')
 
 def is_asking_for_multiple_images(message):
-  return generate_text_from_message(f'Is this a message where multiple images are requested? Answer only True or False: {message}') == 'True'
+  return generate_text_from_message(f'Is this a message where multiple images are requested? Answer only True or False: {message}').startswith('True')
 
 def is_mainly_english(text):
   return langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
@@ -110,6 +110,17 @@ def generate_images(file_ids, post, count):
       file_ids.append(mm.files.upload_file(post['channel_id'], files={'files': ('result.png', image_file)})['file_infos'][0]['id'])
   return comment
 
+def select_system_message(message):
+  system_message = []
+  code_snippets = []
+  if generate_text_from_message(f"Is this a message where an analysis of your chatbot code is requested? Don't care whether you know about the files or not yet, you have a function that we will use later on if needed. Answer only True or False!: {message}") == 'True':
+    for file_path in ('app.py'):
+      with open(file_path, "r", encoding="utf-8") as file:
+        code = file.read()
+      code_snippets.append(f"--- {file_path} ---\n{code}\n")
+    system_message.append({'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+'```'.join(code_snippets)})
+  return system_message
+
 def generate_text_from_context(context):
   messages = []
   context['order'].sort(key=lambda x: context['posts'][x]['create_at'])
@@ -119,10 +130,11 @@ def generate_text_from_context(context):
     else:
       role = 'user'
     messages.append({'role': role, 'content': context['posts'][post_id]['message']})
+  messages += select_system_message(context['posts'][post_id]['message'])
   return openai_chat_completion(messages, os.environ['OPENAI_MODEL_NAME'])
 
 def generate_text_from_message(message, model='gpt-4'):
-  return openai_chat_completion([{'role': 'user', 'content': message}], model)
+  return openai_chat_completion(select_system_message(message)+[{'role': 'user', 'content': message}], model)
 
 def openai_chat_completion(messages, model='gpt-4'):
   try:
