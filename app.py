@@ -40,13 +40,12 @@ def upscale_image(post, file_ids, resize_w: int = 1024, resize_h: int = 1024, up
       result.image.save("upscaled_result.png")
 
       with open('upscaled_result.png', 'rb') as image_file:
-        file_ids.append(
-          mm.files.upload_file(
-              post['channel_id'],
-              files={'files': ('upscaled_result.png', image_file)}
-          )['file_infos'][0]['id']
-      )
-
+          file_ids.append(
+              mm.files.upload_file(
+                  post['channel_id'],
+                  files={'files': ('upscaled_result.png', image_file)}
+                  )['file_infos'][0]['id']
+          )
       comment += "Image upscaled successfully"
   else:
     comment = "No image file attached in the post"
