@@ -1,6 +1,5 @@
 import json
 import os
-import base64
 import chardet
 import langdetect
 import mattermostdriver
