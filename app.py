@@ -2,7 +2,7 @@ import json
 import os
 import base64
 import io
-from PIL import Image, PngImagePlugin
+from PIL import Image
 import chardet
 import langdetect
 import mattermostdriver
