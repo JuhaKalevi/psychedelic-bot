@@ -46,9 +46,8 @@ def upscale_image(post, file_ids, resize_w: int = 1024, resize_h: int = 1024, up
           )['file_infos'][0]['id']
         )
         comment += "Image upscaled successfully"
-    # Assuming webui_api.extra_single_image raises a custom exception UpscalingException
-    except UpscalingException as e:
-      comment += f"Error occurred while upscaling image: {str(e)}"
+    except RuntimeError as err:
+      comment += f"Error occurred while upscaling image: {str(err)}"
   else:
     comment = "No image file attached in the post"
   return comment
