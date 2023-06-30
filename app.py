@@ -1,7 +1,5 @@
 import json
 import os
-import base64
-import io
 from PIL import Image
 import chardet
 import langdetect
@@ -44,21 +42,17 @@ def upscale_image(file_ids, post, resize_w: int = 1024, resize_h: int = 1024, up
         upscaling_resize_h=resize_h,
         upscaler_1=upscaler,
       )
-      image_data = base64.b64decode(result['image'].split(",", 1)[1])
-      result_image = Image.open(io.BytesIO(image_data))
-      upscaled_image_path = result['image']
-      result_image.save(upscaled_image_path)
-      with open(upscaled_image_path, 'rb') as image_file:
+      with open(result.image, 'rb') as image_file:
         file_id = mm.files.upload_file(
           post['channel_id'],
-          files={'files': (upscaled_image_path, image_file)}
+          files={'files': (result.image, image_file)}
         )['file_infos'][0]['id']
       file_ids.append(file_id)
       comment += "Image upscaled successfully"
     except RuntimeError as err:
       comment += f"Error occurred while upscaling image: {str(err)}"
     finally:
-      for temporary_file_path in (post_file_path, upscaled_image_path):
+      for temporary_file_path in (post_file_path, result.image):
         if os.path.exists(temporary_file_path):
           os.remove(temporary_file_path)
   return comment
