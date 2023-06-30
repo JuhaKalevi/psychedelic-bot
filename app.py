@@ -27,7 +27,7 @@ def is_mainly_english(text):
 def upscale_image(file_ids, post, resize_w: int = 1024, resize_h: int = 1024, upscaler="R-ESRGAN 4x+"):
   comment = ''
   if post['file_ids']:
-    image_file_info = mm.files.get_file(post['file_ids'][0])
+    image_file_info = mm.files.get_file(post['file_ids'][0]).json()
     print(image_file_info)
     image_binary = mm.files.get_file(file_id=image_file_info['id'])
     image_path = image_file_info['id']
