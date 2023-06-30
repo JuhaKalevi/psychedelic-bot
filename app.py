@@ -113,12 +113,14 @@ def generate_images(file_ids, post, count):
 def select_system_message(message):
   system_message = []
   code_snippets = []
-  if generate_text_from_message(f"Is this a message where an analysis of your chatbot code is requested? Don't care whether you know about the files or not yet, you have a function that we will use later on if needed. Answer only True or False!: {message}") == 'True':
+  if generate_text_from_message(f"Is this a message where knowledge of your code is requested? Don't care whether you know about the files or not yet, you have a function that we will use later on if needed. Answer only True or False!: {message}").starswith('True'):
     for file_path in ['app.py']:
       with open(file_path, "r", encoding="utf-8") as file:
         code = file.read()
       code_snippets.append(f"--- {file_path} ---\n{code}\n")
     system_message.append({'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+'```'.join(code_snippets)})
+  else:
+    print('Not analyzing code')
   return system_message
 
 def generate_text_from_context(context):
