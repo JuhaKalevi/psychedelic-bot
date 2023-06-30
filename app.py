@@ -5,6 +5,7 @@ import langdetect
 import mattermostdriver
 import openai
 import webuiapi
+import base64
 
 openai.api_key = os.environ['OPENAI_API_KEY']
 mm = mattermostdriver.Driver({
@@ -33,21 +34,23 @@ def upscale_image(file_ids, post, resize_w: int = 1024, resize_h: int = 1024, up
       with open(post_file_path, 'wb') as post_file:
         post_file.write(file_response.content)
     try:
-      result = webui_api.extra_single_image(
-        post_file_path,
-        upscaling_resize=2,
-        upscaling_resize_w=resize_w,
-        upscaling_resize_h=resize_h,
-        upscaler_1=upscaler,
-      )
+      with open(post_file_path, 'rb') as post_file:
+        post_file_base64 = base64.b64encode(post_file.read()).decode('utf-8')
+        result = webui_api.extra_single_image(
+          post_file_base64,
+          upscaling_resize=2,
+          upscaling_resize_w=resize_w,
+          upscaling_resize_h=resize_h,
+          upscaler_1=upscaler,
+        )
       result.image.save("upscaled_result.png")
       with open('upscaled_result.png', 'rb') as image_file:
         file_id = mm.files.upload_file(
           post['channel_id'],
           files={'files': ('upscaled_result.png', image_file)}
         )['file_infos'][0]['id']
-        file_ids.append(file_id)
-        comment += "Image upscaled successfully"
+      file_ids.append(file_id)
+      comment += "Image upscaled successfully"
     except RuntimeError as err:
       comment += f"Error occurred while upscaling image: {str(err)}"
     finally:
