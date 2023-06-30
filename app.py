@@ -30,16 +30,16 @@ def upscale_image(post, file_ids, resize: int = 2, resize_w: int = 1024, resize_
     image_file_info = mm.files.get_file_info(post['file_ids'][0])
     image = os.path.join(mm.files.get_file(image_file_info['id'])).decode()
     try:
-        result = webui_api.extra_single_image(
+      result = webui_api.extra_single_image(
             image,
             upscaling_resize=resize,
             upscaling_resize_w=resize_w,
             upscaling_resize_h=resize_h,
             upscaler_1=upscaler,
         )
-        result.image.save("upscaled_result.png")
+      result.image.save("upscaled_result.png")
 
-        with open('upscaled_result.png', 'rb') as image_file:
+      with open('upscaled_result.png', 'rb') as image_file:
             file_ids.append(
                 mm.files.upload_file(
                     post['channel_id'],
@@ -47,7 +47,7 @@ def upscale_image(post, file_ids, resize: int = 2, resize_w: int = 1024, resize_
                 )['file_infos'][0]['id']
             )
 
-        comment += "Image upscaled successfully"
+      comment += "Image upscaled successfully"
     except Exception as e:
         comment += f"Error while upscaling image: {e}"
   else:
