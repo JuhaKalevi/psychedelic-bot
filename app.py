@@ -24,7 +24,7 @@ def is_asking_for_multiple_images(message):
 def is_mainly_english(text):
   return langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
 
-def upscale_image(post, file_ids, resize: int = 2, resize_w: int = 1024, resize_h: int = 1024, upscaler="R-ESRGAN 4x+"):
+def upscale_image(post, file_ids, resize_w: int = 1024, resize_h: int = 1024, upscaler="R-ESRGAN 4x+"):
   comment = ''
   if post['file_ids']:
     image_file_info = mm.files.get_file_info(post['file_ids'][0])
@@ -32,7 +32,7 @@ def upscale_image(post, file_ids, resize: int = 2, resize_w: int = 1024, resize_
     try:
       result = webui_api.extra_single_image(
             image,
-            upscaling_resize=resize,
+            upscaling_resize=2,
             upscaling_resize_w=resize_w,
             upscaling_resize_h=resize_h,
             upscaler_1=upscaler,
@@ -48,8 +48,6 @@ def upscale_image(post, file_ids, resize: int = 2, resize_w: int = 1024, resize_
       )
 
       comment += "Image upscaled successfully"
-    except Exception as e:
-      comment += f"Error while upscaling image: {e}"
   else:
     comment = "No image file attached in the post"
   return comment
