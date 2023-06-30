@@ -134,7 +134,7 @@ def generate_text_from_context(context):
   return openai_chat_completion(messages, os.environ['OPENAI_MODEL_NAME'])
 
 def generate_text_from_message(message, model='gpt-4'):
-  return openai_chat_completion(select_system_message(message)+[{'role': 'user', 'content': message}], model)
+  return openai_chat_completion([{'role': 'user', 'content': message}], model)
 
 def openai_chat_completion(messages, model='gpt-4'):
   try:
