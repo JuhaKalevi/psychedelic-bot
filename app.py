@@ -25,7 +25,7 @@ def is_asking_for_multiple_images(message):
 def is_mainly_english(text):
   return langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
 
-def upscale_image(file_ids, post, resize_w: int = 2048, resize_h: int = 2048, upscaler="LSDR"):
+def upscale_image(file_ids, post, resize_w: int = 2048, resize_h: int = 2048, upscaler="LDSR"):
   comment = ''
   for post_file_id in post['file_ids']:
     file_response = mm.files.get_file(file_id=post_file_id)
