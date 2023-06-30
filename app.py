@@ -1,11 +1,11 @@
 import json
 import os
+import base64
 import chardet
 import langdetect
 import mattermostdriver
 import openai
 import webuiapi
-import base64
 
 openai.api_key = os.environ['OPENAI_API_KEY']
 mm = mattermostdriver.Driver({
