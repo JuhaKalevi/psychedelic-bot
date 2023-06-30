@@ -35,9 +35,9 @@ def upscale_image(file_ids, post, resize_w: int = 1024, resize_h: int = 1024, up
         post_file.write(file_response.content)
     try:
       with open(post_file_path, 'rb') as post_file:
-        post_file_base64 = base64.b64encode(post_file.read()).decode('utf-8')
+        post_file_data = post_file.read()
         result = webui_api.extra_single_image(
-          post_file_base64,
+          post_file_data,
           upscaling_resize=2,
           upscaling_resize_w=resize_w,
           upscaling_resize_h=resize_h,
