@@ -10,4 +10,5 @@ RUN pip install -r requirements.txt
 RUN python3 -u setup.py install
 WORKDIR /app
 RUN pip install openai webuiapi
+COPY *.py /app/
 CMD python3 -u app.py
