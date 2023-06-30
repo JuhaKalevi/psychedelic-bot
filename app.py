@@ -1,7 +1,7 @@
 import json
 import os
 import mattermostdriver
-from api_connections import mm
+from api_connections import mm, textgen_chat_completion
 from language_processing import generate_text_from_context, is_asking_for_image_generation, is_asking_for_multiple_images
 from image_processing import generate_images, upscale_image
 
@@ -16,6 +16,8 @@ async def context_manager(event):
       thread_id = post['id']
       if post['message'].lower().startswith("4x"):
         openai_response_content = upscale_image(file_ids, post)
+      elif post['message'].lower().startswith("LLM"):
+        openai_response_content = textgen_chat_completion(post['message'])
       elif is_asking_for_image_generation(post['message']):
         if is_asking_for_multiple_images(post['message']):
           openai_response_content = generate_images(file_ids, post, 8)
