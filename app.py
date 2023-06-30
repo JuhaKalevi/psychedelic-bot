@@ -52,8 +52,6 @@ def upscale_image(file_ids, post, resize_w: int = 1024, resize_h: int = 1024, up
       os.remove(image_path)
       if os.path.exists('upscaled_result.png'):
         os.remove('upscaled_result.png')
-  else:
-    comment = "No image file attached in the post"
   return comment
 
 async def context_manager(event):
