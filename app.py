@@ -27,15 +27,31 @@ def is_mainly_english(text):
 def upscale_image(file_ids, post, resize_w: int = 1024, resize_h: int = 1024, upscaler="R-ESRGAN 4x+"):
   comment = ''
   for post_file_id in post['file_ids']:
-    image_file, response = mm.files.get_file(post_file_id)
+    resp, response = mm.files.get_file(post_file_id)
     if response:
       print(response)
-    print(image_file)
-    image_binary = mm.files.get_file(file_id=image_file['id'])
-    image_path = image_file['id']
+      
+      if isinstance(resp, dict):
+        while True:
+            try:
+                with open(file, "w") as f:
+                    json.dump(resp, f)
+                break
+            except:
+                print("Writing file failed")
+      else:
+          while True:
+                try:
+                    with open(file, "wb") as f:
+                        f.write(resp.content)
+                    image_path = file
+                    break
+                except:
+                    print("Writing file failed")
+    else:
+        print("File does not found")
+
     try:
-      with open(image_path, 'wb') as image_file:
-        image_file.write(image_binary)
       result = webui_api.extra_single_image(
         image_path,
         upscaling_resize=2,
