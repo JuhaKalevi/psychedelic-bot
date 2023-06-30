@@ -28,7 +28,7 @@ def upscale_image(file_ids, post, resize_w: int = 1024, resize_h: int = 1024, up
   comment = ''
   if post['file_ids']:
     image_file_info = mm.files.get_file(post['file_ids'][0])
-    image_binary = mm.files.get_file(file_ids)
+    image_binary = mm.files.get_file(image_file_info['id']) # Here is the fix
     image_path = os.path.join('/tmp', image_file_info['id'])
     try:
       with open(image_path, 'wb') as image_file:
