@@ -28,7 +28,7 @@ def textgen_chat_completion(user_input, history):
     'history': history,
     'mode': 'instruct',
     'character': 'Example',
-    'instruction_template': 'Vicuna-v1.1',
+    'instruction_template': 'Instruct-Wizard-Mega',
     'your_name': 'You',
     'regenerate': False,
     '_continue': False,
