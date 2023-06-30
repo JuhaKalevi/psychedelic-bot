@@ -64,7 +64,5 @@ def textgen_chat_completion(user_input, history):
   }
   response = requests.post(os.environ['TEXTGEN_WEBUI_URI'], json=request, timeout=420)
   if response.status_code == 200:
-    print(response.content)
-    return 'xxxxx'
-  print(response)
+    print(json.loads(response.content)['results'])
   return 'yyyyy'
