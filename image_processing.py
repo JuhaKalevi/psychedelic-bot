@@ -1,7 +1,7 @@
 import os
+from PIL import Image
 from api_connections import mm, webui_api
 from language_processing import generate_text_from_message, is_mainly_english
-from PIL import Image
 
 def fix_image_generation_prompt(prompt):
   return generate_text_from_message(f"convert this to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features and you don't have to use full sentences, just a few keywords, separating these aspects by commas. Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally: {prompt}")
