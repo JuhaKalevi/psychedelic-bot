@@ -2,8 +2,8 @@ import json
 import os
 import mattermostdriver
 from api_connections import mm
-from language_processing import generate_images, generate_text_from_context, is_asking_for_image_generation, is_asking_for_multiple_images
-from image_processing import upscale_image
+from language_processing import generate_text_from_context, is_asking_for_image_generation, is_asking_for_multiple_images
+from image_processing import generate_images, upscale_image
 
 async def context_manager(event):
   file_ids = []
