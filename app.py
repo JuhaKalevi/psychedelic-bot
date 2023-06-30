@@ -25,7 +25,7 @@ def is_asking_for_multiple_images(message):
 def is_mainly_english(text):
   return langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
 
-def upscale_image(file_ids, post, resize_w: int = 1024, resize_h: int = 1024, upscaler="R-ESRGAN 4x+"):
+def upscale_image(file_ids, post, resize_w: int = 2048, resize_h: int = 2048, upscaler="LSDR"):
   comment = ''
   for post_file_id in post['file_ids']:
     file_response = mm.files.get_file(file_id=post_file_id)
@@ -37,7 +37,7 @@ def upscale_image(file_ids, post, resize_w: int = 1024, resize_h: int = 1024, up
       post_file_image = Image.open(post_file_path)
       result = webui_api.extra_single_image(
         post_file_image,
-        upscaling_resize=2,
+        upscaling_resize=4,
         upscaling_resize_w=resize_w,
         upscaling_resize_h=resize_h,
         upscaler_1=upscaler,
