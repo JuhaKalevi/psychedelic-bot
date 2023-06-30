@@ -26,28 +26,30 @@ def is_mainly_english(text):
 
 def upscale_image(file_ids, post, resize_w: int = 1024, resize_h: int = 1024, upscaler="R-ESRGAN 4x+"):
   comment = ''
+  filename = resp['filename']
+  filename = "%03d" % post_file_id + "_" + filename
   for post_file_id in post['file_ids']:
     resp, response = mm.files.get_file(post_file_id)
     if response:
       print(response)
       
       if isinstance(resp, dict):
-        while True:
-            try:
-                with open(file, "w") as f:
-                    json.dump(resp, f)
-                break
-            except:
-                print("Writing file failed")
+          while True:
+              try:
+                  with open(filename, "w") as file_handler:
+                      json.dump(resp, file_handler)
+                  break
+              except:
+                  print("Writing file failed")
       else:
           while True:
-                try:
-                    with open(file, "wb") as f:
-                        f.write(resp.content)
-                    image_path = file
-                    break
-                except:
-                    print("Writing file failed")
+              try:
+                  with open(filename, "wb") as file_handler:
+                      file_handler.write(resp.content)
+                  image_path = filename
+                  break
+              except:
+                  print("Writing file failed")
     else:
         print("File does not found")
 
