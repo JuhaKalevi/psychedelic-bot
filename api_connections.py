@@ -65,5 +65,6 @@ def textgen_chat_completion(user_input, history):
   }
   response = requests.post(os.environ['TEXTGEN_WEBUI_URI'], json=request, timeout=420)
   if response.status_code == 200:
-    return json.loads(response.text)['results'][0]
+    print(json.loads(response.text)['results'][0])
+    return "I'm afraid I can't do that, Dave."
   return 'oops'
