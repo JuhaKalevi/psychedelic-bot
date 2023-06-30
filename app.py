@@ -25,31 +25,33 @@ def is_mainly_english(text):
   return langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
 
 def upscale_image(post, file_ids, resize_w: int = 1024, resize_h: int = 1024, upscaler="R-ESRGAN 4x+"):
-  comment = ''
-  if post['file_ids']:
-    image_file_info = mm.files.get_file_info(post['file_ids'][0])
-    image = os.path.join(mm.files.get_file(image_file_info['id'])).decode()
-    try:
-      result = webui_api.extra_single_image(
-            image,
-            upscaling_resize=2,
-            upscaling_resize_w=resize_w,
-            upscaling_resize_h=resize_h,
-            upscaler_1=upscaler,
-        )
-      result.image.save("upscaled_result.png")
+    comment = ''
+    if post['file_ids']:
+        image_file_info = mm.files.get_file_info(post['file_ids'][0])
+        image = os.path.join(mm.files.get_file(image_file_info['id'])).decode()
+        try:
+            result = webui_api.extra_single_image(
+                image,
+                upscaling_resize=2,
+                upscaling_resize_w=resize_w,
+                upscaling_resize_h=resize_h,
+                upscaler_1=upscaler,
+            )
+            result.image.save("upscaled_result.png")
 
-      with open('upscaled_result.png', 'rb') as image_file:
-          file_ids.append(
-              mm.files.upload_file(
-                  post['channel_id'],
-                  files={'files': ('upscaled_result.png', image_file)}
-                  )['file_infos'][0]['id']
-          )
-      comment += "Image upscaled successfully"
-  else:
-    comment = "No image file attached in the post"
-  return comment
+            with open('upscaled_result.png', 'rb') as image_file:
+                file_ids.append(
+                    mm.files.upload_file(
+                        post['channel_id'],
+                        files={'files': ('upscaled_result.png', image_file)}
+                    )['file_infos'][0]['id']
+                )
+            comment += "Image upscaled successfully"
+        except Exception as e:
+            comment += f"Error occurred while upscaling image: {str(e)}"
+    else:
+        comment = "No image file attached in the post"
+    return comment
 
 async def context_manager(event):
   file_ids = []
