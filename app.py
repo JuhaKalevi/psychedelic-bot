@@ -43,7 +43,10 @@ async def context_manager(event):
       if os.environ['MATTERMOST_BOTNAME'] not in post['message']:
         return
       thread_id = post['id']
-      if is_asking_for_image_generation(post['message']):
+      # Check for "hi" at the start of the message first
+      if post['message'].lower().startswith("4x"):  
+        openai_response_content = "You have entered the 4x upscaling command. It has not been implemented yet. Please try again later."
+      elif is_asking_for_image_generation(post['message']):
         if is_asking_for_multiple_images(post['message']):
           openai_response_content = generate_images(post['message'], file_ids, post, 8)
         else:
