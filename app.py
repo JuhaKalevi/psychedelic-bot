@@ -32,14 +32,13 @@ def upscale_image(file_ids, post, resize_w: int = 1024, resize_h: int = 1024, up
     resp, response = mm.files.get_file(post_file_id)
     if response:
       print(response)
-      
       if isinstance(resp, dict):
           while True:
               try:
                   with open(filename, "w") as file_handler:
                       json.dump(resp, file_handler)
                   break
-              except:
+              except IOError:
                   print("Writing file failed")
       else:
           while True:
@@ -48,11 +47,8 @@ def upscale_image(file_ids, post, resize_w: int = 1024, resize_h: int = 1024, up
                       file_handler.write(resp.content)
                   image_path = filename
                   break
-              except:
+              except IOError:
                   print("Writing file failed")
-    else:
-        print("File does not found")
-
     try:
       result = webui_api.extra_single_image(
         image_path,
