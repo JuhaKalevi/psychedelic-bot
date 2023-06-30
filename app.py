@@ -30,11 +30,11 @@ def upscale_image(file_ids, post, resize_w: int = 1024, resize_h: int = 1024, up
     file_response = mm.files.get_file(file_id=post_file_id)
     if file_response.status_code == 200:
       post_file_path=f'{file_id}.jpg'
-      with open(post_file_path, 'wb') as f:
-        f.write(file_response.content)
+      with open(post_file_path, 'wb') as post_file:
+        post_file.write(file_response.content)
     try:
       result = webui_api.extra_single_image(
-        image_path=post_file_path,
+        post_file_path,
         upscaling_resize=2,
         upscaling_resize_w=resize_w,
         upscaling_resize_h=resize_h,
