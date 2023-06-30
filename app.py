@@ -29,7 +29,7 @@ def upscale_image(file_ids, post, resize_w: int = 1024, resize_h: int = 1024, up
   if post['file_ids']:
     image_file_info = mm.files.get_file(post['file_ids'][0])
     print(image_file_info)
-    image_binary = mm.files.get_file(file_ids[0])
+    image_binary = mm.files.get_file(file_id=image_file_info['id'])
     image_path = image_file_info['id']
     try:
       with open(image_path, 'wb') as image_file:
