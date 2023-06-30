@@ -64,8 +64,6 @@ async def context_manager(event):
   event = json.loads(event)
   if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != os.environ['MATTERMOST_BOTNAME']:
     post = json.loads(event['data']['post'])
-    if 'file_ids' in post:
-      print(f'file_ids: {file_ids}')
     if post['root_id'] == "":
       if os.environ['MATTERMOST_BOTNAME'] not in post['message']:
         return
@@ -74,9 +72,9 @@ async def context_manager(event):
         openai_response_content = upscale_image(file_ids, post)
       elif is_asking_for_image_generation(post['message']):
         if is_asking_for_multiple_images(post['message']):
-          openai_response_content = generate_images(post['message'], file_ids, post, 8)
+          openai_response_content = generate_images(file_ids, post, 8)
         else:
-          openai_response_content = generate_images(post['message'], file_ids, post, 1)
+          openai_response_content = generate_images(file_ids, post, 1)
       else:
         context = {'order': [post['id']], 'posts': {post['id']: post}}
         openai_response_content = generate_text_from_context(context)
@@ -94,12 +92,12 @@ async def context_manager(event):
 def fix_image_generation_prompt(prompt):
   return generate_text_from_message(f"convert this to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features and you don't have to use full sentences, just a few keywords, separating these aspects by commas. Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally: {prompt}")
 
-def generate_images(user_prompt, file_ids, post, count):
+def generate_images(file_ids, post, count):
   comment = ''
-  if not is_mainly_english(user_prompt.encode('utf-8')):
-    comment = user_prompt = fix_image_generation_prompt(user_prompt)
+  if not is_mainly_english(post['message'].encode('utf-8')):
+    comment = post['message'] = fix_image_generation_prompt(post['message'])
   result = webui_api.txt2img(
-    prompt = user_prompt,
+    prompt = post['message'],
     negative_prompt = "(unfinished:1.5), (sloppy and messy:1.5), (incoherent:1.5), (deformed:1.5)",
     steps = 42,
     sampler_name = 'UniPC',
