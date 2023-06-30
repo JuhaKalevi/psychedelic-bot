@@ -98,7 +98,7 @@ def generate_images(file_ids, post, count):
     comment = post['message'] = fix_image_generation_prompt(post['message'])
   result = webui_api.txt2img(
     prompt = post['message'],
-    negative_prompt = "(unfinished:1.5), (sloppy and messy:1.5), (incoherent:1.5), (deformed:1.5)",
+    negative_prompt = "(unfinished:1.43), (sloppy and messy:1.43), (incoherent:1.43), (deformed:1.43)",
     steps = 42,
     sampler_name = 'UniPC',
     batch_size = count,
