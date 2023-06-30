@@ -26,30 +26,45 @@ def is_mainly_english(text):
 
 def upscale_image(post, file_ids, resize_w: int = 1024, resize_h: int = 1024, upscaler="R-ESRGAN 4x+"):
   comment = ''
+  
   if post['file_ids']:
     image_file_info = mm.files.get_post_file_info(post['id'], post['file_ids'][0])
-    image = os.path.join(mm.files.get_file(image_file_info['id'])).decode()
+    image_binary = mm.files.get_file(image_file_info['id'])    
+    image_path = os.path.join('/tmp', image_file_info['id'])
+    
     try:
+      with open(image_path, 'wb') as image_file:
+        image_file.write(image_binary)
+
       result = webui_api.extra_single_image(
-        image,
+        image_path,
         upscaling_resize=2,
         upscaling_resize_w=resize_w,
         upscaling_resize_h=resize_h,
         upscaler_1=upscaler,
       )
+
       result.image.save("upscaled_result.png")
+
       with open('upscaled_result.png', 'rb') as image_file:
-        file_ids.append(
-          mm.files.upload_file(
-            post['channel_id'],
-              files={'files': ('upscaled_result.png', image_file)}
-          )['file_infos'][0]['id']
-        )
+        file_id = mm.files.upload_file(
+          post['channel_id'],
+          files={'files': ('upscaled_result.png', image_file)}
+        )['file_infos'][0]['id']
+        file_ids.append(file_id)
         comment += "Image upscaled successfully"
+
     except RuntimeError as err:
       comment += f"Error occurred while upscaling image: {str(err)}"
+        
+    finally:
+      os.remove(image_path)
+      if os.path.exists('upscaled_result.png'):
+        os.remove('upscaled_result.png')
+
   else:
     comment = "No image file attached in the post"
+
   return comment
 
 async def context_manager(event):
