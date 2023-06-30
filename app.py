@@ -97,7 +97,7 @@ def generate_images(file_ids, post, count):
   if not is_mainly_english(post['message'].encode('utf-8')):
     comment = post['message'] = fix_image_generation_prompt(post['message'])
   result = webui_api.txt2img(
-    prompt = user_prompt,
+    prompt = post['message'],
     negative_prompt = "(unfinished:1.5), (sloppy and messy:1.5), (incoherent:1.5), (deformed:1.5)",
     steps = 42,
     sampler_name = 'UniPC',
