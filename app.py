@@ -42,17 +42,19 @@ def upscale_image(file_ids, post, resize_w: int = 1024, resize_h: int = 1024, up
         upscaling_resize_h=resize_h,
         upscaler_1=upscaler,
       )
-      with open(result.image, 'rb') as image_file:
+      upscaled_image_path = f"upscaled_{post_file_id}.png"
+      result.image.save(upscaled_image_path)
+      with open(upscaled_image_path, 'rb') as image_file:
         file_id = mm.files.upload_file(
           post['channel_id'],
-          files={'files': (result.image, image_file)}
+          files={'files': (upscaled_image_path, image_file)}
         )['file_infos'][0]['id']
       file_ids.append(file_id)
       comment += "Image upscaled successfully"
     except RuntimeError as err:
       comment += f"Error occurred while upscaling image: {str(err)}"
     finally:
-      for temporary_file_path in (post_file_path, result.image):
+      for temporary_file_path in (post_file_path, upscaled_image_path):
         if os.path.exists(temporary_file_path):
           os.remove(temporary_file_path)
   return comment
