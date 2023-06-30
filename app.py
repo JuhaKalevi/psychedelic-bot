@@ -27,12 +27,14 @@ def is_mainly_english(text):
 def upscale_image(file_ids, post, resize_w: int = 1024, resize_h: int = 1024, upscaler="R-ESRGAN 4x+"):
   comment = ''
   for post_file_id in post['file_ids']:
-    mm.files.get_file(post_file_id)
-    image_path = mm.files.get_file(file_id=post_file_id)
-    print(json.dumps(image_path))
+    file_response = mm.files.get_file(file_id=post_file_id)
+    if file_response.status_code == 200:
+      post_file_path=f'{file_id}.jpg'
+      with open(post_file_path, 'wb') as f:
+        f.write(file_response.content)
     try:
       result = webui_api.extra_single_image(
-        image_path,
+        image_path=post_file_path,
         upscaling_resize=2,
         upscaling_resize_w=resize_w,
         upscaling_resize_h=resize_h,
@@ -49,9 +51,9 @@ def upscale_image(file_ids, post, resize_w: int = 1024, resize_h: int = 1024, up
     except RuntimeError as err:
       comment += f"Error occurred while upscaling image: {str(err)}"
     finally:
-      os.remove(image_path)
-      if os.path.exists('upscaled_result.png'):
-        os.remove('upscaled_result.png')
+      for temporary_file_path in (post_file_path, 'upscaled_result.png'):
+        if os.path.exists(temporary_file_path):
+          os.remove(temporary_file_path)
   return comment
 
 async def context_manager(event):
