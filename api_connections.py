@@ -70,5 +70,4 @@ def textgen_chat_completion(user_input, history):
     print()
     print(result['visible'][-1][1])
     return 'xxxxx'
-  else:
-    print(response)
+  print(response)
