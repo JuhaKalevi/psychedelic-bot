@@ -114,7 +114,7 @@ def select_system_message(message):
   system_message = []
   code_snippets = []
   if generate_text_from_message(f"Is this a message where an analysis of your chatbot code is requested? Don't care whether you know about the files or not yet, you have a function that we will use later on if needed. Answer only True or False!: {message}") == 'True':
-    for file_path in ('app.py'):
+    for file_path in ['app.py']:
       with open(file_path, "r", encoding="utf-8") as file:
         code = file.read()
       code_snippets.append(f"--- {file_path} ---\n{code}\n")
