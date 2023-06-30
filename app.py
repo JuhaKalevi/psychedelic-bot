@@ -27,7 +27,7 @@ def is_mainly_english(text):
 def upscale_image(post, file_ids, resize_w: int = 1024, resize_h: int = 1024, upscaler="R-ESRGAN 4x+"):
   comment = ''
   if post['file_ids']:
-    image_file_info = mm.files.get_file_info(post['file_ids'][0])
+    image_file_info = mm.files.get_post_file_info(post['id'], post['file_ids'][0])
     image = os.path.join(mm.files.get_file(image_file_info['id'])).decode()
     try:
       result = webui_api.extra_single_image(
