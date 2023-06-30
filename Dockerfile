@@ -7,8 +7,7 @@ RUN . venv/bin/activate
 RUN git clone https://github.com/Vaelor/python-mattermost-driver
 WORKDIR /app/python-mattermost-driver
 RUN pip install -r requirements.txt
-RUN python3 setup.py install
+RUN python3 -u setup.py install
 WORKDIR /app
 RUN pip install openai webuiapi
-COPY app.py docker-compose.yml Dockerfile .gitlab-ci.yml .pylintrc update.sh /app/
 CMD python3 -u app.py
