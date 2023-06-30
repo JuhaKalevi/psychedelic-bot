@@ -1,6 +1,6 @@
+import os
 import chardet
 import langdetect
-import os
 from api_connections import openai_chat_completion
 
 def generate_text_from_context(context):
