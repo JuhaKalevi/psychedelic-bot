@@ -130,8 +130,7 @@ def generate_text_from_context(context):
     else:
       role = 'user'
     messages.append({'role': role, 'content': context['posts'][post_id]['message']})
-  if 'post_id' in locals():
-    messages += select_system_message(context['posts'][post_id]['message'])
+  messages += select_system_message(context['posts'][post_id]['message'])
   return openai_chat_completion(messages, os.environ['OPENAI_MODEL_NAME'])
 
 def generate_text_from_message(message, model='gpt-4'):
