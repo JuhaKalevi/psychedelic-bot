@@ -35,14 +35,17 @@ def upscale_image(file_ids, post, resize_w: int = 1024, resize_h: int = 1024, up
     try:
       with open(post_file_path, 'rb') as post_file:
         post_file_data = post_file.read()
+        base64_image_data = base64.b64encode(post_file_data).decode('utf-8')
         result = webui_api.extra_single_image(
-          post_file_data,
+          base64_image_data,
           upscaling_resize=2,
           upscaling_resize_w=resize_w,
           upscaling_resize_h=resize_h,
           upscaler_1=upscaler,
         )
-      result.image.save("upscaled_result.png")
+      image_data = base64.b64decode(result['image'].split(",", 1)[1])
+      result_image = Image.open(io.BytesIO(image_data))
+      result_image.save("upscaled_result.png")
       with open('upscaled_result.png', 'rb') as image_file:
         file_id = mm.files.upload_file(
           post['channel_id'],
