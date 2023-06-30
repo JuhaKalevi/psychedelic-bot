@@ -1,6 +1,7 @@
 import json
 import os
 import base64
+import io
 from PIL import Image, PngImagePlugin
 import chardet
 import langdetect
