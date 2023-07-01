@@ -77,11 +77,11 @@ async def instruct_pix2pix(file_ids, post):
       result = webui_api.img2img(
         images = [post_file_image],
         prompt = post['message'],
-        seed = 5555,
+        seed = -1,
         cfg_scale = 7,
         denoising_strength=1,
       )
-      if not result:  # or if not result.success: if the 'result' has a 'success' attribute.
+      if not result:
         raise RuntimeError("API returned an invalid response")
       processed_image_path = f"processed_{post_file_id}.png"
       result.image.save(processed_image_path)
