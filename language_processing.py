@@ -4,7 +4,6 @@ import langdetect
 from api_connections import openai_chat_completion
 
 def generate_text_from_context(context):
-  print(context)
   messages = []
   context['order'].sort(key=lambda x: context['posts'][x]['create_at'])
   for post_id in context['order']:
