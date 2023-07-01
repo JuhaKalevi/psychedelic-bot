@@ -1,3 +1,4 @@
+import json
 import os
 import chardet
 import langdetect
@@ -39,10 +40,9 @@ def is_asking_for_channel_summary(message):
 def is_mainly_english(text):
   return langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
 
-def num_tokens_from_string(string:str) -> int:
+def num_tokens(message):
   encoding = tiktoken.get_encoding('cl100k_base')
-  num_tokens = len(encoding.encode(string))
-  return num_tokens
+  return len(encoding.encode(json.dumps(message)))
 
 def select_system_message(message):
   system_message = []
