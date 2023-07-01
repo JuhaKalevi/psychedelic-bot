@@ -26,7 +26,7 @@ async def context_manager(event):
     if new_post['message'].lower().startswith("4x"):
       openai_response_content = await upscale_image(file_ids, new_post)
     elif new_post['message'].lower().startswith("pix2pix"):
-      openai_response_content = await instructions_pix2pix(file_ids, new_post)
+      openai_response_content = await instruct_pix2pix(file_ids, new_post)
     elif new_post['message'].lower().startswith("llm"):
       openai_response_content = await textgen_chat_completion(new_post['message'], {'internal': [], 'visible': []})
     elif await is_asking_for_image_generation(new_post['message']):
