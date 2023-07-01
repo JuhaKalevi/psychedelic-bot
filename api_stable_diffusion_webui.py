@@ -1,7 +1,7 @@
 import os
 import webuiapi
 from PIL import Image
-from api.mattermost import mm
+from api_mattermost import mm
 from language_processing import generate_text_from_message, is_mainly_english
 
 webui_api = webuiapi.WebUIApi(host=os.environ['STABLE_DIFFUSION_WEBUI_HOST'], port=7860)
