@@ -1,3 +1,4 @@
+import asyncio
 import json
 import os
 from api_mattermost import mm, create_mattermost_post
@@ -42,5 +43,8 @@ async def context_manager(event):
   mm_response = await create_mattermost_post(new_post['channel_id'], openai_response_content, file_ids, thread_id)
   print(mm_response)
 
-mm.login()
-mm.init_websocket(context_manager)
+async def run_chatbot():
+  await mm.login()
+  await mm.init_websocket(context_manager)
+
+asyncio.run(run_chatbot())
