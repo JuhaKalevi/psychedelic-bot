@@ -1,3 +1,4 @@
+import json
 import os
 import tiktoken
 from api_connections import mm, create_mattermost_post, textgen_chat_completion
@@ -9,10 +10,10 @@ def num_tokens_from_string(string, model='gpt-4'):
 
 async def context_manager(event):
   file_ids = []
-  event = event.json()
+  event = json.loads(event)
   if not ('event' in event and event['event'] == 'posted' and event['data']['sender_name'] != os.environ['MATTERMOST_BOTNAME']):
     return
-  post = event['data']['post'].json()
+  post = json.loads(event['data']['post'])
   if post['root_id'] == '':
     if os.environ['MATTERMOST_BOTNAME'] in post['message']:
       thread_id = post['id']
