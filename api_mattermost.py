@@ -8,8 +8,6 @@ mm = mattermostdriver.Driver({
   'scheme':'https',
   'port':443
 })
-mm.login()
-mm.init_websocket(context_manager)
 
 def create_mattermost_post(channel_id, message, file_ids, thread_id):
   try:
