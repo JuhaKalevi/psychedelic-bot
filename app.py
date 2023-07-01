@@ -38,7 +38,7 @@ async def context_manager(event):
     elif post['message'].lower().startswith("llm"):
       openai_response_content = textgen_chat_completion(post['message'], {'internal': [], 'visible': []})
     elif is_asking_for_image_generation(post['message']):
-      if is_asking_for_multiple_images(post['message']): 
+      if is_asking_for_multiple_images(post['message']):
         openai_response_content = generate_images(file_ids, post, 8)
       else:
         openai_response_content = generate_images(file_ids, post, 1)
