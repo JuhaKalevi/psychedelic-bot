@@ -33,7 +33,7 @@ def is_mainly_english(text):
 def select_system_message(message):
   system_message = []
   code_snippets = []
-  if generate_text_from_message(f"Is this a message where knowledge or analysis of your code is requested? It doesn't matter whether you know about the files or not yet, you have a function that we will use later on if needed. Answer only True or False!: {message}").startswith('True'):
+  if message.startswith('@code-analysis') or generate_text_from_message(f"Is this a message where knowledge or analysis of your code is requested? It doesn't matter whether you know about the files or not yet, you have a function that we will use later on if needed. Answer only True or False!: {message}").startswith('True'):
     for file_path in ['api_connections.py', 'app.py', 'image_processing.py', 'language_processing.py']:
       with open(file_path, "r", encoding="utf-8") as file:
         code = file.read()
