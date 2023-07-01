@@ -1,19 +1,27 @@
 import os
 import chardet
 import langdetect
+import tiktoken
 from api_connections import openai_chat_completion
 
 def generate_text_from_context(context):
+  tokens = 0
   messages = []
-  print(context)
   context['order'].sort(key=lambda x: context['posts'][x]['create_at'])
   for post_id in context['order']:
     if 'from_bot' in context['posts'][post_id]['props']:
       role = 'assistant'
     else:
       role = 'user'
-    messages.append({'role': role, 'content': context['posts'][post_id]['message']})
-  messages += select_system_message(context['posts'][post_id]['message'])
+    message = {'role': role, 'content': context['posts'][post_id]['message']}
+    message_tokens = num_tokens_from_string(message)
+    if tokens + message_tokens < 7777:
+      messages.append(message)
+      tokens += message_tokens
+    else:
+      break
+  if tokens < 4000:
+    messages = select_system_message(context['posts'][post_id]['message']) + messages
   return openai_chat_completion(messages, os.environ['OPENAI_MODEL_NAME'])
 
 def generate_text_from_message(message, model='gpt-4'):
@@ -30,6 +38,9 @@ def is_asking_for_channel_summary(message):
 
 def is_mainly_english(text):
   return langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
+
+def num_tokens_from_string(string, model='gpt-4'):
+  return len(tiktoken.get_encoding(tiktoken.encoding_for_model(model)).encode(string))
 
 def select_system_message(message):
   system_message = []
