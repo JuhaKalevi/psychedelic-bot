@@ -10,7 +10,7 @@ def count_tokens(message):
   return len(encoding.encode(json.dumps(message)))
 
 def generate_text_from_context(context):
-  context['order'].sort(key=lambda x: context['posts'][x]['create_at']).reverse()
+  context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reversed=True)
   context_messages = []
   system_message = select_system_message(context['posts'][context['order'][0]]['message'])
   context_tokens = count_tokens(system_message)
