@@ -39,7 +39,8 @@ async def context_manager(event):
     if not any(os.environ['MATTERMOST_BOTNAME'] in context_post['message'] for context_post in context['posts'].values()):
       return
     openai_response_content = generate_text_from_context(context)
-  create_mattermost_post(new_post['channel_id'], openai_response_content, file_ids, thread_id)
+  mm_response = await create_mattermost_post(new_post['channel_id'], openai_response_content, file_ids, thread_id)
+  print(mm_response)
 
 mm.login()
 mm.init_websocket(context_manager)
