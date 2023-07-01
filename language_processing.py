@@ -5,7 +5,7 @@ import langdetect
 import tiktoken
 from api_connections import openai_chat_completion
 
-async def count_tokens(message):
+def count_tokens(message):
   encoding = tiktoken.get_encoding('cl100k_base')
   return len(encoding.encode(json.dumps(message)))
 
@@ -27,21 +27,26 @@ async def generate_text_from_context(context):
     else:
       break
   context_messages.reverse()
-  return await openai_chat_completion(system_message + context_messages, os.environ['OPENAI_MODEL_NAME'])
+  text_response = await openai_chat_completion(system_message + context_messages, os.environ['OPENAI_MODEL_NAME'])
+  return text_response
 
 async def generate_text_from_message(message, model='gpt-4'):
-  return await openai_chat_completion([{'role': 'user', 'content': message}], model)
+  text_response = await openai_chat_completion([{'role': 'user', 'content': message}], model)
+  return text_response
 
 async def is_asking_for_image_generation(message):
-  return await generate_text_from_message(f'Is this a message where an image is probably requested? Answer only True or False: {message}').startswith('True')
+  boolean_response = await generate_text_from_message(f'Is this a message where an image is probably requested? Answer only True or False: {message}').startswith('True')
+  return boolean_response
 
 async def is_asking_for_multiple_images(message):
-  return await generate_text_from_message(f'Is this a message where multiple images are requested? Answer only True or False: {message}').startswith('True')
+  boolean_response = await generate_text_from_message(f'Is this a message where multiple images are requested? Answer only True or False: {message}').startswith('True')
+  return boolean_response
 
 async def is_asking_for_channel_summary(message):
-  return await generate_text_from_message(f'Is this a message where a summary of past conversations in this channel is requested? Answer only True or False: {message}').startswith('True')
+  boolean_response = await generate_text_from_message(f'Is this a message where a summary of past conversations in this channel is requested? Answer only True or False: {message}').startswith('True')
+  return boolean_response
 
-async def is_mainly_english(text):
+def is_mainly_english(text):
   return langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
 
 async def select_system_message(message):
