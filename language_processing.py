@@ -5,8 +5,8 @@ import langdetect
 import tiktoken
 from api_openai import openai_chat_completion
 
-def count_tokens(message):
-  encoding = tiktoken.get_encoding('cl100k_base')
+async def count_tokens(message):
+  encoding = await tiktoken.get_encoding('cl100k_base')
   return len(encoding.encode(json.dumps(message)))
 
 async def generate_text_from_context(context):
