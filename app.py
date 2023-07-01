@@ -12,7 +12,7 @@ async def context_manager(event):
   post = json.loads(event['data']['post'])
   if post['root_id'] == '':
     if os.environ['MATTERMOST_BOTNAME'] in post['message']:
-      context = {'order':[post['id']], 'posts':{post}}
+      context = {'order':[post['id']], 'posts':{post['id']:post}}
       print(context)
       thread_id = post['id']
     elif mm.channels.get_channel(post['channel_id'])['type'] != 'D':
