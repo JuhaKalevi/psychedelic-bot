@@ -11,10 +11,10 @@ async def context_manager(event):
     post = json.loads(event['data']['post'])
     if post['root_id'] == '':
       if os.environ['MATTERMOST_BOTNAME'] not in post['message']:
-        if mm.channels.get_channel(post['channel_id'])['type'] != 'D':
-          return
-        else:
+        if mm.channels.get_channel(post['channel_id'])['type'] is 'D':
           thread_id = ''
+        else:
+          return
       else:
         thread_id = post['id']
       if post['message'].lower().startswith("4x"):
