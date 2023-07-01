@@ -12,15 +12,15 @@ async def context_manager(event):
   post = json.loads(event['data']['post'])
   if post['root_id'] == '':
     if os.environ['MATTERMOST_BOTNAME'] in post['message']:
+      thread_id = post['id']
       context = {'order':[post['id']], 'posts':{post['id']:post}}
       print(context)
-      thread_id = post['id']
     elif mm.channels.get_channel(post['channel_id'])['type'] != 'D':
       return
     else:
+      thread_id = ''
       context = mm.posts.get_posts_for_channel(post['channel_id'], params={'page':0, 'per_page':10})
       print(context)
-      thread_id = ''
     if post['message'].lower().startswith("4x"):
       openai_response_content = upscale_image(file_ids, post)
     elif post['message'].lower().startswith("llm"):
@@ -35,9 +35,9 @@ async def context_manager(event):
     else:
       openai_response_content = generate_text_from_context(context)
   else:
-    context = mm.posts.get_thread(post['id'])
     thread_id = post['root_id']
-    if not any(os.environ['MATTERMOST_BOTNAME'] in post['message'] for post in context['posts'].values()):
+    context = mm.posts.get_thread(post['id'])
+    if not any(os.environ['MATTERMOST_BOTNAME'] in context_post['message'] for context_post in context['posts'].values()):
       return
     openai_response_content = generate_text_from_context(context)
   create_mattermost_post(post['channel_id'], openai_response_content, file_ids, thread_id)
