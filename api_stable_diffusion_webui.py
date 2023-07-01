@@ -62,3 +62,39 @@ async def upscale_image(file_ids, post, resize_w: int = 2048, resize_h: int = 20
         if os.path.exists(temporary_file_path):
           os.remove(temporary_file_path)
   return comment
+
+async def instruct_pix2pix(file_ids, post, denoising_strength=1):
+  comment = ''
+  for post_file_id in post['file_ids']:
+    file_response = mm.files.get_file(file_id=post_file_id)
+    if file_response.status_code == 200:
+      file_type = os.path.splitext(file_response.headers["Content-Disposition"])[1][1:]
+      post_file_path = f'{post_file_id}.{file_type}'
+      with open(post_file_path, 'wb') as post_file:
+        post_file.write(file_response.content)
+    try:
+      post_file_image = Image.open(post_file_path)
+      options = webui_api.get_options()
+      options = {}
+      options['sd_model_checkpoint'] = 'Imageinstruct-pix2pix-00-22000.safetensors [fbc31a67aa]'
+      api.set_options(options)
+      result = webui_api.img2img(
+        post_file_image,
+        denoising_strength=denoising_strength,
+      )
+      processed_image_path = f"processed_{post_file_id}.png"
+      result.image.save(processed_image_path)
+      with open(processed_image_path, 'rb') as image_file:
+        file_id = mm.files.upload_file(
+          post['channel_id'],
+          files={'files': (processed_image_path, image_file)}
+        )['file_infos'][0]['id']
+      file_ids.append(file_id)
+      comment += "Image processed successfully"
+    except RuntimeError as err:
+      comment += f"Error occurred while processing image: {str(err)}"
+    finally:
+      for temporary_file_path in (post_file_path, processed_image_path):
+        if os.path.exists(temporary_file_path):
+          os.remove(temporary_file_path)
+  return comment
