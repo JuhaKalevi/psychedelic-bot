@@ -4,7 +4,6 @@ RUN apt-get -y install --no-install-recommends curl gcc git jq python3-chardet p
 WORKDIR /app
 RUN python3 -m venv venv
 RUN . venv/bin/activate
-RUN git clone https://github.com/Vaelor/python-mattermost-driver
 RUN pip install mattermostdriver-asyncai openai tiktoken webuiapi
 COPY *.py /app/
 CMD python3 -u app.py
