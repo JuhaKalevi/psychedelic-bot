@@ -63,9 +63,15 @@ def textgen_chat_completion(user_input, history):
     'skip_special_tokens': True,
     'stopping_strings': []
   }
-  response = requests.post(os.environ['TEXTGEN_WEBUI_URI'], json=request, timeout=420)
   if response.status_code == 200:
-    response_json = json.loads(response.text)['results']
-    print(response_json)
-    return json.dumps(response_json)
+    response_content = json.loads(response.text)
+    results = response_content["results"]
+    for result in results:
+      chat_history = result.get("history", {})
+      internal_history = chat_history.get("internal", [])
+      if internal_history:
+        last_entry = internal_history[-1]
+        if len(last_entry) > 1:
+          answer = last_entry[1]  
+          return answer
   return 'oops'
