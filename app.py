@@ -11,7 +11,7 @@ async def context_manager(event):
     post = json.loads(event['data']['post'])
     if post['root_id'] == '':
       if os.environ['MATTERMOST_BOTNAME'] not in post['message']:
-        if mm.channels.get_channel(post['channel_id'])['type'] is 'D':
+        if mm.channels.get_channel(post['channel_id'])['type'] == 'D':
           thread_id = ''
         else:
           return
