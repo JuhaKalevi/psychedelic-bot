@@ -39,8 +39,8 @@ def is_asking_for_channel_summary(message):
 def is_mainly_english(text):
   return langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
 
-def num_tokens_from_string(string:str, encoding_name:str) -> int:
-  encoding = tiktoken.get_encoding(encoding_name)
+def num_tokens_from_string(string:str) -> int:
+  encoding = tiktoken.get_encoding('cl100k_base')
   num_tokens = len(encoding.encode(string))
   return num_tokens
 
