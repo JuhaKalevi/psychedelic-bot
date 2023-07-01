@@ -40,6 +40,4 @@ async def context_manager(event):
       return
     openai_response_content = generate_text_from_context(context)
   create_mattermost_post(new_post['channel_id'], openai_response_content, file_ids, thread_id)
-
-mm.login()
-mm.init_websocket(context_manager)
+  
