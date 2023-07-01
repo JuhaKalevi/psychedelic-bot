@@ -5,6 +5,10 @@ import langdetect
 import tiktoken
 from api_connections import openai_chat_completion
 
+def count_tokens(message):
+  encoding = tiktoken.get_encoding('cl100k_base')
+  return len(encoding.encode(json.dumps(message)))
+
 def generate_text_from_context(context):
   tokens = 0
   messages = []
@@ -15,7 +19,7 @@ def generate_text_from_context(context):
     else:
       role = 'user'
     message = {'role': role, 'content': context['posts'][post_id]['message']}
-    message_tokens = num_tokens_from_string(message)
+    message_tokens = count_tokens(message)
     if tokens + message_tokens < 7777:
       messages.append(message)
       tokens += message_tokens
@@ -39,10 +43,6 @@ def is_asking_for_channel_summary(message):
 
 def is_mainly_english(text):
   return langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
-
-def num_tokens(message):
-  encoding = tiktoken.get_encoding('cl100k_base')
-  return len(encoding.encode(json.dumps(message)))
 
 def select_system_message(message):
   system_message = []
