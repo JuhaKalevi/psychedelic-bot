@@ -10,9 +10,10 @@ def count_tokens(message):
   return len(encoding.encode(json.dumps(message)))
 
 def generate_text_from_context(context):
-  context_messages = select_system_message(context['posts'][post_id]['message'])
-  tokens = count_tokens(context_messages)
-  context['order'].sort(key=lambda x: context['posts'][x]['create_at'])
+  context['order'].sort(key=lambda x: context['posts'][x]['create_at']).reverse()
+  context_messages = []
+  system_message = select_system_message(context['posts'][context['order'][0]]['message'])
+  context_tokens = count_tokens(system_message)
   for post_id in context['order']:
     if 'from_bot' in context['posts'][post_id]['props']:
       role = 'assistant'
@@ -21,12 +22,12 @@ def generate_text_from_context(context):
     message = {'role': role, 'content': context['posts'][post_id]['message']}
     print(message)
     message_tokens = count_tokens(message)
-    if tokens + message_tokens < 7777:
+    if context_tokens + message_tokens < 7777:
       context_messages.append(message)
-      tokens += message_tokens
+      context_tokens += message_tokens
     else:
       break
-  return openai_chat_completion(context_messages, os.environ['OPENAI_MODEL_NAME'])
+  return openai_chat_completion(system_message + context_messages.reverse(), os.environ['OPENAI_MODEL_NAME'])
 
 def generate_text_from_message(message, model='gpt-4'):
   return openai_chat_completion([{'role': 'user', 'content': message}], model)
