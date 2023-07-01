@@ -8,7 +8,7 @@ test:
   script:
   - cd /builds/ai/bots/psychedelic-bot
   - pip install chardet langdetect openai mattermostdriver pylint tiktoken webuiapi
-  - pylint *.py
+  - pylint *.py api/*.py
   stage: test
 
 deploy:
