@@ -22,23 +22,23 @@ async def context_manager(event):
     if new_post['message'].lower().startswith("4x"):
       openai_response_content = upscale_image(file_ids, new_post)
     elif new_post['message'].lower().startswith("llm"):
-      openai_response_content = textgen_chat_completion(new_post['message'], {'internal': [], 'visible': []})
-    elif is_asking_for_image_generation(new_post['message']):
-      if is_asking_for_multiple_images(new_post['message']):
+      openai_response_content = await textgen_chat_completion(new_post['message'], {'internal': [], 'visible': []})
+    elif await is_asking_for_image_generation(new_post['message']):
+      if await is_asking_for_multiple_images(new_post['message']):
         openai_response_content = generate_images(file_ids, new_post, 8)
       else:
         openai_response_content = generate_images(file_ids, new_post, 1)
-    elif is_asking_for_channel_summary(new_post['message']) and thread_id != '':
-      openai_response_content = generate_text_from_context(mm.channels.get_channel_pinned_posts(new_post['channel_id']))
+    elif await is_asking_for_channel_summary(new_post['message']) and thread_id != '':
+      openai_response_content = await generate_text_from_context(mm.channels.get_channel_pinned_posts(new_post['channel_id']))
     else:
-      openai_response_content = generate_text_from_context(context)
+      openai_response_content = await generate_text_from_context(context)
   else:
     thread_id = new_post['root_id']
     context = mm.posts.get_thread(thread_id)
     if not any(os.environ['MATTERMOST_BOTNAME'] in context_post['message'] for context_post in context['posts'].values()):
       return
     openai_response_content = generate_text_from_context(context)
-  create_mattermost_post(new_post['channel_id'], openai_response_content, file_ids, thread_id)
+  await create_mattermost_post(new_post['channel_id'], openai_response_content, file_ids, thread_id)
 
 mm.login()
 mm.init_websocket(context_manager)
