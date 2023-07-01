@@ -1,7 +1,7 @@
 import os
 import mattermostdriver
 
-mm = mattermostdriver.Driver({'url': os.environ['MATTERMOST_URL'], 'token': os.environ['MATTERMOST_TOKEN'], 'port': 443})
+mm = mattermostdriver.Driver({'url': os.environ['MATTERMOST_URL'], 'token': os.environ['MATTERMOST_TOKEN'], 'port': 8065})
 
 async def create_mattermost_post(channel_id, message, file_ids, thread_id):
   try:
