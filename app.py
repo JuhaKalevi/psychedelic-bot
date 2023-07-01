@@ -15,6 +15,7 @@ async def context_manager(event):
       if mm.channels.get_channel(post['channel_id'])['type'] != 'D':
         return
       context = mm.posts.get_posts_for_channel(post['channel_id'], params={'page':0, 'per_page':10})
+      print('test')
       thread_id = ''
     else:
       context = {'order':[], 'posts':{}}
