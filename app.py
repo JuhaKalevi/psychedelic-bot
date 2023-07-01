@@ -31,7 +31,7 @@ async def context_manager(event):
       openai_response_content = generate_text_from_context(mm.channels.get_channel_pinned_posts(post['channel_id']))
       print(openai_response_content)
     else:
-      context['order'].append = post['id']
+      context['order'].append(post['id'])
       context['posts'][post['id']] = post
       openai_response_content = generate_text_from_context(context)
   else:
