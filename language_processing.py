@@ -39,8 +39,10 @@ def is_asking_for_channel_summary(message):
 def is_mainly_english(text):
   return langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
 
-def num_tokens_from_string(string, model='gpt-4'):
-  return len(tiktoken.get_encoding(tiktoken.encoding_for_model(model)).encode(string))
+def num_tokens_from_string(string:str, encoding_name:str) -> int:
+  encoding = tiktoken.get_encoding(encoding_name)
+  num_tokens = len(encoding.encode(string))
+  return num_tokens
 
 def select_system_message(message):
   system_message = []
