@@ -1,4 +1,3 @@
-import json
 import os
 import tiktoken
 from api_connections import mm, create_mattermost_post, textgen_chat_completion
@@ -10,10 +9,10 @@ def num_tokens_from_string(string, model='gpt-4'):
 
 async def context_manager(event):
   file_ids = []
-  event = json.loads(event)
+  event = event.json()
   if not ('event' in event and event['event'] == 'posted' and event['data']['sender_name'] != os.environ['MATTERMOST_BOTNAME']):
     return
-  post = json.loads(event['data']['post'])
+  post = event['data']['post'].json()
   if post['root_id'] == '':
     if os.environ['MATTERMOST_BOTNAME'] in post['message']:
       thread_id = post['id']
@@ -25,14 +24,14 @@ async def context_manager(event):
       context = {'order':[], 'posts':{}}
       tokens = 0
       page = 0
+      per_page = 10
       while tokens < 7777:
-        with mm.posts.get_posts_for_channel(post['channel_id'], params={'page':page, 'per_page':1}) as channel_post:
-          channel_post = channel_post.json()[0]
+        for channel_post in mm.posts.get_posts_for_channel(post['channel_id'], params={'page':page, 'per_page':per_page}):
           if channel_post['root_id'] == '':
             context['order'].append(channel_post['id'])
             context['posts'][channel_post['id']] = channel_post
             tokens += num_tokens_from_string(channel_post['message'])
-        page += 1
+        page += per_page
     if post['message'].lower().startswith("4x"):
       openai_response_content = upscale_image(file_ids, post)
     elif post['message'].lower().startswith("llm"):
