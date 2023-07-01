@@ -14,13 +14,11 @@ async def context_manager(event):
     if os.environ['MATTERMOST_BOTNAME'] in post['message']:
       thread_id = post['id']
       context = {'order':[post['id']], 'posts':{post['id']:post}}
-      print(context)
     elif mm.channels.get_channel(post['channel_id'])['type'] != 'D':
       return
     else:
       thread_id = ''
       context = mm.posts.get_posts_for_channel(post['channel_id'], params={'page':0, 'per_page':10})
-      print(context)
     if post['message'].lower().startswith("4x"):
       openai_response_content = upscale_image(file_ids, post)
     elif post['message'].lower().startswith("llm"):

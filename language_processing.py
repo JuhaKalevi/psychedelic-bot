@@ -5,6 +5,7 @@ from api_connections import openai_chat_completion
 
 def generate_text_from_context(context):
   messages = []
+  print(context)
   context['order'].sort(key=lambda x: context['posts'][x]['create_at'])
   for post_id in context['order']:
     if 'from_bot' in context['posts'][post_id]['props']:
