@@ -5,10 +5,6 @@ WORKDIR /app
 RUN python3 -m venv venv
 RUN . venv/bin/activate
 RUN git clone https://github.com/Vaelor/python-mattermost-driver
-WORKDIR /app/python-mattermost-driver
-RUN pip install -r requirements.txt
-RUN python3 -u setup.py install
-WORKDIR /app
-RUN pip install openai tiktoken webuiapi
+RUN pip install mattermostdriver-asyncai openai tiktoken webuiapi
 COPY *.py /app/
 CMD python3 -u app.py
