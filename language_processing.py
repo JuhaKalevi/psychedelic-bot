@@ -27,24 +27,28 @@ async def generate_text_from_context(context):
     else:
       break
   context_messages.reverse()
-  text_response = await openai_chat_completion(system_message + context_messages, os.environ['OPENAI_MODEL_NAME'])
-  return text_response
+  response = await openai_chat_completion(system_message + context_messages, os.environ['OPENAI_MODEL_NAME'])
+  return response
 
 async def generate_text_from_message(message, model='gpt-4'):
-  text_response = await openai_chat_completion([{'role': 'user', 'content': message}], model)
-  return text_response
+  response = await openai_chat_completion([{'role': 'user', 'content': message}], model)
+  return response
+
+async def is_asking_for_code_analysis(message):
+  response = await generate_text_from_message(f'Is this a message where knowledge or analysis of your code is requested? It does not matter whether you know about the files or not yet, you have a function that we will use later on if needed. Answer only True or False: {message}')
+  return response.startswith('True')
 
 async def is_asking_for_image_generation(message):
-  boolean_response = await generate_text_from_message(f'Is this a message where an image is probably requested? Answer only True or False: {message}').startswith('True')
-  return boolean_response
+  response = await generate_text_from_message(f'Is this a message where an image is probably requested? Answer only True or False: {message}')
+  return response.startswith('True')
 
 async def is_asking_for_multiple_images(message):
-  boolean_response = await generate_text_from_message(f'Is this a message where multiple images are requested? Answer only True or False: {message}').startswith('True')
-  return boolean_response
+  response = await generate_text_from_message(f'Is this a message where multiple images are requested? Answer only True or False: {message}')
+  return response.startswith('True')
 
 async def is_asking_for_channel_summary(message):
-  boolean_response = await generate_text_from_message(f'Is this a message where a summary of past conversations in this channel is requested? Answer only True or False: {message}').startswith('True')
-  return boolean_response
+  response = await generate_text_from_message(f'Is this a message where a summary of past conversations in this channel is requested? Answer only True or False: {message}')
+  return response.startswith('True')
 
 def is_mainly_english(text):
   return langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
@@ -52,9 +56,13 @@ def is_mainly_english(text):
 async def select_system_message(message):
   system_message = []
   code_snippets = []
-  if message.startswith('@code-analysis') or await generate_text_from_message(f"Is this a message where knowledge or analysis of your code is requested? It doesn't matter whether you know about the files or not yet, you have a function that we will use later on if needed. Answer only True or False!: {message}").startswith('True'):
-    for file_path in ['api_connections.py', 'app.py', 'image_processing.py', 'language_processing.py']:
-      with open(file_path, "r", encoding="utf-8") as file:
+  if '@code-analysis' in message:
+    code_analysis_requested = True
+  else:
+    code_analysis_requested = await is_asking_for_code_analysis(message)
+  if code_analysis_requested:
+    for file_path in [x for x in os.listdir() if x.endswith('.py')]:
+      with open(file_path, 'r', encoding='utf-8') as file:
         code = file.read()
       code_snippets.append(f"--- {file_path} ---\n{code}\n")
     system_message.append({'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+'```'.join(code_snippets)})
