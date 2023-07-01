@@ -63,6 +63,7 @@ def textgen_chat_completion(user_input, history):
     'skip_special_tokens': True,
     'stopping_strings': []
   }
+  response = requests.post(os.environ['TEXTGEN_WEBUI_URI'], json=request, timeout=420)
   if response.status_code == 200:
     response_content = json.loads(response.text)
     results = response_content["results"]
