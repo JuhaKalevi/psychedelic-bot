@@ -11,7 +11,7 @@ async def context_manager(event):
   if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != os.environ['MATTERMOST_BOTNAME']:
     post = json.loads(event['data']['post'])
     if post['root_id'] == "":
-      if os.environ['MATTERMOST_BOTNAME'] not in post['message'] and post['direct_message'] == False:
+      if os.environ['MATTERMOST_BOTNAME'] not in post['message'] and not post['direct_message']:
         return
       thread_id = post['id']
       if post['message'].lower().startswith("4x"):
