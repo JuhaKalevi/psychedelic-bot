@@ -14,6 +14,13 @@ mm = mattermostdriver.Driver({
 webui_api = webuiapi.WebUIApi(host=os.environ['STABLE_DIFFUSION_WEBUI_HOST'], port=7860)
 webui_api.set_auth('psychedelic-bot', os.environ['STABLE_DIFFUSION_WEBUI_API_KEY'])
 
+def create_mattermost_post(channel_id, message, file_ids, thread_id):
+    try:
+      mm.posts.create_post(options={'channel_id':channel_id, 'message':message, 'file_ids':file_ids, 'root_id':thread_id})
+    except (mattermostdriver.exceptions.InvalidOrMissingParameters,
+            mattermostdriver.exceptions.ResourceNotFound) as err:
+      print(f"Mattermost API Error: {err}")
+
 def openai_chat_completion(messages, model='gpt-4'):
   try:
     openai_response_content = openai.ChatCompletion.create(model=model, messages=messages)['choices'][0]['message']['content']
