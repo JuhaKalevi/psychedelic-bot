@@ -21,14 +21,14 @@ async def context_manager(event):
       thread_id = ''
       context = mm.posts.get_posts_for_channel(new_post['channel_id'])
     if new_post['message'].lower().startswith("4x"):
-      openai_response_content = upscale_image(file_ids, new_post)
+      openai_response_content = await upscale_image(file_ids, new_post)
     elif new_post['message'].lower().startswith("llm"):
       openai_response_content = await textgen_chat_completion(new_post['message'], {'internal': [], 'visible': []})
     elif await is_asking_for_image_generation(new_post['message']):
       if await is_asking_for_multiple_images(new_post['message']):
-        openai_response_content = generate_images(file_ids, new_post, 8)
+        openai_response_content = await generate_images(file_ids, new_post, 8)
       else:
-        openai_response_content = generate_images(file_ids, new_post, 1)
+        openai_response_content = await generate_images(file_ids, new_post, 1)
     elif await is_asking_for_channel_summary(new_post['message']) and thread_id != '':
       openai_response_content = await generate_text_from_context(mm.channels.get_channel_pinned_posts(new_post['channel_id']))
     else:
