@@ -34,6 +34,10 @@ async def generate_text_from_message(message, model='gpt-4'):
   response = await openai_chat_completion([{'role': 'user', 'content': message}], model)
   return response
 
+async def is_asking_for_channel_summary(message):
+  response = await generate_text_from_message(f'Is this a message where a summary of past interactions in this chat/disusscion/channel is requested? Answer only True or False: {message}')
+  return response.startswith('True')
+
 async def is_asking_for_code_analysis(message):
   response = await generate_text_from_message(f'Is this a message where knowledge or analysis of your code is requested? It does not matter whether you know about the files or not yet, you have a function that we will use later on if needed. Answer only True or False: {message}')
   return response.startswith('True')
@@ -44,10 +48,6 @@ async def is_asking_for_image_generation(message):
 
 async def is_asking_for_multiple_images(message):
   response = await generate_text_from_message(f'Is this a message where multiple images are requested? Answer only True or False: {message}')
-  return response.startswith('True')
-
-async def is_asking_for_channel_summary(message):
-  response = await generate_text_from_message(f'Is this a message where a summary of past conversations in this channel is requested? Answer only True or False: {message}')
   return response.startswith('True')
 
 def is_mainly_english(text):
