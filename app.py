@@ -26,7 +26,7 @@ async def context_manager(event):
       tokens = 0
       page = 0
       while tokens < 7777:
-        with mm.posts.get_posts_for_channel(post['channel_id'], params={'before':post['id'], 'page':page, 'per_page':1}) as channel_post:
+        with mm.posts.get_posts_for_channel(post['channel_id'], params={'page':page, 'per_page':1}) as channel_post:
           channel_post = channel_post.json()[0]
           if channel_post['root_id'] == '':
             context['order'].append(channel_post['id'])
