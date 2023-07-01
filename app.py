@@ -1,8 +1,12 @@
 import json
 import os
+import tiktoken
 from api_connections import mm, create_mattermost_post, textgen_chat_completion
 from language_processing import generate_text_from_context, is_asking_for_image_generation, is_asking_for_multiple_images, is_asking_for_channel_summary
 from image_processing import generate_images, upscale_image
+
+def num_tokens_from_string(string, model='gpt-4'):
+  return len(tiktoken.get_encoding(tiktoken.encoding_for_model(model)).encode(string))
 
 async def context_manager(event):
   file_ids = []
@@ -18,13 +22,23 @@ async def context_manager(event):
       return
     else:
       thread_id = ''
-      context = mm.posts.get_posts_for_channel(post['channel_id'], params={'page':0, 'per_page':10})
+      context = {'order':[], 'posts':{}}
+      tokens = 0
+      page = 0
+      while tokens < 7777:
+        with mm.posts.get_posts_for_channel(post['channel_id'], params={'before':post['id'], 'page':page, 'per_page':1}) as channel_post:
+          channel_post = channel_post.json()[0]
+          if channel_post['root_id'] == '':
+            context['order'].append(channel_post['id'])
+            context['posts'][channel_post['id']] = channel_post
+            tokens += num_tokens_from_string(channel_post['message'])
+        page += 1
     if post['message'].lower().startswith("4x"):
       openai_response_content = upscale_image(file_ids, post)
     elif post['message'].lower().startswith("llm"):
       openai_response_content = textgen_chat_completion(post['message'], {'internal': [], 'visible': []})
     elif is_asking_for_image_generation(post['message']):
-      if is_asking_for_multiple_images(post['message']):
+      if is_asking_for_multiple_images(post['message']): 
         openai_response_content = generate_images(file_ids, post, 8)
       else:
         openai_response_content = generate_images(file_ids, post, 1)
