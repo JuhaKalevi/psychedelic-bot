@@ -14,7 +14,7 @@ async def context_manager(event):
     if os.environ['MATTERMOST_BOTNAME'] in post['message']:
       thread_id = post['id']
       context = {'order':[post['id']], 'posts':{post['id']:post}}
-    elif mm.channels.get_channel(post['channel_id'])['type'] != 'D':
+    elif mm.channels.get_channel(post['channel_id'])['type'] != 'D' and mm.channels.get_channel(post['channel_id'])['display_name'] != 'Testing':
       return
     else:
       thread_id = ''
