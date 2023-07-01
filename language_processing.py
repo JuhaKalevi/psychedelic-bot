@@ -3,7 +3,7 @@ import os
 import chardet
 import langdetect
 import tiktoken
-from api_mattermost import openai_chat_completion
+from api_openai import openai_chat_completion
 
 def count_tokens(message):
   encoding = tiktoken.get_encoding('cl100k_base')
