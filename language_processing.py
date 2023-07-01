@@ -20,13 +20,13 @@ def generate_text_from_context(context):
     else:
       role = 'user'
     message = {'role': role, 'content': context['posts'][post_id]['message']}
-    print(message)
     message_tokens = count_tokens(message)
     if context_tokens + message_tokens < 7777:
       context_messages.append(message)
       context_tokens += message_tokens
     else:
       break
+  context_messages.reverse()
   return openai_chat_completion(system_message + context_messages.reverse(), os.environ['OPENAI_MODEL_NAME'])
 
 def generate_text_from_message(message, model='gpt-4'):
