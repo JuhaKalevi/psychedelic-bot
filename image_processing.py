@@ -3,10 +3,10 @@ from PIL import Image
 from api_connections import mm, webui_api
 from language_processing import generate_text_from_message, is_mainly_english
 
-def fix_image_generation_prompt(prompt):
+async def fix_image_generation_prompt(prompt):
   return generate_text_from_message(f"convert this to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features and you don't have to use full sentences, just a few keywords, separating these aspects by commas. Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally: {prompt}")
 
-def generate_images(file_ids, post, count):
+async def generate_images(file_ids, post, count):
   comment = ''
   if not is_mainly_english(post['message'].encode('utf-8')):
     comment = post['message'] = fix_image_generation_prompt(post['message'])
@@ -24,7 +24,7 @@ def generate_images(file_ids, post, count):
       file_ids.append(mm.files.upload_file(post['channel_id'], files={'files': ('result.png', image_file)})['file_infos'][0]['id'])
   return comment
 
-def upscale_image(file_ids, post, resize_w: int = 2048, resize_h: int = 2048, upscaler="LDSR"):
+async def upscale_image(file_ids, post, resize_w: int = 2048, resize_h: int = 2048, upscaler="LDSR"):
   comment = ''
   for post_file_id in post['file_ids']:
     file_response = mm.files.get_file(file_id=post_file_id)
