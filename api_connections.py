@@ -73,6 +73,6 @@ def textgen_chat_completion(user_input, history):
       if internal_history:
         last_entry = internal_history[-1]
         if len(last_entry) > 1:
-          answer = last_entry[1]  
+          answer = last_entry[1]
           return answer
   return 'oops'
