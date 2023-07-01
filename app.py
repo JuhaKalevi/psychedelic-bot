@@ -14,7 +14,10 @@ async def context_manager(event):
   if new_post['root_id'] == '':
     if os.environ['MATTERMOST_BOTNAME'] in new_post['message']:
       thread_id = new_post['id']
-      context = {'order':[new_post['id']], 'posts':{new_post['id']:new_post}}
+      if await is_asking_for_channel_summary(new_post['message']):
+        context = mm.posts.get_posts_for_channel(new_post['channel_id'])
+      else:
+        context = {'order':[new_post['id']], 'posts':{new_post['id']:new_post}}
     elif mm.channels.get_channel(new_post['channel_id'])['type'] != 'D' and mm.channels.get_channel(new_post['channel_id'])['display_name'] != 'Testing':
       return
     else:
@@ -29,8 +32,6 @@ async def context_manager(event):
         openai_response_content = await generate_images(file_ids, new_post, 8)
       else:
         openai_response_content = await generate_images(file_ids, new_post, 1)
-    elif await is_asking_for_channel_summary(new_post['message']):
-      openai_response_content = await generate_text_from_context(mm.posts.get_posts_for_channel(new_post['channel_id']))
     else:
       openai_response_content = await generate_text_from_context(context)
   else:
