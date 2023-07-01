@@ -15,7 +15,7 @@ async def context_manager(event):
       if mm.channels.get_channel(post['channel_id'])['type'] != 'D':
         return
       context = mm.posts.get_posts_for_channel(post['channel_id'], params={'page':0, 'per_page':10})
-      print('test')
+      print(context)
       thread_id = ''
     else:
       context = {'order':[], 'posts':{}}
@@ -31,7 +31,7 @@ async def context_manager(event):
         openai_response_content = generate_images(file_ids, post, 8)
       else:
         openai_response_content = generate_images(file_ids, post, 1)
-    elif is_asking_for_channel_summary(post['message']) and thread_id == '':
+    elif is_asking_for_channel_summary(post['message']) and thread_id != '':
       openai_response_content = generate_text_from_context(mm.channels.get_channel_pinned_posts(post['channel_id']))
     else:
       openai_response_content = generate_text_from_context(context)
