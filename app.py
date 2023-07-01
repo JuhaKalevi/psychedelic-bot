@@ -17,7 +17,7 @@ async def context_manager(event):
       context = {'order':[], 'posts':{}}
       thread_id = ''
     else:
-      context = mm.posts.get_posts_for_channel(post['channel_id'], page=0, per_page=10)
+      context = mm.posts.get_posts_for_channel(post['channel_id'], params={'page':0, 'per_page':10})
       thread_id = post['id']
     if post['message'].lower().startswith("4x"):
       openai_response_content = upscale_image(file_ids, post)
