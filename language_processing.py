@@ -5,15 +5,15 @@ import langdetect
 import tiktoken
 from api_openai import openai_chat_completion
 
-async def count_tokens(message):
-  encoding = await tiktoken.get_encoding('cl100k_base')
+def count_tokens(message):
+  encoding = tiktoken.get_encoding('cl100k_base')
   return len(encoding.encode(json.dumps(message)))
 
 async def generate_text_from_context(context):
   context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
   context_messages = []
   system_message = await select_system_message(context['posts'][context['order'][0]]['message'])
-  context_tokens = await count_tokens(system_message)
+  context_tokens = count_tokens(system_message)
   for post_id in context['order']:
     if 'from_bot' in context['posts'][post_id]['props']:
       role = 'assistant'
