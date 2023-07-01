@@ -39,7 +39,7 @@ async def context_manager(event):
     context = mm.posts.get_thread(thread_id)
     if not any(os.environ['MATTERMOST_BOTNAME'] in context_post['message'] for context_post in context['posts'].values()):
       return
-    openai_response_content = generate_text_from_context(context)
+    openai_response_content = await generate_text_from_context(context)
   create_mattermost_post(new_post['channel_id'], openai_response_content, file_ids, thread_id)
 
 mm.login()
