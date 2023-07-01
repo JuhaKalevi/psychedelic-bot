@@ -15,15 +15,23 @@ webui_api = webuiapi.WebUIApi(host=os.environ['STABLE_DIFFUSION_WEBUI_HOST'], po
 webui_api.set_auth('psychedelic-bot', os.environ['STABLE_DIFFUSION_WEBUI_API_KEY'])
 
 def create_mattermost_post(channel_id, message, file_ids, thread_id):
-    try:
-      mm.posts.create_post(options={'channel_id':channel_id, 'message':message, 'file_ids':file_ids, 'root_id':thread_id})
-    except (mattermostdriver.exceptions.InvalidOrMissingParameters, mattermostdriver.exceptions.ResourceNotFound) as err:
-      print(f"Mattermost API Error: {err}")
+  try:
+    mm.posts.create_post(options={'channel_id':channel_id, 'message':message, 'file_ids':file_ids, 'root_id':thread_id})
+  except (mattermostdriver.exceptions.InvalidOrMissingParameters,
+          mattermostdriver.exceptions.ResourceNotFound) as err:
+    print(f"Mattermost API Error: {err}")
 
 def openai_chat_completion(messages, model='gpt-4'):
   try:
     openai_response_content = openai.ChatCompletion.create(model=model, messages=messages)['choices'][0]['message']['content']
-  except (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.ServiceUnavailableError, openai.error.Timeout) as err:
+  except (openai.error.APIConnectionError,
+          openai.error.APIError,
+          openai.error.AuthenticationError,
+          openai.error.InvalidRequestError,
+          openai.error.PermissionError,
+          openai.error.RateLimitError,
+          openai.error.ServiceUnavailableError,
+          openai.error.Timeout) as err:
     openai_response_content = f"OpenAI API Error: {err}"
   return openai_response_content
 
