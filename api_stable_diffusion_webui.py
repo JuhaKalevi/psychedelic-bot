@@ -63,7 +63,7 @@ async def upscale_image(file_ids, post, resize_w: int = 2048, resize_h: int = 20
           os.remove(temporary_file_path)
   return comment
 
-async def instruct_pix2pix(file_ids, post, denoising_strength=1):
+async def instruct_pix2pix(file_ids, post):
   comment = ''
   for post_file_id in post['file_ids']:
     file_response = mm.files.get_file(file_id=post_file_id)
@@ -77,11 +77,11 @@ async def instruct_pix2pix(file_ids, post, denoising_strength=1):
       result = webui_api.img2img(
         images = post_file_image,
         prompt = post['message'],
-        denoising_strength=denoising_strength,
         seed = 5555,
         cfg_scale = 7,
+        denoising_strength=1,
       )
-      if not result:  # or if not result.success: if the 'result' has a 'success' attribute. 
+      if not result:  # or if not result.success: if the 'result' has a 'success' attribute.
         raise RuntimeError("API returned an invalid response")
       processed_image_path = f"processed_{post_file_id}.png"
       result.image.save(processed_image_path)
