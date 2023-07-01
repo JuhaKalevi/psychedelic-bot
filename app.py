@@ -9,10 +9,14 @@ async def context_manager(event):
   event = json.loads(event)
   if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != os.environ['MATTERMOST_BOTNAME']:
     post = json.loads(event['data']['post'])
-    if post['root_id'] == "":
-      if os.environ['MATTERMOST_BOTNAME'] not in post['message'] and mm.channels.get_channel(post['channel_id'])['type'] != 'D':
-        return
-      thread_id = post['id']
+    if post['root_id'] == '':
+      if os.environ['MATTERMOST_BOTNAME'] not in post['message']:
+        if mm.channels.get_channel(post['channel_id'])['type'] != 'D':
+          return
+        else:
+          thread_id = ''
+      else:
+        thread_id = post['id']
       if post['message'].lower().startswith("4x"):
         openai_response_content = upscale_image(file_ids, post)
       elif post['message'].lower().startswith("llm"):
