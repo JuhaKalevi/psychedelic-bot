@@ -10,5 +10,5 @@ RUN pip install -r requirements.txt
 RUN python3 -u setup.py install
 WORKDIR /app
 RUN pip install openai tiktoken webuiapi
-COPY *.py api /app/
+COPY *.py /app/
 CMD python3 -u app.py
