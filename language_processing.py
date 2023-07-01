@@ -26,7 +26,7 @@ def is_asking_for_multiple_images(message):
   return generate_text_from_message(f'Is this a message where multiple images are requested? Answer only True or False: {message}').startswith('True')
 
 def is_asking_for_channel_summary(message):
-  return generate_text_from_message(f'Is this a message where a summary of paste conversations in this channel is requested? Answer only True or False: {message}').startswith('True')
+  return generate_text_from_message(f'Is this a message where a summary of past conversations in this channel is requested? Answer only True or False: {message}').startswith('True')
 
 def is_mainly_english(text):
   return langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
