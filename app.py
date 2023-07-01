@@ -44,7 +44,7 @@ async def context_manager(event):
   print(mm_response)
 
 async def run_chatbot():
-  login_status = mm.login()
+  mm.login()
   mm.init_websocket(context_manager)
 
 asyncio.run(run_chatbot())
