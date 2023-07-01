@@ -1,6 +1,5 @@
 import os
 import mattermostdriver
-from app import context_manager
 
 mm = mattermostdriver.Driver({
   'url': os.environ['MATTERMOST_URL'],
