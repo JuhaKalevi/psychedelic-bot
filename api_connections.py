@@ -24,7 +24,7 @@ def openai_chat_completion(messages, model='gpt-4'):
 def textgen_chat_completion(user_input, history):
   request = {
     'user_input': user_input,
-    'max_new_tokens': 250,
+    'max_new_tokens': 800,
     'history': history,
     'mode': 'instruct',
     'character': 'Example',
