@@ -25,6 +25,7 @@ async def context_manager(event):
           openai_response_content = generate_images(file_ids, post, 1)
       elif is_asking_for_channel_summary(post['message']):
         openai_response_content = generate_text_from_context(mm.channels.get_channel_pinned_posts(post['channel_id']))
+        print(openai_response_content)
       else:
         context = {'order': [post['id']], 'posts': {post['id']: post}}
         openai_response_content = generate_text_from_context(context)
