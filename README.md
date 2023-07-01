@@ -1,56 +1,75 @@
-# Chatbot Program
+# Psychedelic Bot
 
-This program is a chatbot that generates natural language responses based on user input and message context. It can understand and respond to various types of requests like generating images, interpreting non-English prompts, and generating appropriate text in replies.
+A Conversational AI Bot via OpenAI GPT-4 and Custom Text Generation API 
 
-## Dependencies
+This is a cloud-based conversational AI implementation using OpenAI's GPT-4 model and a custom text generation API. It also includes capabilities of processing image related operations. 
 
-The following Python libraries need to be installed:
+## Getting Started
 
-- `json`
-- `os`
-- `chardet`
-- `langdetect`
-- `mattermostdriver`
-- `openai`
-- `webuiapi`
+These instructions will help you set up the project on your local machine.
 
-Make sure to have the latest versions installed using `pip`:
+## Prerequisites
 
-```
-pip install chardet langdetect mattermostdriver openai webuiapi
-```
+- Python 3.6 or later.
+- Python libraries - `json`, `os`, `requests`, `PIL`, `chardet`, `langdetect`, `mattermostdriver`, `OpenAI`, `webuiapi`.
 
-## Usage
+## Structure
 
-1. Set up required environment variables:
-   - `OPENAI_API_KEY`: Your OpenAI API key
-   - `MATTERMOST_URL`: The URL for your Mattermost instance
-   - `MATTERMOST_TOKEN`: Your Mattermost API token
-   - `MATTERMOST_BOTNAME`: The bot's display name in Mattermost
-   - `OPENAI_MODEL_NAME`: The OpenAI model to use (e.g., `gpt-4`)
+The project is divided into four main Python files:
 
-2. Run the program:
-```
-python chatbot.py
-```
+1. `api_connections.py`
+2. `app.py`
+3. `image_processing.py`
+4. `language_processing.py`
 
-3. The bot should now be active on Mattermost and generating responses based on user input.
+#### api_connections.py
 
-## Features
+Here we establish connections with different APIs including `OpenAI`, `Mattermost`, and `webuiapi`. Included are functions to send request and receive response from OpenAI and custom text generation API models.
 
-This chatbot has the following features:
+#### app.py
 
-- Detects if a message requests image generation.
-- Determines if a message asks for multiple images or just one.
-- Checks if a text is mainly in English or other languages.
-- Context-aware responses: provides relevant replies based on previous messages.
-- Generates images from text prompts, handles non-English prompts, and professional terms.
-- Handles errors from OpenAI and Mattermost APIs.
+The central application file that signs into your chat interface (here, Mattermost) and listens for new events, reacting accordingly with either text or image responses.
+
+#### image_processing.py
+
+Contains methods for processing image-centric commands, including image generation and image upscaling using the `webuiapi`.
+
+#### language_processing.py
+
+A file defining core language and text processing functions that facilitate communication between the AI and the user.
+
+## Setup
+
+Remember to set the environment variables with your respective API keys.
+
+## Running
+
+You can start the application by running `app.py`.
+
+## Built With
+
+- [OpenAI](https://openai.com/research/)
+- [Mattermostdriver](https://pypi.org/project/mattermostdriver/)
+- [webuiapi](https://link-to-web-ui-api-provider.com)
+
+## Contributing
+
+TODO
+
+## Versioning
+
+TODO
+
+## Authors
+
+- bunnyh, ronaz
 
 ## License
 
-MIT License.
+This project is licensed under the IDC (I don't care) License - use your brains for details.
 
-### Note
+## Acknowledgments
 
-Please note that the provided code is for informational purposes, do not use the code as-is without verification or validation. Always test and implement proper security measures.
+- OpenAI's team
+- The creator of Stable Diffusion
+- Anyone whose code was used \o/
