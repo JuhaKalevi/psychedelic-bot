@@ -19,6 +19,8 @@ async def context_manager(event):
     else:
       context = {'order':[], 'posts':{}}
       thread_id = post['id']
+    context['order'].append(post['id'])
+    context['posts'][post['id']] = post
     if post['message'].lower().startswith("4x"):
       openai_response_content = upscale_image(file_ids, post)
     elif post['message'].lower().startswith("llm"):
@@ -28,16 +30,13 @@ async def context_manager(event):
         openai_response_content = generate_images(file_ids, post, 8)
       else:
         openai_response_content = generate_images(file_ids, post, 1)
-    elif is_asking_for_channel_summary(post['message']):
+    elif is_asking_for_channel_summary(post['message']) and thread_id == '':
       openai_response_content = generate_text_from_context(mm.channels.get_channel_pinned_posts(post['channel_id']))
-      print(openai_response_content)
     else:
-      context['order'].append(post['id'])
-      context['posts'][post['id']] = post
       openai_response_content = generate_text_from_context(context)
   else:
-    thread_id = post['root_id']
     context = mm.posts.get_thread(post['id'])
+    thread_id = post['root_id']
     if not any(os.environ['MATTERMOST_BOTNAME'] in post['message'] for post in context['posts'].values()):
       return
     openai_response_content = generate_text_from_context(context)
