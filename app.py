@@ -2,7 +2,7 @@ import json
 import os
 import mattermostdriver
 from api_connections import mm, textgen_chat_completion
-from language_processing import generate_text_from_context, is_asking_for_image_generation, is_asking_for_multiple_images
+from language_processing import generate_text_from_context, is_asking_for_image_generation, is_asking_for_multiple_images, is_asking_for_channel_summary
 from image_processing import generate_images, upscale_image
 
 async def context_manager(event):
@@ -23,6 +23,8 @@ async def context_manager(event):
           openai_response_content = generate_images(file_ids, post, 8)
         else:
           openai_response_content = generate_images(file_ids, post, 1)
+      elif is_asking_for_channel_summary(post['message']):
+          openai_response_content = 'need a channel summary here'
       else:
         context = {'order': [post['id']], 'posts': {post['id']: post}}
         openai_response_content = generate_text_from_context(context)
