@@ -33,8 +33,8 @@ async def upscale_image(file_ids, post, resize_w: int = 2048, resize_h: int = 20
   for post_file_id in post['file_ids']:
     file_response = mm.files.get_file(file_id=post_file_id)
     if file_response.status_code == 200:
-        file_type = os.path.splitext(file_response.headers["Content-Disposition"])[1][1:]
-        post_file_path = f'{post_file_id}.{file_type}'
+      file_type = os.path.splitext(file_response.headers["Content-Disposition"])[1][1:]
+      post_file_path = f'{post_file_id}.{file_type}'
       with open(post_file_path, 'wb') as post_file:
         post_file.write(file_response.content)
     try:
