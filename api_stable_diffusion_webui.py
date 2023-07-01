@@ -79,8 +79,8 @@ async def instruct_pix2pix(file_ids, post, denoising_strength=1):
       options['sd_model_checkpoint'] = 'Imageinstruct-pix2pix-00-22000.safetensors [fbc31a67aa]'
       webui_api.set_options(options)
       result = webui_api.img2img(
-        prompt = post['message'],
         post_file_image,
+        prompt = post['message'],
         denoising_strength=denoising_strength,
       )
       processed_image_path = f"processed_{post_file_id}.png"
