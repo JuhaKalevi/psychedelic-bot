@@ -1,6 +1,6 @@
 import os
 from PIL import Image
-from api_connections import mm, webui_api
+from api.mattermost import mm, webui_api
 from language_processing import generate_text_from_message, is_mainly_english
 
 async def fix_image_generation_prompt(prompt):
