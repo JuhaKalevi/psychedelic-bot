@@ -13,7 +13,7 @@ async def fix_image_generation_prompt(prompt):
 async def generate_images(file_ids, post, count):
   comment = ''
   if not is_mainly_english(post['message'].encode('utf-8')):
-    comment = post['message'] = fix_image_generation_prompt(post['message'])
+    comment = post['message'] = await fix_image_generation_prompt(post['message'])
   options = webui_api.get_options()
   options = {}
   options['sd_model_checkpoint'] = 'realisticVisionV30_v30VAE.safetensors [c52892e92a]'
