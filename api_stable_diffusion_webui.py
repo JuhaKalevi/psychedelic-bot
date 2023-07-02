@@ -77,6 +77,7 @@ async def instruct_pix2pix(file_ids, post):
       result = webui_api.img2img(
         images = [post_file_image],
         prompt = post['message'],
+        steps = 100,
         seed = -1,
         cfg_scale = 7,
         denoising_strength=1,
