@@ -74,6 +74,10 @@ async def instruct_pix2pix(file_ids, post):
         post_file.write(file_response.content)
     try:
       post_file_image = Image.open(post_file_path)
+      options = webui_api.get_options()
+      options = {}
+      options['sd_model_checkpoint'] = 'Imageinstruct-pix2pix-00-22000.safetensors [fbc31a67aa]'
+      webui_api.set_options(options)
       result = webui_api.img2img(
         images = [post_file_image],
         prompt = post['message'],
