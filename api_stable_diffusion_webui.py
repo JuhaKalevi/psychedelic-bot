@@ -19,6 +19,7 @@ async def generate_images(file_ids, post, count):
     options = webui_api.get_options()
     options = {}
     options['sd_model_checkpoint'] = 'realisticVisionV30_v30VAE.safetensors [c52892e92a]'
+    options['sd_vae'] = "vae-ft-mse-840000-ema-pruned.safetensors"
     webui_api.set_options(options)
     negative_prompt = "(unfinished:1.43), (sloppy and messy:1.43), (incoherent:1.43), (deformed:1.43)",
     steps = 42,
@@ -81,6 +82,7 @@ async def instruct_pix2pix(file_ids, post):
       options = webui_api.get_options()
       options = {}
       options['sd_model_checkpoint'] = 'instruct-pix2pix-00-22000.safetensors [fbc31a67aa]'
+      options['sd_vae'] = "None"
       webui_api.set_options(options)
       result = webui_api.img2img(
         images = [post_file_image],
