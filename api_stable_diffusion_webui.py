@@ -16,6 +16,10 @@ async def generate_images(file_ids, post, count):
     comment = post['message'] = fix_image_generation_prompt(post['message'])
   result = webui_api.txt2img(
     prompt = post['message'],
+    options = webui_api.get_options()
+    options = {}
+    options['sd_model_checkpoint'] = 'realisticVisionV30_v30VAE.safetensors [c52892e92a]'
+    webui_api.set_options(options)
     negative_prompt = "(unfinished:1.43), (sloppy and messy:1.43), (incoherent:1.43), (deformed:1.43)",
     steps = 42,
     sampler_name = 'UniPC',
