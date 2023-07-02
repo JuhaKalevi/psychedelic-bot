@@ -17,7 +17,7 @@ async def generate_images(file_ids, post, count):
   options = webui_api.get_options()
   options = {}
   options['sd_model_checkpoint'] = 'realisticVisionV30_v30VAE.safetensors [c52892e92a]'
-#  options['sd_vae'] = 'vae-ft-mse-840000-ema-pruned.safetensors'
+  options['sd_vae'] = 'vae-ft-mse-840000-ema-pruned.safetensors'
   webui_api.set_options(options)
   result = webui_api.txt2img(
     prompt = post['message'],
