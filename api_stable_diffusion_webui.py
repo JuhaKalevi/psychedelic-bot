@@ -79,8 +79,8 @@ async def instruct_pix2pix(file_ids, post):
         prompt = post['message'],
         steps = 100,
         seed = -1,
-        cfg_scale = 7,
-        denoising_strength=1,
+        cfg_scale = 7.5,
+        denoising_strength=1.5,
       )
       if not result:
         raise RuntimeError("API returned an invalid response")
