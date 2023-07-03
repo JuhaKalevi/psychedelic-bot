@@ -1,9 +1,25 @@
-import json
 import os
+import json
 import chardet
 import langdetect
 import tiktoken
-from api_openai import openai_chat_completion
+from api_mattermost import mm
+from api_openai import BOT_NAME, openai_chat_completion
+
+async def check_purpose(channel):
+  system_context = []
+  code_snippets = []
+  if f"" != 'Channel where ' + os.environ['MATTERMOST_BOTNAME'] + ' responds without tagging' and channel['type'] != 'D' and channel['display_name'] != 'Testing':
+    code_analysis_requested = True
+  else:
+    code_analysis_requested = await is_asking_for_code_analysis(message)
+  if code_analysis_requested:
+    for file_path in [x for x in os.listdir() if x.endswith('.py')]:
+      with open(file_path, 'r', encoding='utf-8') as file:
+        code = file.read()
+      code_snippets.append(f'--- BEGING {file_path} ---\n{code}\n')
+    system_context.append({'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+'```'.join(code_snippets)})
+  return system_context
 
 def count_tokens(message):
   encoding = tiktoken.get_encoding('cl100k_base')
@@ -11,9 +27,9 @@ def count_tokens(message):
 
 async def generate_text_from_context(context):
   context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
+  context_system_message = await check_purpose(mm.channels.get_channel(context['posts'][context['order'][0]]['channel_id']))
   context_messages = []
-  system_message = await select_system_message(context['posts'][context['order'][0]]['message'])
-  context_tokens = count_tokens(system_message)
+  context_tokens = count_tokens(context_system_message)
   for post_id in context['order']:
     if 'from_bot' in context['posts'][post_id]['props']:
       role = 'assistant'
@@ -50,20 +66,6 @@ async def is_asking_for_multiple_images(message):
   response = await generate_text_from_message(f'Is this a message where multiple images are requested? Answer only True or False: {message}')
   return response.startswith('True')
 
+
 def is_mainly_english(text):
   return langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
-
-async def select_system_message(message):
-  system_message = []
-  code_snippets = []
-  if '@code-analysis' in message:
-    code_analysis_requested = True
-  else:
-    code_analysis_requested = await is_asking_for_code_analysis(message)
-  if code_analysis_requested:
-    for file_path in [x for x in os.listdir() if x.endswith('.py')]:
-      with open(file_path, 'r', encoding='utf-8') as file:
-        code = file.read()
-      code_snippets.append(f"--- {file_path} ---\n{code}\n")
-    system_message.append({'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+'```'.join(code_snippets)})
-  return system_message
