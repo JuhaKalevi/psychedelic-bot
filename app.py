@@ -2,7 +2,7 @@ import json
 import os
 from api_mattermost import mm, create_mattermost_post
 from api_oobabooga_textgen import textgen_chat_completion
-from api_stable_diffusion_webui import generate_images, upscale_image, instruct_pix2pix
+from api_stable_diffusion_webui import generate_images, upscale_image_2x, upscale_image_4x, instruct_pix2pix
 from language_processing import generate_text_from_context, is_asking_for_image_generation, is_asking_for_multiple_images, is_asking_for_channel_summary
 
 async def context_manager(event):
