@@ -23,7 +23,9 @@ async def context_manager(event):
     else:
       thread_id = ''
       context = mm.posts.get_posts_for_channel(new_post['channel_id'])
-    if new_post['message'].lower().startswith("4x"):
+    if new_post['message'].lower().startswith("2x"):
+      openai_response_content = await upscale_image_2x(file_ids, new_post)
+    elif new_post['message'].lower().startswith("4x"):
       openai_response_content = await upscale_image(file_ids, new_post)
     elif new_post['message'].lower().startswith("pix2pix"):
       openai_response_content = await instruct_pix2pix(file_ids, new_post)

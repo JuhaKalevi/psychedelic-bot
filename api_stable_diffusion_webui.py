@@ -33,7 +33,7 @@ async def generate_images(file_ids, post, count):
       file_ids.append(mm.files.upload_file(post['channel_id'], files={'files': ('result.png', image_file)})['file_infos'][0]['id'])
   return comment
 
-async def upscale_image(file_ids, post, resize_w: int = 2048, resize_h: int = 2048, upscaler="LDSR"):
+async def upscale_image_2x(file_ids, post, resize_w: int = 1024, resize_h: int = 1024, upscaler="LDSR"):
   comment = ''
   for post_file_id in post['file_ids']:
     file_response = mm.files.get_file(file_id=post_file_id)
