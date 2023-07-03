@@ -33,7 +33,7 @@ async def generate_images(file_ids, post, count):
       file_ids.append(mm.files.upload_file(post['channel_id'], files={'files': ('result.png', image_file)})['file_infos'][0]['id'])
   return comment
 
-async def upscale_image_2x(file_ids, post, resize_w: int = 1024, resize_h: int = 1024, upscaler="LDSR"):
+async def upscale_image_4x(file_ids, post, resize_w: int = 1024, resize_h: int = 1024, upscaler="LDSR"):
   comment = ''
   for post_file_id in post['file_ids']:
     file_response = mm.files.get_file(file_id=post_file_id)
@@ -47,6 +47,41 @@ async def upscale_image_2x(file_ids, post, resize_w: int = 1024, resize_h: int =
       result = webui_api.extra_single_image(
         post_file_image,
         upscaling_resize=4,
+        upscaling_resize_w=resize_w,
+        upscaling_resize_h=resize_h,
+        upscaler_1=upscaler,
+      )
+      upscaled_image_path = f"upscaled_{post_file_id}.png"
+      result.image.save(upscaled_image_path)
+      with open(upscaled_image_path, 'rb') as image_file:
+        file_id = mm.files.upload_file(
+          post['channel_id'],
+          files={'files': (upscaled_image_path, image_file)}
+        )['file_infos'][0]['id']
+      file_ids.append(file_id)
+      comment += "Image upscaled successfully"
+    except RuntimeError as err:
+      comment += f"Error occurred while upscaling image: {str(err)}"
+    finally:
+      for temporary_file_path in (post_file_path, upscaled_image_path):
+        if os.path.exists(temporary_file_path):
+          os.remove(temporary_file_path)
+  return comment
+
+async def upscale_image_2x(file_ids, post, resize_w: int = 1024, resize_h: int = 1024, upscaler="LDSR"):
+  comment = ''
+  for post_file_id in post['file_ids']:
+    file_response = mm.files.get_file(file_id=post_file_id)
+    if file_response.status_code == 200:
+      file_type = os.path.splitext(file_response.headers["Content-Disposition"])[1][1:]
+      post_file_path = f'{post_file_id}.{file_type}'
+      with open(post_file_path, 'wb') as post_file:
+        post_file.write(file_response.content)
+    try:
+      post_file_image = Image.open(post_file_path)
+      result = webui_api.extra_single_image(
+        post_file_image,
+        upscaling_resize=2,
         upscaling_resize_w=resize_w,
         upscaling_resize_h=resize_h,
         upscaler_1=upscaler,
