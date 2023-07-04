@@ -9,7 +9,7 @@ async def textgen_chat_completion(user_input, history):
     'history': history,
     'mode': 'instruct',
     'character': 'Example',
-    'instruction_template': 'Wizard-Mega WizardLM',
+    'instruction_template': 'WizardLM',
     'your_name': 'You',
     'regenerate': False,
     '_continue': False,
