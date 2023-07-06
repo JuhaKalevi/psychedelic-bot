@@ -72,10 +72,8 @@ async def textgen_chat_completion(user_input, history):
   return 'oops'
 
 async def youtube_transcription(user_input):
-  if user_input.startswith("transcribe @gpt3 "):
-    response = user_input
-    return response
-  return "Incorrect command format. Please use the following format: 'transcribe @gpt3 [http://youtubeURL](http://youtubeURL)'"
+  response = user_input
+  return response
 
 async def openai_chat_completion(messages, model=os.environ['OPENAI_MODEL_NAME']):
   try:
