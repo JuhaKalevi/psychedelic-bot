@@ -71,21 +71,21 @@ async def textgen_chat_completion(user_input, history):
           return answer
   return 'oops'
 
-async def youtube_transcription(user_input):
-  if user_input.startswith("transcribe @gpt3 "):
-    print(user_input)
-    regex = r"\[(.*?)\]\((.*?)\)"
-    matches = re.findall(regex, user_input)
-    if matches:
-        # matches[0][1] will give the URL present in user_input
-      user_input = matches[0][1]
-    else:
-      return "Incorrect command format. Please use the following format: 'transcribe @gpt3 [http://youtubeURL](http://youtubeURL)'"
-    client = Client(TRANSCRIPTION_API_URI)
-    response = client.predict(user_input, fn_index=1)
-    print(response)
-    return response
-  return "Incorrect command format. Please use the following format: 'transcribe @gpt3 [http://youtubeURL](http://youtubeURL)'"
+#async def youtube_transcription(user_input):
+#  if user_input.startswith("transcribe @gpt3 "):
+#    print(user_input)
+#    regex = r"\[(.*?)\]\((.*?)\)"
+#    matches = re.findall(regex, user_input)
+#    if matches:
+#        # matches[0][1] will give the URL present in user_input
+#      user_input = matches[0][1]
+#    else:
+#      return "Incorrect command format. Please use the following format: 'transcribe @gpt3 [http://youtubeURL](http://youtubeURL)'"
+#    client = Client(TRANSCRIPTION_API_URI)
+#    response = client.predict(user_input, fn_index=1)
+#    print(response)
+#    return response
+#  return "Incorrect command format. Please use the following format: 'transcribe @gpt3 [http://youtubeURL](http://youtubeURL)'"
 
 async def openai_chat_completion(messages, model=os.environ['OPENAI_MODEL_NAME']):
   try:
@@ -187,8 +187,8 @@ async def context_manager(event):
       openai_response_content = await instruct_pix2pix(file_ids, post)
     elif post['message'].lower().startswith("llm"):
       openai_response_content = await textgen_chat_completion(post['message'], {'internal': [], 'visible': []})
-    elif post['message'].lower().startswith("transcribe"):
-      openai_response_content = await youtube_transcription(post['message'])
+#    elif post['message'].lower().startswith("transcribe"):
+#      openai_response_content = await youtube_transcription(post['message'])
     elif await is_asking_for_image_generation(post['message']):
       if await is_asking_for_multiple_images(post['message']):
         openai_response_content = await generate_images(file_ids, post, 8)
