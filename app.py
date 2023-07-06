@@ -81,7 +81,7 @@ async def youtube_transcription(user_input):
   if response.status_code == 200:
     response_content = json.loads(response.text)
     results = response_content["results"]
-      return results
+    return results
   return 'oops'
 
 async def openai_chat_completion(messages, model=os.environ['OPENAI_MODEL_NAME']):
