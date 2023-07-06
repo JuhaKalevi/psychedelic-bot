@@ -13,8 +13,8 @@ async def choose_system_message(post):
       with open(file_path, 'r', encoding='utf-8') as file:
         code = file.read()
       code_snippets.append(f'--- BEGING {file_path} ---\n{code}\n')
-    return[{'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+'```'.join(code_snippets)}]
-  return []
+    return [{'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+'```'.join(code_snippets)}]
+  return [{'role':'system', 'content':'You are an assistant with no specific role determined right now.'}]
 
 def count_tokens(message):
   encoding = tiktoken.get_encoding('cl100k_base')
