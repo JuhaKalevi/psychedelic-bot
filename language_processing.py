@@ -6,13 +6,14 @@ import tiktoken
 from api_mattermost import mm
 from api_openai import BOT_NAME, openai_chat_completion
 
-async def check_purpose(channel):
+async def check_purpose(post):
+  channel = post['channel_id']
   system_context = []
   code_snippets = []
   if f"" != 'Channel where ' + os.environ['MATTERMOST_BOTNAME'] + ' responds without tagging' and channel['type'] != 'D' and channel['display_name'] != 'Testing':
     code_analysis_requested = True
   else:
-    code_analysis_requested = await is_asking_for_code_analysis(message)
+    code_analysis_requested = await is_asking_for_code_analysis(post['message'])
   if code_analysis_requested:
     for file_path in [x for x in os.listdir() if x.endswith('.py')]:
       with open(file_path, 'r', encoding='utf-8') as file:
@@ -27,7 +28,7 @@ def count_tokens(message):
 
 async def generate_text_from_context(context):
   context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
-  context_system_message = await check_purpose(mm.channels.get_channel(context['posts'][context['order'][0]]['channel_id']))
+  context_system_message = await check_purpose(mm.channels.get_channel(context['posts'][context['order'][0]]))
   context_messages = []
   context_tokens = count_tokens(context_system_message)
   for post_id in context['order']:
@@ -43,7 +44,7 @@ async def generate_text_from_context(context):
     else:
       break
   context_messages.reverse()
-  response = await openai_chat_completion(system_message + context_messages, os.environ['OPENAI_MODEL_NAME'])
+  response = await openai_chat_completion(context_system_message + context_messages, os.environ['OPENAI_MODEL_NAME'])
   return response
 
 async def generate_text_from_message(message, model='gpt-4'):
