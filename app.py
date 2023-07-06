@@ -7,6 +7,7 @@ import requests
 import mattermostdriver
 import tiktoken
 import webuiapi
+import gradio_client
 from PIL import Image
 
 openai.api_key = os.environ['OPENAI_API_KEY']
@@ -74,18 +75,13 @@ async def youtube_transcription(user_input):
     'user_input': user_input,
     'fn_index': 1,
   }
-  response = requests.post(TRANSCRIPTION_API_URI, json=request, timeout=420)
+  client = Client("TRANSCRIPTION_API_URI")
+  response = client.predict(json=request)
+  print(response)
   if response.status_code == 200:
     response_content = json.loads(response.text)
     results = response_content["results"]
-    for result in results:
-      chat_history = result.get("history", {})
-      internal_history = chat_history.get("internal", [])
-      if internal_history:
-        last_entry = internal_history[-1]
-        if len(last_entry) > 1:
-          answer = last_entry[1]
-          return answer
+      return results
   return 'oops'
 
 async def openai_chat_completion(messages, model=os.environ['OPENAI_MODEL_NAME']):
