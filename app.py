@@ -77,8 +77,7 @@ async def youtube_transcription(user_input):
     response = client.predict(user_input, fn_index=1)
     print(response)
     return response
-  else:
-    return "Incorrect command format. Please use the following format: 'transcribe @gpt3 {youtubeURL}'"
+  return "Incorrect command format. Please use the following format: 'transcribe @gpt3 {youtubeURL}'"
 
 async def openai_chat_completion(messages, model=os.environ['OPENAI_MODEL_NAME']):
   try:
