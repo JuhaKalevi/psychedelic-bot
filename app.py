@@ -7,7 +7,7 @@ import requests
 import mattermostdriver
 import tiktoken
 import webuiapi
-import gradio_client
+from gradio_client import Client
 from PIL import Image
 
 openai.api_key = os.environ['OPENAI_API_KEY']
