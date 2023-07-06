@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import chardet
 import langdetect
 import openai
@@ -72,12 +73,18 @@ async def textgen_chat_completion(user_input, history):
 
 async def youtube_transcription(user_input):
   if user_input.startswith("transcribe @gpt3 "):
-    user_input = user_input.replace("transcribe @gpt3 ", "", 1)
+    regex = r"\[(.*?)\]\((.*?)\)"
+    matches = re.findall(regex, user_input)
+    if matches:
+        # matches[0][1] will give the URL present in user_input 
+        user_input = matches[0][1]
+    else:
+        return "Incorrect command format. Please use the following format: 'transcribe @gpt3 [http://youtubeURL](http://youtubeURL)'"
     client = Client(TRANSCRIPTION_API_URI)
     response = client.predict(user_input, fn_index=1)
     print(response)
     return response
-  return "Incorrect command format. Please use the following format: 'transcribe @gpt3 {youtubeURL}'"
+  return "Incorrect command format. Please use the following format: 'transcribe @gpt3 [http://youtubeURL](http://youtubeURL)'"
 
 async def openai_chat_completion(messages, model=os.environ['OPENAI_MODEL_NAME']):
   try:
