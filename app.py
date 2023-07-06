@@ -1,6 +1,6 @@
 import json
 import os
-import re
+#import re
 import chardet
 import langdetect
 import openai
@@ -8,7 +8,7 @@ import requests
 import mattermostdriver
 import tiktoken
 import webuiapi
-from gradio_client import Client
+#from gradio_client import Client
 from PIL import Image
 
 openai.api_key = os.environ['OPENAI_API_KEY']
