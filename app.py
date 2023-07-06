@@ -76,7 +76,7 @@ async def youtube_transcription(user_input):
     'fn_index': 1,
   }
   client = Client("TRANSCRIPTION_API_URI")
-  response = client.predict(json=request)
+  response = client.predict(request)
   print(response)
   if response.status_code == 200:
     response_content = json.loads(response.text)
