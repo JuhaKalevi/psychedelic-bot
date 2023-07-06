@@ -1,8 +1,8 @@
-import chardet
 import json
+import os
+import chardet
 import langdetect
 import openai
-import os
 import requests
 import mattermostdriver
 import tiktoken
