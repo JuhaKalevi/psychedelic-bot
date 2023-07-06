@@ -80,11 +80,7 @@ async def youtube_transcription(user_input):
   client = Client("TRANSCRIPTION_API_URI")
   response = client.predict(request)
   print(response)
-  if response.status_code == 200:
-    response_content = json.loads(response.text)
-    results = response_content["results"]
-    return results
-  return 'oops'
+  return response
 
 async def openai_chat_completion(messages, model=os.environ['OPENAI_MODEL_NAME']):
   try:
