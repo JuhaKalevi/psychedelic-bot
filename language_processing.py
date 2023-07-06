@@ -14,8 +14,7 @@ async def choose_system_message(post):
         code = file.read()
       code_snippets.append(f'--- BEGING {file_path} ---\n{code}\n')
     return[{'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+'```'.join(code_snippets)}]
-  else:
-    return []
+  return []
 
 def count_tokens(message):
   encoding = tiktoken.get_encoding('cl100k_base')
