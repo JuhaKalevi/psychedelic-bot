@@ -1,6 +1,6 @@
 import json
 import os
-#import re
+import re
 import chardet
 import langdetect
 import openai
@@ -8,7 +8,7 @@ import requests
 import mattermostdriver
 import tiktoken
 import webuiapi
-#from gradio_client import Client
+from gradio_client import Client
 from PIL import Image
 
 openai.api_key = os.environ['OPENAI_API_KEY']
@@ -72,8 +72,19 @@ async def textgen_chat_completion(user_input, history):
   return 'oops'
 
 async def youtube_transcription(user_input):
-  response = user_input
-  return response
+  if user_input.startswith("transcribe @gpt3 "):
+    regex = r"\[(.*?)\]\((.*?)\)"
+    matches = re.findall(regex, user_input)
+    if matches:
+        # matches[0][1] will give the URL present in user_input
+      user_input = matches[0][1]
+    else:
+      return "Incorrect command format. Please use the following format: 'transcribe @gpt3 [http://youtubeURL](http://youtubeURL)'"
+    client = Client(TRANSCRIPTION_API_URI)
+    response = client.predict(user_input, fn_index=1)
+    print(response)
+    return response
+  return "Incorrect command format. Please use the following format: 'transcribe @gpt3 [http://youtubeURL](http://youtubeURL)'"
 
 async def openai_chat_completion(messages, model=os.environ['OPENAI_MODEL_NAME']):
   try:
