@@ -71,7 +71,6 @@ async def textgen_chat_completion(user_input, history):
 
 async def youtube_transcription(user_input):
   request = {
-    print(user_input)
     'user_input': user_input,
     'fn_index': 1,
   }
