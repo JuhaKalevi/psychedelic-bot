@@ -73,6 +73,7 @@ async def textgen_chat_completion(user_input, history):
 
 async def youtube_transcription(user_input):
   if user_input.startswith("transcribe @gpt3 "):
+    print(user_input)
     regex = r"\[(.*?)\]\((.*?)\)"
     matches = re.findall(regex, user_input)
     if matches:
