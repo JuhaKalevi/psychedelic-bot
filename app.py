@@ -76,10 +76,10 @@ async def youtube_transcription(user_input):
     regex = r"\[(.*?)\]\((.*?)\)"
     matches = re.findall(regex, user_input)
     if matches:
-        # matches[0][1] will give the URL present in user_input 
-        user_input = matches[0][1]
+        # matches[0][1] will give the URL present in user_input
+      user_input = matches[0][1]
     else:
-        return "Incorrect command format. Please use the following format: 'transcribe @gpt3 [http://youtubeURL](http://youtubeURL)'"
+      return "Incorrect command format. Please use the following format: 'transcribe @gpt3 [http://youtubeURL](http://youtubeURL)'"
     client = Client(TRANSCRIPTION_API_URI)
     response = client.predict(user_input, fn_index=1)
     print(response)
