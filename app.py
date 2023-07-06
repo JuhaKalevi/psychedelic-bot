@@ -91,10 +91,6 @@ async def choose_system_message(post):
     return [{'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+'```'.join(code_snippets)}]
   return [{'role':'system', 'content':'You are an assistant with no specific role determined right now.'}]
 
-def count_tokens(message):
-  encoding = tiktoken.get_encoding('cl100k_base')
-  return len(encoding.encode(json.dumps(message)))
-
 async def generate_text_from_context(context):
   context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
   system_message = await choose_system_message(mm.channels.get_channel(context['posts'][context['order'][0]]))
@@ -147,12 +143,6 @@ def is_configured_for_replies_without_tagging(channel):
 def is_mainly_english(text):
   return langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
 
-def create_mattermost_post(channel_id, message, file_ids, thread_id):
-  try:
-    mm.posts.create_post(options={'channel_id':channel_id, 'message':message, 'file_ids':file_ids, 'root_id':thread_id})
-  except (ConnectionResetError, mattermostdriver.exceptions.InvalidOrMissingParameters, mattermostdriver.exceptions.ResourceNotFound) as err:
-    print(f"Mattermost API Error: {err}")
-
 async def context_manager(event):
   file_ids = []
   event = json.loads(event)
@@ -190,7 +180,13 @@ async def context_manager(event):
     if not any(os.environ['MATTERMOST_BOTNAME'] in context_post['message'] for context_post in context['posts'].values()):
       return
     openai_response_content = await generate_text_from_context(context)
-  create_mattermost_post(post['channel_id'], openai_response_content, file_ids, thread_id)
+  try:
+    mm.posts.create_post(options={'channel_id':post['channel_id'], 'message':openai_response_content, 'file_ids':file_ids, 'root_id':thread_id})
+  except (ConnectionResetError, mattermostdriver.exceptions.InvalidOrMissingParameters, mattermostdriver.exceptions.ResourceNotFound) as err:
+    print(f"Mattermost API Error: {err}")
+
+def count_tokens(message):
+  return len(tiktoken.get_encoding('cl100k_base').encode(json.dumps(message)))
 
 async def fix_image_generation_prompt(prompt):
   return await generate_text_from_message(f"convert this to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features and you don't have to use full sentences, just a few keywords, separating these aspects by commas. Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally: {prompt}")
