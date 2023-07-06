@@ -4,23 +4,18 @@ import chardet
 import langdetect
 import tiktoken
 from api_mattermost import mm
-from api_openai import BOT_NAME, openai_chat_completion
+from api_openai import openai_chat_completion
 
-async def check_purpose(post):
-  channel = post['channel_id']
-  system_context = []
-  code_snippets = []
-  if f"" != 'Channel where ' + os.environ['MATTERMOST_BOTNAME'] + ' responds without tagging' and channel['type'] != 'D' and channel['display_name'] != 'Testing':
-    code_analysis_requested = True
-  else:
-    code_analysis_requested = await is_asking_for_code_analysis(post['message'])
-  if code_analysis_requested:
+async def choose_system_message(post):
+  if await is_asking_for_code_analysis(post['message']):
+    code_snippets = []
     for file_path in [x for x in os.listdir() if x.endswith('.py')]:
       with open(file_path, 'r', encoding='utf-8') as file:
         code = file.read()
       code_snippets.append(f'--- BEGING {file_path} ---\n{code}\n')
-    system_context.append({'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+'```'.join(code_snippets)})
-  return system_context
+    return[{'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+'```'.join(code_snippets)}]
+  else:
+    return []
 
 def count_tokens(message):
   encoding = tiktoken.get_encoding('cl100k_base')
@@ -28,9 +23,9 @@ def count_tokens(message):
 
 async def generate_text_from_context(context):
   context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
-  context_system_message = await check_purpose(mm.channels.get_channel(context['posts'][context['order'][0]]))
+  system_message = await choose_system_message(mm.channels.get_channel(context['posts'][context['order'][0]]))
   context_messages = []
-  context_tokens = count_tokens(context_system_message)
+  context_tokens = count_tokens(context)
   for post_id in context['order']:
     if 'from_bot' in context['posts'][post_id]['props']:
       role = 'assistant'
@@ -44,7 +39,7 @@ async def generate_text_from_context(context):
     else:
       break
   context_messages.reverse()
-  response = await openai_chat_completion(context_system_message + context_messages, os.environ['OPENAI_MODEL_NAME'])
+  response = await openai_chat_completion(system_message + context_messages, os.environ['OPENAI_MODEL_NAME'])
   return response
 
 async def generate_text_from_message(message, model='gpt-4'):
@@ -67,6 +62,12 @@ async def is_asking_for_multiple_images(message):
   response = await generate_text_from_message(f'Is this a message where multiple images are requested? Answer only True or False: {message}')
   return response.startswith('True')
 
+def is_configured_for_replies_without_tagging(channel):
+  if channel['display_name'] == 'Testing':
+    return True
+  if f"{os.environ['MATTERMOST_BOTNAME']} responds without tagging" in channel['purpose']:
+    return True
+  return False
 
 def is_mainly_english(text):
   return langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
