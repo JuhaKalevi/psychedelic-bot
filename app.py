@@ -12,8 +12,8 @@ async def context_manager(event):
     return
   post = json.loads(event['data']['post'])
   if is_configured_for_replies_without_tagging(mm.channels.get_channel(post['channel_id'])):
-      thread_id = ''
-      context = mm.posts.get_posts_for_channel(post['channel_id'])
+    thread_id = ''
+    context = mm.posts.get_posts_for_channel(post['channel_id'])
   elif post['root_id'] == '':
     if os.environ['MATTERMOST_BOTNAME'] in post['message']:
       thread_id = post['id']
