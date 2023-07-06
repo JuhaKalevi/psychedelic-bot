@@ -23,6 +23,7 @@ def count_tokens(message):
 async def generate_text_from_context(context):
   context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
   system_message = await choose_system_message(mm.channels.get_channel(context['posts'][context['order'][0]]))
+  print(system_message)
   context_messages = []
   context_tokens = count_tokens(context)
   for post_id in context['order']:
