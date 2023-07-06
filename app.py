@@ -69,7 +69,7 @@ async def textgen_chat_completion(user_input, history):
           return answer
   return 'oops'
 
-async def youtube_transcription(user_input, ):
+async def youtube_transcription(user_input):
   request = {
     print(user_input)
     'user_input': user_input,
