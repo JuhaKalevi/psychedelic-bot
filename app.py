@@ -71,7 +71,6 @@ async def textgen_chat_completion(user_input, history):
   return 'oops'
 
 async def youtube_transcription(user_input):
-  TRANSCRIPTION_API_URI = "https://f645412aa7bfd8b6d8.gradio.live/"
 #  if user_input.startswith("transcribe @gpt3 "):
 #    user_input = user_input.replace("transcribe @gpt3 ", "", 1)
   client = Client(TRANSCRIPTION_API_URI)
