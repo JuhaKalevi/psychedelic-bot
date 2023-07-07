@@ -1,6 +1,8 @@
 from json import dumps, loads
 from os import environ, path, listdir, remove
 import re
+import time
+import base64
 import chardet
 import langdetect
 import openai
@@ -84,6 +86,8 @@ async def respond_to_magic_words(post: dict, file_ids: list):
     response = await textgen_chat_completion(post['message'], {'internal': [], 'visible': []})
   elif post['message'].lower().startswith("summary"):
     response = await youtube_transcription(post['message'])
+  elif post['message'].lower().startswith("caption"):
+    response = await captioner(post)
   else:
     return None
   return response
@@ -358,6 +362,46 @@ async def generate_summary_from_transcription(message, model='gpt-4'):
     }
 ], model)
   return response
+
+async def captioner(post):
+  caption = ''
+  for post_file_id in post['file_ids']:
+    file_response = mm.files.get_file(file_id=post_file_id)
+    if file_response.status_code == 200:
+      file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
+      post_file_path = f'{post_file_id}.{file_type}'
+  url = "https://stablehorde.net/api/v2/interrogate/async"
+  headers = {"Content-Type": "application/json",
+            "apikey": 'token': environ['STABLEHORDE_API_KEY']
+            }
+  with open(post_file_path, 'rb') as f:
+      img_byte = f.read()
+  source_image_base64 = base64.b64encode(img_byte).decode("utf-8")
+  data = {
+      "forms": [
+          {
+              "name": "caption",
+              "payload": {} # Additional form payload data should go here, based on spec
+          }
+      ],
+      "source_image": source_image_base64, # Here is the base64 image
+      "slow_workers": True
+  }
+  response = requests.post(url, headers=headers, data=json.dumps(data))
+  print(response.json())
+  response_content = response.json()
+  id_value = response_content['id']
+  print(id_value)
+  time.sleep(20)
+  caption = requests.get(
+      'https://stablehorde.net/api/v2/interrogate/status/' + id_value, 
+      headers=headers
+  ) 
+  json_response = caption.json()
+  print(json_response)
+  caption=json_response['forms'][0]['result']['caption']
+  print(caption)
+  return caption
 
 mm = mattermostdriver.Driver({'url': environ['MATTERMOST_URL'], 'token': environ['MATTERMOST_TOKEN'], 'scheme':'https', 'port':443})
 mm.login()
