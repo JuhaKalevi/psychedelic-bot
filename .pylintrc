@@ -2,8 +2,6 @@
 disable=
     C0114, # missing-module-docstring
     C0116, # missing-function-docstring
-    R0914, # too-many-locals
-    W0631, # undefined-loop-variable
     W1514, # unspecified-encoding
 max-branches=42
 [FORMAT]

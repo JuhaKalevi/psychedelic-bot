@@ -105,76 +105,82 @@ async def generate_text_from_context(context):
   context_messages.reverse()
   return await openai_chat_completion(system_message + context_messages, 'gpt-4')
 
-async def generate_text_from_message(message, model='gpt-4'):
+async def generate_text_from_message(message: dict, model='gpt-4'):
   return await openai_chat_completion([{'role': 'user', 'content': message}], model)
 
-async def is_asking_for_channel_summary(message):
-  return (await generate_text_from_message(f'Is this a message where a summary of past interactions in this chat/discussion/channel is requested? Answer only True or False: {message}')).startswith('True')
+async def is_asking_for_channel_summary(message: dict) -> bool:
+  response = await generate_text_from_message(f'Is this a message where a summary of past interactions in this chat/discussion/channel is requested? Answer only True or False: {message}')
+  return response.startswith('True')
 
-async def is_asking_for_code_analysis(message):
-  return (await generate_text_from_message(f'Is this a message where knowledge or analysis of your code is requested? It does not matter whether you know about the files or not yet, you have a function that we will use later on if needed. Answer only True or False: {message}')).startswith('True')
+async def is_asking_for_code_analysis(message: dict) -> bool:
+  response = await generate_text_from_message(f'Is this a message where knowledge or analysis of your code is requested? It does not matter whether you know about the files or not yet, you have a function that we will use later on if needed. Answer only True or False: {message}')
+  return response.startswith('True')
 
-async def is_asking_for_image_generation(message):
-  return (await generate_text_from_message(f'Is this a message where an image is probably requested? Answer only True or False: {message}')).startswith('True')
+async def is_asking_for_image_generation(message: dict) -> bool:
+  response = await generate_text_from_message(f'Is this a message where an image is probably requested? Answer only True or False: {message}')
+  return response.startswith('True')
 
-async def is_asking_for_multiple_images(message):
-  return (await generate_text_from_message(f'Is this a message where multiple images are requested? Answer only True or False: {message}')).startswith('True')
+async def is_asking_for_multiple_images(message: dict) -> bool:
+  response = await generate_text_from_message(f'Is this a message where multiple images are requested? Answer only True or False: {message}')
+  return response.startswith('True')
 
-def is_configured_for_replies_without_tagging(channel):
+def is_configured_for_replies_without_tagging(channel: dict) -> bool:
   if channel['display_name'] == 'Testing':
     return True
   if f"{BOT_NAME} responds without tagging" in channel['purpose']:
     return True
   return False
 
-def is_mainly_english(text):
+def is_mainly_english(text: str) -> bool:
   return langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
 
-def channel_from_post(post):
+def channel_from_post(post: dict) -> dict:
   return mm.channels.get_channel(post['channel_id'])
-def channel_history_from_post(post):
+
+def channel_context(post: dict) -> dict:
   return mm.posts.get_posts_for_channel(post['channel_id'])
 
-def context_from_post(post):
+def thread_context(post: dict) -> dict:
   return {'order':[post['id']], 'posts':{post['id']:post}}
 
-async def context_manager(event):
+async def create_mattermost_post(options: dict) -> dict:
+  try:
+    mm.posts.create_post(options=options)
+  except (ConnectionResetError, mattermostdriver.exceptions.InvalidOrMissingParameters, mattermostdriver.exceptions.ResourceNotFound) as err:
+    return f"Mattermost API Error: {err}"
+
+async def context_manager(event: dict):
   file_ids = []
   event = loads(event)
   response = None
-  if not ('event' in event and event['event'] == 'posted' and event['data']['sender_name'] != BOT_NAME):
-    return
-  post = loads(event['data']['post'])
-  message = post['message']
-  if post['root_id'] == '' and is_configured_for_replies_without_tagging(channel_from_post(post)):
-    thread_id = post['id']
-    response = await respond_to_magic_words(post, file_ids)
-    if response is None:
-      response = await generate_text_from_context(channel_history_from_post(post))
-  elif post['root_id'] == '':
-    if BOT_NAME in message:
-      thread_id = post['id']
+  if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != BOT_NAME:
+    post = loads(event['data']['post'])
+    message = post['message']
+    thread = post['root_id']
+    if thread == '' and is_configured_for_replies_without_tagging(channel_from_post(post)):
+      reply_to = post['id']
+      response = await respond_to_magic_words(post, file_ids)
+      if response is None:
+        response = await generate_text_from_context(channel_context(post))
+    elif thread == '' and BOT_NAME in message:
+      reply_to = post['id']
       response = await respond_to_magic_words(post, file_ids)
       if response is None and await is_asking_for_channel_summary(message):
-        context = mm.posts.get_posts_for_channel(post['channel_id'])
+        context = channel_context(post)
       else:
-        context = context_from_post(post)
+        context = thread_context(post)
       if response is None and await is_asking_for_image_generation(message):
         if await is_asking_for_multiple_images(message):
           response = await generate_images(file_ids, post, 8)
         else:
           response = await generate_images(file_ids, post, 1)
-  else:
-    thread_id = post['root_id']
-    context = mm.posts.get_thread(thread_id)
-    if not any(BOT_NAME in context_post['message'] for context_post in context['posts'].values()):
-      return
-    response = await generate_text_from_context(context)
-  if response:
-    try:
-      mm.posts.create_post(options={'channel_id':post['channel_id'], 'message':response, 'file_ids':file_ids, 'root_id':thread_id})
-    except (ConnectionResetError, mattermostdriver.exceptions.InvalidOrMissingParameters, mattermostdriver.exceptions.ResourceNotFound) as err:
-      print(f"Mattermost API Error: {err}")
+    else:
+      reply_to = post['root_id']
+      context = mm.posts.get_thread(reply_to)
+      if any(BOT_NAME in context_post['message'] for context_post in context['posts'].values()):
+        response = await generate_text_from_context(context)
+    if response:
+      create_mattermost_post(options={'channel_id':post['channel_id'], 'message':response, 'file_ids':file_ids, 'root_id':reply_to})
 
 def count_tokens(message):
   return len(tiktoken.get_encoding('cl100k_base').encode(dumps(message)))
