@@ -29,7 +29,7 @@ async def channel_from_post(post: dict) -> dict:
   return channel
 
 async def channel_context(post: dict) -> dict:
-  context = await mm.posts.get_posts_for_channel(post['channel_id'])
+  context = mm.posts.get_posts_for_channel(post['channel_id'])
   return context
 
 async def thread_context(post: dict) -> dict:
