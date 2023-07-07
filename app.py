@@ -386,7 +386,7 @@ async def captioner(post):
       "source_image": source_image_base64, # Here is the base64 image
       "slow_workers": True
   }
-  response = requests.post(url, headers=headers, data, timeout=420)
+  response = requests.post(url, headers=headers, data=data, timeout=420)
   print(response.json())
   response_content = response.json()
   id_value = response_content['id']
