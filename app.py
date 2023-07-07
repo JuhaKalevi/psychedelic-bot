@@ -178,9 +178,9 @@ async def context_manager(event: dict):
       reply_to = post['id']
       response = await respond_to_magic_words(post, file_ids)
       if response is None and await is_asking_for_channel_summary(message):
-        context = channel_context(post)
+        context = await channel_context(post)
       else:
-        context = thread_context(post)
+        context = await thread_context(post)
       if response is None and await is_asking_for_image_generation(message):
         if await is_asking_for_multiple_images(message):
           response = await generate_images(file_ids, post, 8)
