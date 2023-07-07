@@ -404,7 +404,11 @@ async def captioner(post):
         print(json_response)
         caption=json_response['forms'][0]['result']['caption']
         print(caption)
-  return caption
+      except RuntimeError as err:
+        comment += f"Error occurred while upscaling image: {str(err)}"
+      finally:
+        print("Done")
+    return caption
 
 mm = mattermostdriver.Driver({'url': environ['MATTERMOST_URL'], 'token': environ['MATTERMOST_TOKEN'], 'scheme':'https', 'port':443})
 mm.login()
