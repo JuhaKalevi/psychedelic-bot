@@ -379,7 +379,7 @@ async def captioner(post):
         async with aiofiles.open(post_file_path, 'wb') as post_file:
           await post_file.write(file_response.content)
       try:
-        with open('source_image_path', 'rb') as perkele:
+        with open('post_file_path', 'rb') as perkele:
           img_byte = perkele.read()
         source_image_base64 = base64.b64encode(img_byte).decode("utf-8")
         data = {
