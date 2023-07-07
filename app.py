@@ -42,7 +42,7 @@ async def choose_system_message(post: dict) -> list:
   analyze_code = await is_asking_for_code_analysis(post['message'])
   if analyze_code:
     code_snippets = []
-    async for file_path in [x for x in listdir() if x.endswith('.py')]:
+    for file_path in [x for x in listdir() if x.endswith('.py')]:
       async with open(file_path, 'r', encoding='utf-8') as file:
         code = file.read()
       code_snippets.append(f'--- BEGING {file_path} ---\n{code}\n')
