@@ -168,12 +168,14 @@ async def context_manager(event: dict):
     post = loads(event['data']['post'])
     message = post['message']
     thread = post['root_id']
-    if thread == '' and await is_configured_for_replies_without_tagging(await channel_from_post(post)):
-      reply_to = post['id']
-      response = await respond_to_magic_words(post, file_ids)
-      if response is None:
-        context = await channel_context(post)
-        response = await generate_text_from_context(context)
+    if thread == '':
+      reply_without_tagging = await is_configured_for_replies_without_tagging(await channel_from_post(post))
+      if reply_without_tagging:
+        reply_to = post['id']
+        response = await respond_to_magic_words(post, file_ids)
+        if response is None:
+          context = await channel_context(post)
+          response = await generate_text_from_context(context)
     elif thread == '' and BOT_NAME in message:
       reply_to = post['id']
       response = await respond_to_magic_words(post, file_ids)
