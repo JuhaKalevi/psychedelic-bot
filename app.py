@@ -59,7 +59,7 @@ async def is_asking_for_multiple_images(message: dict) -> bool:
   response = await generate_text_from_message(f'Is this a message where multiple images are requested? Answer only True or False: {message}')
   return response.startswith('True')
 
-def is_configured_for_replies_without_tagging(channel: dict) -> bool:
+async def is_configured_for_replies_without_tagging(channel: dict) -> bool:
   if channel['display_name'] == 'Testing':
     return True
   if f"{BOT_NAME} responds without tagging" in channel['purpose']:
