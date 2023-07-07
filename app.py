@@ -70,9 +70,9 @@ async def textgen_chat_completion(user_input, history):
 
 async def openai_chat_completion(messages: list, model='gpt-4'):
   try:
-    response = openai.ChatCompletion.acreate(model=model, messages=messages)
+    response = await openai.ChatCompletion.acreate(model=model, messages=messages)
     print(response)
-    return response.choices[0].text
+    return response
   except (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.ServiceUnavailableError, openai.error.Timeout) as err:
     return f"OpenAI API Error: {err}"
 
