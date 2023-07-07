@@ -102,7 +102,7 @@ async def generate_text_from_context(context):
     else:
       break
   context_messages.reverse()
-  return(await openai_chat_completion(system_message + context_messages, os.environ['OPENAI_MODEL_NAME']))
+  return await openai_chat_completion(system_message + context_messages, os.environ['OPENAI_MODEL_NAME'])
 
 async def generate_text_from_message(message, model='gpt-4'):
   return(await openai_chat_completion([{'role': 'user', 'content': message}], model).startswith('True'))
