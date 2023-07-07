@@ -35,7 +35,7 @@ async def channel_context(post: dict) -> dict:
   return context
 
 async def thread_context(post: dict) -> dict:
-  context = await {'order':[post['id']], 'posts':{post['id']:post}}
+  context = {'order':[post['id']], 'posts':{post['id']:post}}
   return context
 
 async def choose_system_message(post: dict) -> list:
