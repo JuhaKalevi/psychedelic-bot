@@ -118,7 +118,6 @@ async def is_asking_for_image_generation(message):
 
 async def is_asking_for_multiple_images(message):
   return(await generate_text_from_message(f'Is this a message where multiple images are requested? Answer only True or False: {message}').startswith('True'))
-  return response.startswith('True')
 
 def is_configured_for_replies_without_tagging(channel):
   if channel['display_name'] == 'Testing':
