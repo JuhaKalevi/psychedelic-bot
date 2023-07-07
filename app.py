@@ -359,7 +359,7 @@ async def generate_summary_from_transcription(message, model='gpt-4'):
         f" Also make a guess on how many different characters' speech is included in the transcription."
         f" Also analyze the style of this video (comedy, drama, instructional, educational, etc.)."
         f" IGNORE all advertisement(s), sponsorship(s), discount(s), promotions(s),"
-        f" all War Thunder/Athletic Green etc. talk completely. Transcription: {message}")
+        f" all War Thunder/Athletic Green etc. talk completely. Also give scoring 0-10 about the video for each of these three categories: originality, difficulty, humor. Transcription: {message}")
     }
 ], model)
   return response
