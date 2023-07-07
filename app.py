@@ -376,38 +376,38 @@ async def captioner(post):
         post_file.write(file_response.content)
     try:
       post_file_image = Image.open(post_file_path)
-  with open('source_image_path', 'rb') as f:
-    img_byte = f.read()
-  source_image_base64 = base64.b64encode(img_byte).decode("utf-8")
-  data = {
-      "forms": [
-          {
-              "name": "caption",
-              "payload": {} # Additional form payload data should go here, based on spec
-          }
-      ],
-      "source_image": source_image_base64, # Here is the base64 image
-      "slow_workers": True
-  }
-  url = "https://stablehorde.net/api/v2/interrogate/async"
-  headers = {"Content-Type": "application/json",
-            "apikey": "a8kMOjo-sgqlThYpupXS7g"
-            }
-  response = requests.post(url, headers=headers, data=json.dumps(data))
-  print(response.json())
-  response_content = response.json()
-  id_value = response_content['id']
-  print(id_value)
-  time.sleep(20)
-  caption = requests.get(
-      'https://stablehorde.net/api/v2/interrogate/status/' + id_value, 
-      headers=headers,
-      timeout=420
-  )
-  json_response = caption.json()
-  print(json_response)
-  caption=json_response['forms'][0]['result']['caption']
-  print(caption)
+      with open('source_image_path', 'rb') as f:
+        img_byte = f.read()
+      source_image_base64 = base64.b64encode(img_byte).decode("utf-8")
+      data = {
+          "forms": [
+              {
+                  "name": "caption",
+                  "payload": {} # Additional form payload data should go here, based on spec
+              }
+          ],
+          "source_image": source_image_base64, # Here is the base64 image
+          "slow_workers": True
+      }
+      url = "https://stablehorde.net/api/v2/interrogate/async"
+      headers = {"Content-Type": "application/json",
+                "apikey": "a8kMOjo-sgqlThYpupXS7g"
+                }
+      response = requests.post(url, headers=headers, data=json.dumps(data))
+      print(response.json())
+      response_content = response.json()
+      id_value = response_content['id']
+      print(id_value)
+      time.sleep(20)
+      caption = requests.get(
+          'https://stablehorde.net/api/v2/interrogate/status/' + id_value, 
+          headers=headers,
+          timeout=420
+      )
+      json_response = caption.json()
+      print(json_response)
+      caption=json_response['forms'][0]['result']['caption']
+      print(caption)
   return caption
 
 mm = mattermostdriver.Driver({'url': environ['MATTERMOST_URL'], 'token': environ['MATTERMOST_TOKEN'], 'scheme':'https', 'port':443})
