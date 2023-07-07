@@ -3,9 +3,7 @@ disable=
     C0114, # missing-module-docstring
     C0116, # missing-function-docstring
     R0914, # too-many-locals
-    W1514, # unspecified-encoding
-extension-pkg-whitelist=mattermostdriver
-max-branches=42
+max-branches=14
 [FORMAT]
 indent-string='  '
 indent-after-paren=2
