@@ -372,12 +372,12 @@ async def captioner(post):
     if file_response.status_code == 200:
       file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
       post_file_path = f'{post_file_id}.{file_type}'
-  url = "https://stablehorde.net/api/v2/interrogate/async"
-  headers = {"Content-Type": "application/json",
-            "apikey": "a8kMOjo-sgqlThYpupXS7g"
-            }
-  with open(post_file_path, 'rb') as perkele:
-    img_byte = perkele.read()
+      async with open(post_file_path, 'wb') as post_file:
+        post_file.write(file_response.content)
+    try:
+      post_file_image = Image.open(post_file_path)
+    with open('source_image_path', 'rb') as f:
+      img_byte = f.read()
   source_image_base64 = base64.b64encode(img_byte).decode("utf-8")
   data = {
       "forms": [
@@ -389,7 +389,11 @@ async def captioner(post):
       "source_image": source_image_base64, # Here is the base64 image
       "slow_workers": True
   }
-  response = requests.post(url, headers=headers, data=data, timeout=420)
+  url = "https://stablehorde.net/api/v2/interrogate/async"
+  headers = {"Content-Type": "application/json",
+            "apikey": "a8kMOjo-sgqlThYpupXS7g"
+            }
+  response = requests.post(url, headers=headers, data=json.dumps(data))
   print(response.json())
   response_content = response.json()
   id_value = response_content['id']
