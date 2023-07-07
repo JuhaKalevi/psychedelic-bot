@@ -346,8 +346,7 @@ async def youtube_transcription(user_input):
     response = client.predict(user_input, fn_index=1)
     print(response)
     return response
-  else:
-    print("No URL found in the input.")
+  print("No URL found in the input.")
 
 mm = mattermostdriver.Driver({'url': environ['MATTERMOST_URL'], 'token': environ['MATTERMOST_TOKEN'], 'scheme':'https', 'port':443})
 mm.login()
