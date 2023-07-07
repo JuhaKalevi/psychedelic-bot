@@ -351,7 +351,7 @@ async def youtube_transcription(user_input):
   print("No URL found in the input.")
 
 async def generate_summary_from_transcription(message, model='gpt-4'):
-  response = await openai_chat_completion([{'role': 'user', 'content': "Summarize IN DETAIL, adjusting the summary length according to the transcription's legnth, the YouTube-video transcription below. Also make guess how many different characters' speech is included in the transcription. Also analyze the style of this video (comedy, drama, instructional, educational, etc.). Transcription:" + message}], model)
+  response = await openai_chat_completion([{'role': 'user', 'content': "Summarize IN DETAIL, adjusting the summary length according to the transcription's legnth, the YouTube-video transcription below. Also make guess how many different characters' speech is included in the transcription. Also analyze the style of this video (comedy, drama, instructional, educational, etc.). IGNORE all advertisement, sponsorship, discount etc. talk. Transcription:" + message}], model)
   return response
 
 mm = mattermostdriver.Driver({'url': environ['MATTERMOST_URL'], 'token': environ['MATTERMOST_TOKEN'], 'scheme':'https', 'port':443})
