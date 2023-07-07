@@ -130,8 +130,10 @@ def is_configured_for_replies_without_tagging(channel):
 def is_mainly_english(text):
   return langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
 
-def channel_id_from_post(post):
+def channel_from_post(post):
   return mm.channels.get_channel(post['channel_id'])
+def channel_history_from_post(post):
+  return mm.posts.get_posts_for_channel(post['channel_id'])
 
 def context_from_post(post):
   return {'order':[post['id']], 'posts':{post['id']:post}}
@@ -143,21 +145,22 @@ async def context_manager(event):
   if not ('event' in event and event['event'] == 'posted' and event['data']['sender_name'] != BOT_NAME):
     return
   post = loads(event['data']['post'])
-  if post['root_id'] == '' and is_configured_for_replies_without_tagging(channel_id_from_post(post)):
+  message = post['message']
+  if post['root_id'] == '' and is_configured_for_replies_without_tagging(channel_from_post(post)):
     thread_id = post['id']
     response = await respond_to_magic_words(post, file_ids)
     if response is None:
-      response = await generate_text_from_context(channel_id_from_post(post))
+      response = await generate_text_from_context(channel_history_from_post(post))
   elif post['root_id'] == '':
-    if BOT_NAME in post['message']:
+    if BOT_NAME in message:
       thread_id = post['id']
       response = await respond_to_magic_words(post, file_ids)
-      if response is None and await is_asking_for_channel_summary(post['message']):
+      if response is None and await is_asking_for_channel_summary(message):
         context = mm.posts.get_posts_for_channel(post['channel_id'])
       else:
         context = context_from_post(post)
-      if response is None and await is_asking_for_image_generation(post['message']):
-        if await is_asking_for_multiple_images(post['message']):
+      if response is None and await is_asking_for_image_generation(message):
+        if await is_asking_for_multiple_images(message):
           response = await generate_images(file_ids, post, 8)
         else:
           response = await generate_images(file_ids, post, 1)
