@@ -46,7 +46,7 @@ async def choose_system_message(post: dict) -> list:
   if analyze_code:
     code_snippets = []
     for file_path in [x for x in listdir() if x.endswith('.py')]:
-      async with open(file_path, 'r', encoding='utf-8') as file:
+      with open(file_path, 'r', encoding='utf-8') as file:
         code = file.read()
       code_snippets.append(f'--- BEGING {file_path} ---\n{code}\n')
     return [{'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+'```'.join(code_snippets)}]
