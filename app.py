@@ -87,7 +87,7 @@ async def respond_to_magic_words(post: dict, file_ids: list):
     response = await instruct_pix2pix(file_ids, post)
   elif post['message'].lower().startswith("llm"):
     response = await textgen_chat_completion(post['message'], {'internal': [], 'visible': []})
-  elif post['message'].lower().startswith("transcribe"):
+  elif post['message'].lower().startswith("summary"):
     response = await youtube_transcription(post['message'])
   else:
     return None
