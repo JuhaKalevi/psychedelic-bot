@@ -183,46 +183,49 @@ async def generate_text_from_context(context: dict) -> str:
   openai_response = await openai_chat_completion(system_message + context_messages, 'gpt-4')
   return openai_response
 
+async def process(post: dict, message: str, thread: str) -> dict:
+  summarize = await is_asking_for_channel_summary(message)
+  if summarize:
+    context = await channel_context(post)
+    reply_to = post['id']
+  else:
+    context = await thread_context(post)
+    reply_to = thread
+  return (context, reply_to)
+    
 async def context_manager(event: dict):
   file_ids = []
   event = loads(event)
-  response = None
+  answer = None
   if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != BOT_NAME:
     post = loads(event['data']['post'])
     message = post['message']
     thread = post['root_id']
-    if thread == '':
-      channel = await channel_from_post(post)
+    channel = await channel_from_post(post)
+    answer = await respond_to_magic_words(post, file_ids)
+    if answer is None:
       reply_without_tagging = await is_configured_for_replies_without_tagging(channel)
-      if reply_without_tagging:
-        reply_to = post['id']
-        response = await respond_to_magic_words(post, file_ids)
-        if response is None:
-          context = await channel_context(post)
-          response = await generate_text_from_context(context)
-    elif thread == '' and BOT_NAME in message:
+    if reply_without_tagging:
+      if answer:
+        context, reply_to = await process(post, message, thread)
+      else:
+        answer = await generate_text_from_message(message)
+    elif thread:
       reply_to = post['id']
-      response = await respond_to_magic_words(post, file_ids)
-      if response is None:
-        summarize = await is_asking_for_channel_summary(message)
-        if summarize:
-          context = await channel_context(post)
-        else:
-          context = await thread_context(post)
-        response = await generate_text_from_context(context)
-      if response is None:
+      answer = await generate_text_from_context(context)
+      if answer is None:
         image_requested = await is_asking_for_image_generation(message)
         if image_requested:
-          response = await generate_images(file_ids, post, 8)
+          answer = await generate_images(file_ids, post, 8)
         else:
-          response = await generate_images(file_ids, post, 1)
+          answer = await generate_images(file_ids, post, 1)
     else:
-      reply_to = post['root_id']
+      reply_to = post['id']
       context = await thread_context(post)
       if any(BOT_NAME in context_post['message'] for context_post in context['posts'].values()):
-        response = await generate_text_from_context(context)
-    if response:
-      response_posted = await create_mattermost_post(options={'channel_id':post['channel_id'], 'message':response, 'file_ids':file_ids, 'root_id':reply_to})
+        answer = await generate_text_from_context(context)
+    if answer:
+      response_posted = await create_mattermost_post(options={'channel_id':post['channel_id'], 'message':answer, 'file_ids':file_ids, 'root_id':reply_to})
       return response_posted
 
 async def fix_image_generation_prompt(prompt):
