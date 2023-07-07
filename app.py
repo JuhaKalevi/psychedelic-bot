@@ -188,7 +188,7 @@ async def context_manager(event: dict):
           response = await generate_images(file_ids, post, 1)
     else:
       reply_to = post['root_id']
-      context = thread_context(post)
+      context = await thread_context(post)
       if any(BOT_NAME in context_post['message'] for context_post in context['posts'].values()):
         response = await generate_text_from_context(context)
     if response:
