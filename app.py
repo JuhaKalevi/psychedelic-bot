@@ -376,8 +376,8 @@ async def captioner(post):
         post_file.write(file_response.content)
     try:
       post_file_image = Image.open(post_file_path)
-    async with open('source_image_path', 'rb') as f:
-      img_byte = f.read()
+  with open('source_image_path', 'rb') as f:
+    img_byte = f.read()
   source_image_base64 = base64.b64encode(img_byte).decode("utf-8")
   data = {
       "forms": [
