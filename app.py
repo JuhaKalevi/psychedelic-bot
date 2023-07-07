@@ -376,7 +376,7 @@ async def captioner(post):
         post_file.write(file_response.content)
       try:
         post_file_image = Image.open(post_file_path)
-        with open('source_image_path', 'rb') as f:
+        open('source_image_path', 'rb') as f:
           img_byte = f.read()
         source_image_base64 = base64.b64encode(img_byte).decode("utf-8")
         data = {
@@ -402,7 +402,7 @@ async def captioner(post):
         print(json_response)
         caption=json_response['forms'][0]['result']['caption']
         print(caption)
-  return caption
+    return caption
 
 mm = mattermostdriver.Driver({'url': environ['MATTERMOST_URL'], 'token': environ['MATTERMOST_TOKEN'], 'scheme':'https', 'port':443})
 mm.login()
