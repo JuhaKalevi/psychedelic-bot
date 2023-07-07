@@ -10,6 +10,7 @@ import webuiapi
 from PIL import Image
 
 openai.api_key = os.environ['OPENAI_API_KEY']
+BOT_NAME = os.environ['MATTERMOST_BOTNAME']
 
 async def textgen_chat_completion(user_input, history):
   request = {
@@ -67,18 +68,10 @@ async def textgen_chat_completion(user_input, history):
           return answer
   return 'oops'
 
-async def openai_chat_completion(messages, model=os.environ['OPENAI_MODEL_NAME']):
+async def openai_chat_completion(messages, model='gpt-4'):
   try:
-    response = await openai.ChatCompletion.acreate(model=model, messages=messages)
-    return response['choices'][0]['message']['content']
-  except (openai.error.APIConnectionError,
-          openai.error.APIError,
-          openai.error.AuthenticationError,
-          openai.error.InvalidRequestError,
-          openai.error.PermissionError,
-          openai.error.RateLimitError,
-          openai.error.ServiceUnavailableError,
-          openai.error.Timeout) as err:
+    return(await openai.ChatCompletion.acreate(model=model, messages=messages))
+  except (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.ServiceUnavailableError, openai.error.Timeout) as err:
     return f"OpenAI API Error: {err}"
 
 async def choose_system_message(post):
@@ -94,7 +87,6 @@ async def choose_system_message(post):
 async def generate_text_from_context(context):
   context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
   system_message = await choose_system_message(mm.channels.get_channel(context['posts'][context['order'][0]]))
-  print(system_message)
   context_messages = []
   context_tokens = count_tokens(context)
   for post_id in context['order']:
@@ -110,38 +102,36 @@ async def generate_text_from_context(context):
     else:
       break
   context_messages.reverse()
-  response = await openai_chat_completion(system_message + context_messages, os.environ['OPENAI_MODEL_NAME'])
-  return response
+  return(await openai_chat_completion(system_message + context_messages, os.environ['OPENAI_MODEL_NAME']))
 
 async def generate_text_from_message(message, model='gpt-4'):
-  response = await openai_chat_completion([{'role': 'user', 'content': message}], model)
-  return response
+  return(await openai_chat_completion([{'role': 'user', 'content': message}], model).startswith('True'))
 
 async def is_asking_for_channel_summary(message):
-  response = await generate_text_from_message(f'Is this a message where a summary of past interactions in this chat/discussion/channel is requested? Answer only True or False: {message}')
-  return response.startswith('True')
+  return(await generate_text_from_message(f'Is this a message where a summary of past interactions in this chat/discussion/channel is requested? Answer only True or False: {message}').startswith('True'))
 
 async def is_asking_for_code_analysis(message):
-  response = await generate_text_from_message(f'Is this a message where knowledge or analysis of your code is requested? It does not matter whether you know about the files or not yet, you have a function that we will use later on if needed. Answer only True or False: {message}')
-  return response.startswith('True')
+  return(await generate_text_from_message(f'Is this a message where knowledge or analysis of your code is requested? It does not matter whether you know about the files or not yet, you have a function that we will use later on if needed. Answer only True or False: {message}').startswith('True'))
 
 async def is_asking_for_image_generation(message):
-  response = await generate_text_from_message(f'Is this a message where an image is probably requested? Answer only True or False: {message}')
-  return response.startswith('True')
+  return(await generate_text_from_message(f'Is this a message where an image is probably requested? Answer only True or False: {message}').startswith('True'))
 
 async def is_asking_for_multiple_images(message):
-  response = await generate_text_from_message(f'Is this a message where multiple images are requested? Answer only True or False: {message}')
+  return(await generate_text_from_message(f'Is this a message where multiple images are requested? Answer only True or False: {message}').startswith('True'))
   return response.startswith('True')
 
 def is_configured_for_replies_without_tagging(channel):
   if channel['display_name'] == 'Testing':
     return True
-  if f"{os.environ['MATTERMOST_BOTNAME']} responds without tagging" in channel['purpose']:
+  if f"{BOT_NAME} responds without tagging" in channel['purpose']:
     return True
   return False
 
 def is_mainly_english(text):
   return langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
+
+def context_from_post(post):
+  return {'order':[post['id']], 'posts':{post['id']:post}}
 
 async def context_manager(event):
   file_ids = []
@@ -149,39 +139,32 @@ async def context_manager(event):
   if not ('event' in event and event['event'] == 'posted' and event['data']['sender_name'] != os.environ['MATTERMOST_BOTNAME']):
     return
   post = json.loads(event['data']['post'])
-  if is_configured_for_replies_without_tagging(mm.channels.get_channel(post['channel_id'])):
-    thread_id = ''
-    openai_response_content = await generate_text_from_context(mm.posts.get_posts_for_channel(post['channel_id']))
+  if post['root_id'] == '' and is_configured_for_replies_without_tagging(mm.channels.get_channel(post['channel_id'])):
+    thread_id = post['id']
+    response = await respond_to_magic_words(post, file_ids)
+    if response is None:
+      response = await generate_text_from_context(mm.posts.get_posts_for_channel(post['channel_id']))
   elif post['root_id'] == '':
-    if os.environ['MATTERMOST_BOTNAME'] in post['message']:
+    if BOT_NAME in post['message']:
       thread_id = post['id']
-      if await is_asking_for_channel_summary(post['message']):
+      response = await respond_to_magic_words(post, file_ids)
+      if response is None and await is_asking_for_channel_summary(post['message']):
         context = mm.posts.get_posts_for_channel(post['channel_id'])
       else:
-        context = {'order':[post['id']], 'posts':{post['id']:post}}
-    if post['message'].lower().startswith("2x"):
-      openai_response_content = await upscale_image_2x(file_ids, post)
-    elif post['message'].lower().startswith("4x"):
-      openai_response_content = await upscale_image_4x(file_ids, post)
-    elif post['message'].lower().startswith("pix2pix"):
-      openai_response_content = await instruct_pix2pix(file_ids, post)
-    elif post['message'].lower().startswith("llm"):
-      openai_response_content = await textgen_chat_completion(post['message'], {'internal': [], 'visible': []})
-    elif await is_asking_for_image_generation(post['message']):
-      if await is_asking_for_multiple_images(post['message']):
-        openai_response_content = await generate_images(file_ids, post, 8)
-      else:
-        openai_response_content = await generate_images(file_ids, post, 1)
-    else:
-      openai_response_content = await generate_text_from_context(context)
+        context = context_from_post(post)
+      if response is None and await is_asking_for_image_generation(post['message']):
+        if await is_asking_for_multiple_images(post['message']):
+          response = await generate_images(file_ids, post, 8)
+        else:
+          response = await generate_images(file_ids, post, 1)
   else:
     thread_id = post['root_id']
     context = mm.posts.get_thread(thread_id)
-    if not any(os.environ['MATTERMOST_BOTNAME'] in context_post['message'] for context_post in context['posts'].values()):
+    if not any(BOT_NAME in context_post['message'] for context_post in context['posts'].values()):
       return
-    openai_response_content = await generate_text_from_context(context)
+    response = await generate_text_from_context(context)
   try:
-    mm.posts.create_post(options={'channel_id':post['channel_id'], 'message':openai_response_content, 'file_ids':file_ids, 'root_id':thread_id})
+    mm.posts.create_post(options={'channel_id':post['channel_id'], 'message':response, 'file_ids':file_ids, 'root_id':thread_id})
   except (ConnectionResetError, mattermostdriver.exceptions.InvalidOrMissingParameters, mattermostdriver.exceptions.ResourceNotFound) as err:
     print(f"Mattermost API Error: {err}")
 
@@ -283,6 +266,19 @@ async def upscale_image_2x(file_ids, post, resize_w: int = 1024, resize_h: int =
         if os.path.exists(temporary_file_path):
           os.remove(temporary_file_path)
   return comment
+
+async def respond_to_magic_words(post, file_ids):
+  if post['message'].lower().startswith("2x"):
+    openai_response_content = await upscale_image_2x(file_ids, post)
+  elif post['message'].lower().startswith("4x"):
+    openai_response_content = await upscale_image_4x(file_ids, post)
+  elif post['message'].lower().startswith("pix2pix"):
+    openai_response_content = await instruct_pix2pix(file_ids, post)
+  elif post['message'].lower().startswith("llm"):
+    openai_response_content = await textgen_chat_completion(post['message'], {'internal': [], 'visible': []})
+  else:
+    openai_response_content = None
+  return openai_response_content
 
 async def instruct_pix2pix(file_ids, post):
   comment = ''
