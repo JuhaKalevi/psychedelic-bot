@@ -336,20 +336,18 @@ async def instruct_pix2pix(file_ids, post):
   return comment
 
 async def youtube_transcription(user_input):
-  print(user_input)
-  if user_input.startswith("transcribe @gpt3 "):
-    regex = r"\[(.*?)\]\((.*?)\)"
-    matches = re.findall(regex, user_input)
-    if matches:
-      user_input = matches[0][1]
-    else:
-      return "Incorrect command format. Please use the following format: 'transcribe @gpt3 [http://youtubeURL](http://youtubeURL)'"
+  input_str = user_input
+  url_pattern = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
+  urls = re.findall(url_pattern, input_str)
+  if urls:
+    new_user_input = urls[0]  # Take the first URL found
+    print(new_user_input)
     client = Client(TRANSCRIPTION_API_URI)
     response = client.predict(user_input, fn_index=1)
     print(response)
     return response
-  return "Incorrect command format. Please use the following format: 'transcribe @gpt3 [http://youtubeURL](http://youtubeURL)'"
-
+  else:
+    print("No URL found in the input.")
 
 mm = mattermostdriver.Driver({'url': environ['MATTERMOST_URL'], 'token': environ['MATTERMOST_TOKEN'], 'scheme':'https', 'port':443})
 mm.login()
