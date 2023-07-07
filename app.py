@@ -18,11 +18,11 @@ async def return_maybe_debug(value):
     print(value)
   return value
 
-async def count_tokens(message: str) -> int:
-  return_maybe_debug(len(tiktoken.get_encoding('cl100k_base').encode(dumps(message))))
-
 async def is_mainly_english(text: str) -> bool:
   return_maybe_debug(langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en")
+
+async def count_tokens(message: str) -> int:
+  return_maybe_debug(len(tiktoken.get_encoding('cl100k_base').encode(dumps(message))))
 
 async def channel_from_post(post: dict) -> dict:
   return_maybe_debug(mm.channels.get_channel(post['channel_id']))
@@ -32,6 +32,50 @@ async def channel_context(post: dict) -> dict:
 
 async def thread_context(post: dict) -> dict:
   return_maybe_debug({'order':[post['id']], 'posts':{post['id']:post}})
+
+async def choose_system_message(post: dict) -> list:
+  if await is_asking_for_code_analysis(post['message']):
+    code_snippets = []
+    async for file_path in [x for x in listdir() if x.endswith('.py')]:
+      async with open(file_path, 'r', encoding='utf-8') as file:
+        code = file.read()
+      code_snippets.append(f'--- BEGING {file_path} ---\n{code}\n')
+    return [{'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+'```'.join(code_snippets)}]
+  return [{'role':'system', 'content':'You are an assistant with no specific role determined right now.'}]
+
+async def is_asking_for_channel_summary(message: dict) -> bool:
+  response = await generate_text_from_message(f'Is this a message where a summary of past interactions in this chat/discussion/channel is requested? Answer only True or False: {message}')
+  return response.startswith('True')
+
+async def is_asking_for_code_analysis(message: dict) -> bool:
+  response = await generate_text_from_message(f'Is this a message where knowledge or analysis of your code is requested? It does not matter whether you know about the files or not yet, you have a function that we will use later on if needed. Answer only True or False: {message}')
+  return response.startswith('True')
+
+async def is_asking_for_image_generation(message: dict) -> bool:
+  response = await generate_text_from_message(f'Is this a message where an image is probably requested? Answer only True or False: {message}')
+  return response.startswith('True')
+
+async def is_asking_for_multiple_images(message: dict) -> bool:
+  response = await generate_text_from_message(f'Is this a message where multiple images are requested? Answer only True or False: {message}')
+  return response.startswith('True')
+
+def is_configured_for_replies_without_tagging(channel: dict) -> bool:
+  if channel['display_name'] == 'Testing':
+    return True
+  if f"{BOT_NAME} responds without tagging" in channel['purpose']:
+    return True
+  return False
+
+async def generate_text_from_message(message: dict, model='gpt-4'):
+  response = await openai_chat_completion([{'role': 'user', 'content': message}], model)
+  return response
+
+async def openai_chat_completion(messages: list, model='gpt-4'):
+  try:
+    response = await openai.ChatCompletion.acreate(model=model, messages=messages)
+    return str(response['choices'][0]['message']['content'])
+  except (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.ServiceUnavailableError, openai.error.Timeout) as err:
+    return f"OpenAI API Error: {err}"
 
 async def textgen_chat_completion(user_input, history):
   request = {
@@ -89,23 +133,6 @@ async def textgen_chat_completion(user_input, history):
           return answer
   return 'oops'
 
-async def openai_chat_completion(messages: list, model='gpt-4'):
-  try:
-    response = await openai.ChatCompletion.acreate(model=model, messages=messages)
-    return str(response['choices'][0]['message']['content'])
-  except (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.ServiceUnavailableError, openai.error.Timeout) as err:
-    return f"OpenAI API Error: {err}"
-
-async def choose_system_message(post: dict) -> list:
-  if await is_asking_for_code_analysis(post['message']):
-    code_snippets = []
-    for file_path in [x for x in listdir() if x.endswith('.py')]:
-      async with open(file_path, 'r', encoding='utf-8') as file:
-        code = file.read()
-      code_snippets.append(f'--- BEGING {file_path} ---\n{code}\n')
-    return [{'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+'```'.join(code_snippets)}]
-  return [{'role':'system', 'content':'You are an assistant with no specific role determined right now.'}]
-
 async def generate_text_from_context(context):
   if 'order' in context:
     context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
@@ -127,34 +154,6 @@ async def generate_text_from_context(context):
   context_messages.reverse()
   return await openai_chat_completion(system_message + context_messages, 'gpt-4')
 
-async def generate_text_from_message(message: dict, model='gpt-4'):
-  response = await openai_chat_completion([{'role': 'user', 'content': message}], model)
-  return response
-
-async def is_asking_for_channel_summary(message: dict) -> bool:
-  response = await generate_text_from_message(f'Is this a message where a summary of past interactions in this chat/discussion/channel is requested? Answer only True or False: {message}')
-  return response.startswith('True')
-
-async def is_asking_for_code_analysis(message: dict) -> bool:
-  response = await generate_text_from_message(f'Is this a message where knowledge or analysis of your code is requested? It does not matter whether you know about the files or not yet, you have a function that we will use later on if needed. Answer only True or False: {message}')
-  return response.startswith('True')
-
-async def is_asking_for_image_generation(message: dict) -> bool:
-  response = await generate_text_from_message(f'Is this a message where an image is probably requested? Answer only True or False: {message}')
-  return response.startswith('True')
-
-async def is_asking_for_multiple_images(message: dict) -> bool:
-  response = await generate_text_from_message(f'Is this a message where multiple images are requested? Answer only True or False: {message}')
-  return response.startswith('True')
-
-def is_configured_for_replies_without_tagging(channel: dict) -> bool:
-  if channel['display_name'] == 'Testing':
-    return True
-  if f"{BOT_NAME} responds without tagging" in channel['purpose']:
-    return True
-  return False
-
-
 async def create_mattermost_post(options: dict) -> dict:
   try:
     mm.posts.create_post(options=options)
@@ -169,7 +168,7 @@ async def context_manager(event: dict):
     post = loads(event['data']['post'])
     message = post['message']
     thread = post['root_id']
-    if thread == '' and is_configured_for_replies_without_tagging(channel_from_post(post)):
+    if thread == '' and is_configured_for_replies_without_tagging(await channel_from_post(post)):
       reply_to = post['id']
       response = await respond_to_magic_words(post, file_ids)
       if response is None:
@@ -193,7 +192,6 @@ async def context_manager(event: dict):
         response = await generate_text_from_context(context)
     if response:
       create_mattermost_post(options={'channel_id':post['channel_id'], 'message':response, 'file_ids':file_ids, 'root_id':reply_to})
-
 
 async def fix_image_generation_prompt(prompt):
   return await generate_text_from_message(f"convert this to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features and you don't have to use full sentences, just a few keywords, separating these aspects by commas. Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally: {prompt}")
