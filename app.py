@@ -9,8 +9,29 @@ import tiktoken
 import webuiapi
 from PIL import Image
 
+DEBUG_LEVEL = environ['DEBUG_LEVEL']
 openai.api_key = environ['OPENAI_API_KEY']
 BOT_NAME = environ['MATTERMOST_BOTNAME']
+
+async def flow(object):
+  if DEBUG_LEVEL > 0:
+    print(object)
+  return object
+
+async def count_tokens(message: str) -> int:
+  flow(len(tiktoken.get_encoding('cl100k_base').encode(dumps(message))))
+
+async def is_mainly_english(text: str) -> bool:
+  flow(langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en")
+
+async def channel_from_post(post: dict) -> dict:
+  flow(mm.channels.get_channel(post['channel_id']))
+
+async def channel_context(post: dict) -> dict:
+  flow(mm.posts.get_posts_for_channel(post['channel_id']))
+
+async def thread_context(post: dict) -> dict:
+  flow({'order':[post['id']], 'posts':{post['id']:post}})
 
 async def textgen_chat_completion(user_input, history):
   request = {
@@ -75,11 +96,11 @@ async def openai_chat_completion(messages: list, model='gpt-4'):
   except (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.ServiceUnavailableError, openai.error.Timeout) as err:
     return f"OpenAI API Error: {err}"
 
-async def choose_system_message(post):
+async def choose_system_message(post: dict) -> list:
   if await is_asking_for_code_analysis(post['message']):
     code_snippets = []
     for file_path in [x for x in listdir() if x.endswith('.py')]:
-      with open(file_path, 'r', encoding='utf-8') as file:
+      async with open(file_path, 'r', encoding='utf-8') as file:
         code = file.read()
       code_snippets.append(f'--- BEGING {file_path} ---\n{code}\n')
     return [{'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+'```'.join(code_snippets)}]
@@ -133,17 +154,6 @@ def is_configured_for_replies_without_tagging(channel: dict) -> bool:
     return True
   return False
 
-def is_mainly_english(text: str) -> bool:
-  return langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
-
-def channel_from_post(post: dict) -> dict:
-  return mm.channels.get_channel(post['channel_id'])
-
-async def channel_context(post: dict) -> dict:
-  return mm.posts.get_posts_for_channel(post['channel_id'])
-
-def thread_context(post: dict) -> dict:
-  return {'order':[post['id']], 'posts':{post['id']:post}}
 
 async def create_mattermost_post(options: dict) -> dict:
   try:
@@ -184,8 +194,6 @@ async def context_manager(event: dict):
     if response:
       create_mattermost_post(options={'channel_id':post['channel_id'], 'message':response, 'file_ids':file_ids, 'root_id':reply_to})
 
-def count_tokens(message):
-  return len(tiktoken.get_encoding('cl100k_base').encode(dumps(message)))
 
 async def fix_image_generation_prompt(prompt):
   return await generate_text_from_message(f"convert this to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features and you don't have to use full sentences, just a few keywords, separating these aspects by commas. Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally: {prompt}")
