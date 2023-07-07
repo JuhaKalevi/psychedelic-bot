@@ -19,19 +19,19 @@ async def return_maybe_debug(value):
   return value
 
 async def is_mainly_english(text: str) -> bool:
-  return_maybe_debug(langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en")
+  await return_maybe_debug(langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en")
 
 async def count_tokens(message: str) -> int:
-  return_maybe_debug(len(tiktoken.get_encoding('cl100k_base').encode(dumps(message))))
+  await return_maybe_debug(len(tiktoken.get_encoding('cl100k_base').encode(dumps(message))))
 
 async def channel_from_post(post: dict) -> dict:
-  return_maybe_debug(mm.channels.get_channel(post['channel_id']))
+  await return_maybe_debug(mm.channels.get_channel(post['channel_id']))
 
 async def channel_context(post: dict) -> dict:
-  return_maybe_debug(mm.posts.get_posts_for_channel(post['channel_id']))
+  await return_maybe_debug(mm.posts.get_posts_for_channel(post['channel_id']))
 
 async def thread_context(post: dict) -> dict:
-  return_maybe_debug({'order':[post['id']], 'posts':{post['id']:post}})
+  await return_maybe_debug({'order':[post['id']], 'posts':{post['id']:post}})
 
 async def choose_system_message(post: dict) -> list:
   if await is_asking_for_code_analysis(post['message']):
