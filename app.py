@@ -68,9 +68,11 @@ async def textgen_chat_completion(user_input, history):
           return answer
   return 'oops'
 
-async def openai_chat_completion(messages, model='gpt-4'):
+async def openai_chat_completion(messages: list, model='gpt-4'):
   try:
-    return await openai.ChatCompletion.acreate(model=model, messages=messages)
+    response = openai.ChatCompletion.acreate(model=model, messages=messages)
+    print(response)
+    return response.choices[0].text
   except (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.ServiceUnavailableError, openai.error.Timeout) as err:
     return f"OpenAI API Error: {err}"
 
@@ -106,7 +108,8 @@ async def generate_text_from_context(context):
   return await openai_chat_completion(system_message + context_messages, 'gpt-4')
 
 async def generate_text_from_message(message: dict, model='gpt-4'):
-  return await openai_chat_completion([{'role': 'user', 'content': message}], model)
+  response = await openai_chat_completion([{'role': 'user', 'content': message}], model)
+  return response
 
 async def is_asking_for_channel_summary(message: dict) -> bool:
   response = await generate_text_from_message(f'Is this a message where a summary of past interactions in this chat/discussion/channel is requested? Answer only True or False: {message}')
