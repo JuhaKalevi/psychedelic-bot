@@ -138,6 +138,7 @@ def context_from_post(post):
 async def context_manager(event):
   file_ids = []
   event = loads(event)
+  response = None
   if not ('event' in event and event['event'] == 'posted' and event['data']['sender_name'] != BOT_NAME):
     return
   post = loads(event['data']['post'])
@@ -165,10 +166,11 @@ async def context_manager(event):
     if not any(BOT_NAME in context_post['message'] for context_post in context['posts'].values()):
       return
     response = await generate_text_from_context(context)
-  try:
-    mm.posts.create_post(options={'channel_id':post['channel_id'], 'message':response, 'file_ids':file_ids, 'root_id':thread_id})
-  except (ConnectionResetError, mattermostdriver.exceptions.InvalidOrMissingParameters, mattermostdriver.exceptions.ResourceNotFound) as err:
-    print(f"Mattermost API Error: {err}")
+  if response:
+    try:
+      mm.posts.create_post(options={'channel_id':post['channel_id'], 'message':response, 'file_ids':file_ids, 'root_id':thread_id})
+    except (ConnectionResetError, mattermostdriver.exceptions.InvalidOrMissingParameters, mattermostdriver.exceptions.ResourceNotFound) as err:
+      print(f"Mattermost API Error: {err}")
 
 def count_tokens(message):
   return len(tiktoken.get_encoding('cl100k_base').encode(dumps(message)))
