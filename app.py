@@ -25,7 +25,7 @@ async def count_tokens(message: str) -> int:
   return token_count
 
 async def channel_from_post(post: dict) -> dict:
-  channel = await mm.channels.get_channel(post['channel_id'])
+  channel = mm.channels.get_channel(post['channel_id'])
   return channel
 
 async def channel_context(post: dict) -> dict:
