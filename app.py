@@ -16,29 +16,24 @@ openai.api_key = environ['OPENAI_API_KEY']
 BOT_NAME = environ['MATTERMOST_BOTNAME']
 TRANSCRIPTION_API_URI = "https://d007e5503a6b32d07a.gradio.live"
 
-async def maybe_debug(value):
-  if DEBUG_LEVEL > 0:
-    print(value)
-  return value
-
 async def is_mainly_english(text: str) -> bool:
-  response = await maybe_debug(langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en")
+  response = await langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
   return response
 
 async def count_tokens(message: str) -> int:
-  token_count = await maybe_debug(len(tiktoken.get_encoding('cl100k_base').encode(dumps(message))))
+  token_count = await len(tiktoken.get_encoding('cl100k_base').encode(dumps(message)))
   return token_count
 
 async def channel_from_post(post: dict) -> dict:
-  channel = await maybe_debug(mm.channels.get_channel(post['channel_id']))
+  channel = await mm.channels.get_channel(post['channel_id'])
   return channel
 
 async def channel_context(post: dict) -> dict:
-  context = await maybe_debug(mm.posts.get_posts_for_channel(post['channel_id']))
+  context = await mm.posts.get_posts_for_channel(post['channel_id'])
   return context
 
 async def thread_context(post: dict) -> dict:
-  context = await maybe_debug({'order':[post['id']], 'posts':{post['id']:post}})
+  context = await {'order':[post['id']], 'posts':{post['id']:post}}
   return context
 
 async def choose_system_message(post: dict) -> list:

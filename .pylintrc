@@ -4,6 +4,7 @@ disable=
     C0116, # missing-function-docstring
     R0914, # too-many-locals
     W1514, # unspecified-encoding
+extension-pkg-whitelist=mattermostdriver
 max-branches=42
 [FORMAT]
 indent-string='  '
