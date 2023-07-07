@@ -196,7 +196,7 @@ async def process(post: dict, message: str, thread: str) -> dict:
     context = await thread_context(post)
     reply_to = thread
   return (context, reply_to)
-    
+
 async def context_manager(event: dict):
   file_ids = []
   event = loads(event)
