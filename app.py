@@ -66,7 +66,7 @@ async def is_configured_for_replies_without_tagging(channel: dict) -> bool:
     return True
   return False
 
-async def respond_to_magic_words(post, file_ids):
+async def respond_to_magic_words(post: dict, file_ids: list):
   if post['message'].lower().startswith("2x"):
     response = await upscale_image_2x(file_ids, post)
   elif post['message'].lower().startswith("4x"):
@@ -152,19 +152,19 @@ async def textgen_chat_completion(user_input, history):
           return answer
   return 'oops'
 
-async def generate_text_from_context(context):
+async def generate_text_from_context(context: dict) -> str:
   if 'order' in context:
     context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
   system_message = await choose_system_message(context['posts'][context['order'][0]])
   context_messages = []
-  context_tokens = count_tokens(context)
-  for post_id in context['order']:
+  context_tokens = await count_tokens(context)
+  async for post_id in context['order']:
     if 'from_bot' in context['posts'][post_id]['props']:
       role = 'assistant'
     else:
       role = 'user'
     message = {'role': role, 'content': context['posts'][post_id]['message']}
-    message_tokens = count_tokens(message)
+    message_tokens = await count_tokens(message)
     if context_tokens + message_tokens < 7777:
       context_messages.append(message)
       context_tokens += message_tokens
@@ -182,7 +182,8 @@ async def context_manager(event: dict):
     message = post['message']
     thread = post['root_id']
     if thread == '':
-      reply_without_tagging = await is_configured_for_replies_without_tagging(await channel_from_post(post))
+      channel = await channel_from_post(post)
+      reply_without_tagging = await is_configured_for_replies_without_tagging(channel)
       if reply_without_tagging:
         reply_to = post['id']
         response = await respond_to_magic_words(post, file_ids)
@@ -207,7 +208,7 @@ async def context_manager(event: dict):
       if any(BOT_NAME in context_post['message'] for context_post in context['posts'].values()):
         response = await generate_text_from_context(context)
     if response:
-      create_mattermost_post(options={'channel_id':post['channel_id'], 'message':response, 'file_ids':file_ids, 'root_id':reply_to})
+      await create_mattermost_post(options={'channel_id':post['channel_id'], 'message':response, 'file_ids':file_ids, 'root_id':reply_to})
 
 async def fix_image_generation_prompt(prompt):
   return await generate_text_from_message(f"convert this to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features and you don't have to use full sentences, just a few keywords, separating these aspects by commas. Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally: {prompt}")
