@@ -23,8 +23,7 @@ async def is_mainly_english(text: str) -> bool:
   return response
 
 async def count_tokens(message: str) -> int:
-  token_count = await len(tiktoken.get_encoding('cl100k_base').encode(dumps(message)))
-  return token_count
+  return len(tiktoken.get_encoding('cl100k_base').encode(dumps(message)))
 
 async def channel_from_post(post: dict) -> dict:
   channel = mm.channels.get_channel(post['channel_id'])
