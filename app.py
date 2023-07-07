@@ -373,8 +373,8 @@ async def captioner(post):
   headers = {"Content-Type": "application/json",
             "apikey": environ['STABLEHORDE_API_KEY']
             }
-  with open(post_file_path, 'rb') as f:
-      img_byte = f.read()
+  with open(post_file_path, 'rb') as foo:
+      img_byte = foo.read()
   source_image_base64 = base64.b64encode(img_byte).decode("utf-8")
   data = {
       "forms": [
@@ -396,7 +396,7 @@ async def captioner(post):
       'https://stablehorde.net/api/v2/interrogate/status/' + id_value, 
       headers=headers,
       timeout=420
-  ) 
+  )
   json_response = caption.json()
   print(json_response)
   caption=json_response['forms'][0]['result']['caption']
