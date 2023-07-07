@@ -13,30 +13,34 @@ DEBUG_LEVEL = int(environ['DEBUG_LEVEL'])
 openai.api_key = environ['OPENAI_API_KEY']
 BOT_NAME = environ['MATTERMOST_BOTNAME']
 
-async def return_maybe_debug(value):
+async def maybe_debug(value):
   if DEBUG_LEVEL > 0:
     print(value)
   return value
 
 async def is_mainly_english(text: str) -> bool:
-  await return_maybe_debug(langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en")
+  response = await maybe_debug(langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en")
+  return response
 
 async def count_tokens(message: str) -> int:
-  await return_maybe_debug(len(tiktoken.get_encoding('cl100k_base').encode(dumps(message))))
+  token_count = await maybe_debug(len(tiktoken.get_encoding('cl100k_base').encode(dumps(message))))
+  return token_count 
 
 async def channel_from_post(post: dict) -> dict:
-  channel = await return_maybe_debug(mm.channels.get_channel(post['channel_id']))
+  channel = await maybe_debug(mm.channels.get_channel(post['channel_id']))
   return channel
 
 async def channel_context(post: dict) -> dict:
-  context = await return_maybe_debug(mm.posts.get_posts_for_channel(post['channel_id']))
+  context = await maybe_debug(mm.posts.get_posts_for_channel(post['channel_id']))
   return context
 
 async def thread_context(post: dict) -> dict:
-  await return_maybe_debug({'order':[post['id']], 'posts':{post['id']:post}})
+  context = await maybe_debug({'order':[post['id']], 'posts':{post['id']:post}})
+  return context
 
 async def choose_system_message(post: dict) -> list:
-  if await is_asking_for_code_analysis(post['message']):
+  analyze_code = await is_asking_for_code_analysis(post['message'])
+  if analyze_code:
     code_snippets = []
     async for file_path in [x for x in listdir() if x.endswith('.py')]:
       async with open(file_path, 'r', encoding='utf-8') as file:
@@ -83,7 +87,8 @@ async def respond_to_magic_words(post: dict, file_ids: list):
 
 async def create_mattermost_post(options: dict) -> dict:
   try:
-    mm.posts.create_post(options=options)
+    post_result = await mm.posts.create_post(options=options)
+    return post_result
   except (ConnectionResetError, mattermostdriver.exceptions.InvalidOrMissingParameters, mattermostdriver.exceptions.ResourceNotFound) as err:
     return f"Mattermost API Error: {err}"
 
@@ -160,7 +165,7 @@ async def generate_text_from_context(context: dict) -> str:
   system_message = await choose_system_message(context['posts'][context['order'][0]])
   context_messages = []
   context_tokens = await count_tokens(context)
-  async for post_id in context['order']:
+  for post_id in context['order']:
     if 'from_bot' in context['posts'][post_id]['props']:
       role = 'assistant'
     else:
@@ -173,7 +178,8 @@ async def generate_text_from_context(context: dict) -> str:
     else:
       break
   context_messages.reverse()
-  return await openai_chat_completion(system_message + context_messages, 'gpt-4')
+  openai_response = await openai_chat_completion(system_message + context_messages, 'gpt-4')
+  return openai_response
 
 async def context_manager(event: dict):
   file_ids = []
