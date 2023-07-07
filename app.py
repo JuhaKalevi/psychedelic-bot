@@ -373,7 +373,7 @@ async def captioner(post):
       file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
       post_file_path = f'{post_file_id}.{file_type}'
       async with open(post_file_path, 'wb') as post_file:
-      post_file.write(file_response.content)
+        post_file.write(file_response.content)
     try:
       post_file_image = Image.open(post_file_path)
       with open('source_image_path', 'rb') as perkele:
