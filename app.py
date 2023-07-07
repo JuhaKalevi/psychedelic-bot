@@ -336,6 +336,7 @@ async def instruct_pix2pix(file_ids, post):
   return comment
 
 async def youtube_transcription(user_input):
+  print(user_input)
   if user_input.startswith("transcribe @gpt3 "):
     regex = r"\[(.*?)\]\((.*?)\)"
     matches = re.findall(regex, user_input)
