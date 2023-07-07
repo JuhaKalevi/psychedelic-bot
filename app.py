@@ -1,4 +1,4 @@
-from json import dumps, loads
+import json
 from os import environ, path, listdir, remove
 import re
 import time
@@ -198,7 +198,7 @@ async def context_manager(event: dict):
     if thread == '':
       channel = await channel_from_post(post)
       reply_without_tagging = await is_configured_for_replies_without_tagging(channel)
-      if reply_without_tagging or BOT_NAME in message:
+      if reply_without_tagging:
         reply_to = post['id']
         response = await respond_to_magic_words(post, file_ids)
         if response is None:
@@ -386,7 +386,7 @@ async def captioner(post):
       "source_image": source_image_base64, # Here is the base64 image
       "slow_workers": True
   }
-  response = requests.post(url, headers=headers, data=json.dumps(data))
+  response = requests.post(url, headers=headers, data=json.dumps(data), timeout=420)
   print(response.json())
   response_content = response.json()
   id_value = response_content['id']
@@ -394,7 +394,8 @@ async def captioner(post):
   time.sleep(20)
   caption = requests.get(
       'https://stablehorde.net/api/v2/interrogate/status/' + id_value, 
-      headers=headers
+      headers=headers,
+      timeout=420
   ) 
   json_response = caption.json()
   print(json_response)
