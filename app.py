@@ -1,5 +1,5 @@
-import json
-import os
+from json import dumps, loads
+from os import environ, path, listdir, remove
 import chardet
 import langdetect
 import openai
@@ -9,8 +9,8 @@ import tiktoken
 import webuiapi
 from PIL import Image
 
-openai.api_key = os.environ['OPENAI_API_KEY']
-BOT_NAME = os.environ['MATTERMOST_BOTNAME']
+openai.api_key = environ['OPENAI_API_KEY']
+BOT_NAME = environ['MATTERMOST_BOTNAME']
 
 async def textgen_chat_completion(user_input, history):
   request = {
@@ -54,9 +54,9 @@ async def textgen_chat_completion(user_input, history):
     'skip_special_tokens': True,
     'stopping_strings': []
   }
-  response = requests.post(os.environ['TEXTGEN_WEBUI_URI'], json=request, timeout=420)
+  response = requests.post(environ['TEXTGEN_WEBUI_URI'], json=request, timeout=420)
   if response.status_code == 200:
-    response_content = json.loads(response.text)
+    response_content = loads(response.text)
     results = response_content["results"]
     for result in results:
       chat_history = result.get("history", {})
@@ -77,7 +77,7 @@ async def openai_chat_completion(messages, model='gpt-4'):
 async def choose_system_message(post):
   if await is_asking_for_code_analysis(post['message']):
     code_snippets = []
-    for file_path in [x for x in os.listdir() if x.endswith('.py')]:
+    for file_path in [x for x in listdir() if x.endswith('.py')]:
       with open(file_path, 'r', encoding='utf-8') as file:
         code = file.read()
       code_snippets.append(f'--- BEGING {file_path} ---\n{code}\n')
@@ -86,7 +86,7 @@ async def choose_system_message(post):
 
 async def generate_text_from_context(context):
   context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
-  system_message = await choose_system_message(mm.channels.get_channel(context['posts'][context['order'][0]]))
+  system_message = await choose_system_message(context['posts'][context['order'][0]])
   context_messages = []
   context_tokens = count_tokens(context)
   for post_id in context['order']:
@@ -102,7 +102,7 @@ async def generate_text_from_context(context):
     else:
       break
   context_messages.reverse()
-  return await openai_chat_completion(system_message + context_messages, os.environ['OPENAI_MODEL_NAME'])
+  return await openai_chat_completion(system_message + context_messages, 'gpt-4')
 
 async def generate_text_from_message(message, model='gpt-4'):
   return(await openai_chat_completion([{'role': 'user', 'content': message}], model).startswith('True'))
@@ -134,10 +134,10 @@ def context_from_post(post):
 
 async def context_manager(event):
   file_ids = []
-  event = json.loads(event)
-  if not ('event' in event and event['event'] == 'posted' and event['data']['sender_name'] != os.environ['MATTERMOST_BOTNAME']):
+  event = loads(event)
+  if not ('event' in event and event['event'] == 'posted' and event['data']['sender_name'] != BOT_NAME):
     return
-  post = json.loads(event['data']['post'])
+  post = loads(event['data']['post'])
   if post['root_id'] == '' and is_configured_for_replies_without_tagging(mm.channels.get_channel(post['channel_id'])):
     thread_id = post['id']
     response = await respond_to_magic_words(post, file_ids)
@@ -168,7 +168,7 @@ async def context_manager(event):
     print(f"Mattermost API Error: {err}")
 
 def count_tokens(message):
-  return len(tiktoken.get_encoding('cl100k_base').encode(json.dumps(message)))
+  return len(tiktoken.get_encoding('cl100k_base').encode(dumps(message)))
 
 async def fix_image_generation_prompt(prompt):
   return await generate_text_from_message(f"convert this to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features and you don't have to use full sentences, just a few keywords, separating these aspects by commas. Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally: {prompt}")
@@ -201,7 +201,7 @@ async def upscale_image_4x(file_ids, post, resize_w: int = 2048, resize_h: int =
   for post_file_id in post['file_ids']:
     file_response = mm.files.get_file(file_id=post_file_id)
     if file_response.status_code == 200:
-      file_type = os.path.splitext(file_response.headers["Content-Disposition"])[1][1:]
+      file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
       post_file_path = f'{post_file_id}.{file_type}'
       with open(post_file_path, 'wb') as post_file:
         post_file.write(file_response.content)
@@ -227,8 +227,8 @@ async def upscale_image_4x(file_ids, post, resize_w: int = 2048, resize_h: int =
       comment += f"Error occurred while upscaling image: {str(err)}"
     finally:
       for temporary_file_path in (post_file_path, upscaled_image_path):
-        if os.path.exists(temporary_file_path):
-          os.remove(temporary_file_path)
+        if path.exists(temporary_file_path):
+          remove(temporary_file_path)
   return comment
 
 async def upscale_image_2x(file_ids, post, resize_w: int = 1024, resize_h: int = 1024, upscaler="LDSR"):
@@ -236,7 +236,7 @@ async def upscale_image_2x(file_ids, post, resize_w: int = 1024, resize_h: int =
   for post_file_id in post['file_ids']:
     file_response = mm.files.get_file(file_id=post_file_id)
     if file_response.status_code == 200:
-      file_type = os.path.splitext(file_response.headers["Content-Disposition"])[1][1:]
+      file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
       post_file_path = f'{post_file_id}.{file_type}'
       with open(post_file_path, 'wb') as post_file:
         post_file.write(file_response.content)
@@ -262,8 +262,8 @@ async def upscale_image_2x(file_ids, post, resize_w: int = 1024, resize_h: int =
       comment += f"Error occurred while upscaling image: {str(err)}"
     finally:
       for temporary_file_path in (post_file_path, upscaled_image_path):
-        if os.path.exists(temporary_file_path):
-          os.remove(temporary_file_path)
+        if path.exists(temporary_file_path):
+          remove(temporary_file_path)
   return comment
 
 async def respond_to_magic_words(post, file_ids):
@@ -284,7 +284,7 @@ async def instruct_pix2pix(file_ids, post):
   for post_file_id in post['file_ids']:
     file_response = mm.files.get_file(file_id=post_file_id)
     if file_response.status_code == 200:
-      file_type = os.path.splitext(file_response.headers["Content-Disposition"])[1][1:]
+      file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
       post_file_path = f'{post_file_id}.{file_type}'
       with open(post_file_path, 'wb') as post_file:
         post_file.write(file_response.content)
@@ -318,17 +318,13 @@ async def instruct_pix2pix(file_ids, post):
       comment += f"Error occurred while processing image: {str(err)}"
     finally:
       for temporary_file_path in (post_file_path, processed_image_path):
-        if os.path.exists(temporary_file_path):
-          os.remove(temporary_file_path)
+        if path.exists(temporary_file_path):
+          remove(temporary_file_path)
   return comment
 
-mm = mattermostdriver.Driver({
-  'url': os.environ['MATTERMOST_URL'],
-  'token': os.environ['MATTERMOST_TOKEN'],
-  'scheme':'https',
-  'port':443
-})
+mm = mattermostdriver.Driver({'url': environ['MATTERMOST_URL'], 'token': environ['MATTERMOST_TOKEN'], 'scheme':'https', 'port':443})
 mm.login()
 mm.init_websocket(context_manager)
-webui_api = webuiapi.WebUIApi(host=os.environ['STABLE_DIFFUSION_WEBUI_HOST'], port=7860)
-webui_api.set_auth('psychedelic-bot', os.environ['STABLE_DIFFUSION_WEBUI_API_KEY'])
+
+webui_api = webuiapi.WebUIApi(host=environ['STABLE_DIFFUSION_WEBUI_HOST'], port=7860)
+webui_api.set_auth('psychedelic-bot', environ['STABLE_DIFFUSION_WEBUI_API_KEY'])
