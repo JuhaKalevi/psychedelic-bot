@@ -200,7 +200,7 @@ async def context_manager(event: dict):
     if thread == '':
       channel = await channel_from_post(post)
       reply_without_tagging = await is_configured_for_replies_without_tagging(channel)
-      if reply_without_tagging:
+      if reply_without_tagging or BOT_NAME in message:
         reply_to = post['id']
         response = await respond_to_magic_words(post, file_ids)
         if response is None:
