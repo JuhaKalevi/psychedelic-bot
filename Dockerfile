@@ -9,6 +9,6 @@ WORKDIR /app/python-mattermost-driver
 RUN pip install -r requirements.txt
 RUN python3 -u setup.py install
 WORKDIR /app
-RUN pip install openai tiktoken webuiapi gradio_client
+RUN pip install openai tiktoken webuiapi gradio_client aiofiles httpx
 COPY *.py /app/
 CMD python3 -u app.py
