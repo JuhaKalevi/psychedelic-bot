@@ -66,6 +66,25 @@ async def is_configured_for_replies_without_tagging(channel: dict) -> bool:
     return True
   return False
 
+async def respond_to_magic_words(post, file_ids):
+  if post['message'].lower().startswith("2x"):
+    response = await upscale_image_2x(file_ids, post)
+  elif post['message'].lower().startswith("4x"):
+    response = await upscale_image_4x(file_ids, post)
+  elif post['message'].lower().startswith("pix2pix"):
+    response = await instruct_pix2pix(file_ids, post)
+  elif post['message'].lower().startswith("llm"):
+    response = await textgen_chat_completion(post['message'], {'internal': [], 'visible': []})
+  else:
+    return None
+  return response
+
+async def create_mattermost_post(options: dict) -> dict:
+  try:
+    mm.posts.create_post(options=options)
+  except (ConnectionResetError, mattermostdriver.exceptions.InvalidOrMissingParameters, mattermostdriver.exceptions.ResourceNotFound) as err:
+    return f"Mattermost API Error: {err}"
+
 async def generate_text_from_message(message: dict, model='gpt-4'):
   response = await openai_chat_completion([{'role': 'user', 'content': message}], model)
   return response
@@ -153,12 +172,6 @@ async def generate_text_from_context(context):
       break
   context_messages.reverse()
   return await openai_chat_completion(system_message + context_messages, 'gpt-4')
-
-async def create_mattermost_post(options: dict) -> dict:
-  try:
-    mm.posts.create_post(options=options)
-  except (ConnectionResetError, mattermostdriver.exceptions.InvalidOrMissingParameters, mattermostdriver.exceptions.ResourceNotFound) as err:
-    return f"Mattermost API Error: {err}"
 
 async def context_manager(event: dict):
   file_ids = []
@@ -266,19 +279,6 @@ async def upscale_image_2x(file_ids, post, resize_w: int = 1024, resize_h: int =
         if path.exists(temporary_file_path):
           remove(temporary_file_path)
   return comment
-
-async def respond_to_magic_words(post, file_ids):
-  if post['message'].lower().startswith("2x"):
-    response = await upscale_image_2x(file_ids, post)
-  elif post['message'].lower().startswith("4x"):
-    response = await upscale_image_4x(file_ids, post)
-  elif post['message'].lower().startswith("pix2pix"):
-    response = await instruct_pix2pix(file_ids, post)
-  elif post['message'].lower().startswith("llm"):
-    response = await textgen_chat_completion(post['message'], {'internal': [], 'visible': []})
-  else:
-    return None
-  return response
 
 async def instruct_pix2pix(file_ids, post):
   comment = ''
