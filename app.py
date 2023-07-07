@@ -129,6 +129,9 @@ def is_configured_for_replies_without_tagging(channel):
 def is_mainly_english(text):
   return langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
 
+def channel_id_from_post(post):
+  return mm.channels.get_channel(post['channel_id'])
+
 def context_from_post(post):
   return {'order':[post['id']], 'posts':{post['id']:post}}
 
@@ -138,11 +141,11 @@ async def context_manager(event):
   if not ('event' in event and event['event'] == 'posted' and event['data']['sender_name'] != BOT_NAME):
     return
   post = loads(event['data']['post'])
-  if post['root_id'] == '' and is_configured_for_replies_without_tagging(mm.channels.get_channel(post['channel_id'])):
+  if post['root_id'] == '' and is_configured_for_replies_without_tagging(channel_id_from_post(post)):
     thread_id = post['id']
     response = await respond_to_magic_words(post, file_ids)
     if response is None:
-      response = await generate_text_from_context(mm.posts.get_posts_for_channel(post['channel_id']))
+      response = await generate_text_from_context(channel_id_from_post(post))
   elif post['root_id'] == '':
     if BOT_NAME in post['message']:
       thread_id = post['id']
@@ -182,14 +185,7 @@ async def generate_images(file_ids, post, count):
   options['sd_model_checkpoint'] = 'realisticVisionV30_v30VAE.safetensors [c52892e92a]'
   options['sd_vae'] = 'vae-ft-mse-840000-ema-pruned.safetensors'
   webui_api.set_options(options)
-  result = webui_api.txt2img(
-    prompt = post['message'],
-    negative_prompt = "(unfinished:1.43), (sloppy and messy:1.43), (incoherent:1.43), (deformed:1.43)",
-    steps = 42,
-    sampler_name = 'UniPC',
-    batch_size = count,
-    restore_faces = True
-  )
+  result = webui_api.txt2img(prompt = post['message'], negative_prompt = "(unfinished:1.43), (sloppy and messy:1.43), (incoherent:1.43), (deformed:1.43)", steps = 42, sampler_name = 'UniPC', batch_size = count, restore_faces = True)
   for image in result.images:
     image.save("result.png")
     with open('result.png', 'rb') as image_file:
@@ -207,20 +203,11 @@ async def upscale_image_4x(file_ids, post, resize_w: int = 2048, resize_h: int =
         post_file.write(file_response.content)
     try:
       post_file_image = Image.open(post_file_path)
-      result = webui_api.extra_single_image(
-        post_file_image,
-        upscaling_resize=4,
-        upscaling_resize_w=resize_w,
-        upscaling_resize_h=resize_h,
-        upscaler_1=upscaler,
-      )
+      result = webui_api.extra_single_image(post_file_image, upscaling_resize=4, upscaling_resize_w=resize_w, upscaling_resize_h=resize_h, upscaler_1=upscaler)
       upscaled_image_path = f"upscaled_{post_file_id}.png"
       result.image.save(upscaled_image_path)
       with open(upscaled_image_path, 'rb') as image_file:
-        file_id = mm.files.upload_file(
-          post['channel_id'],
-          files={'files': (upscaled_image_path, image_file)}
-        )['file_infos'][0]['id']
+        file_id = mm.files.upload_file(post['channel_id'], files={'files': (upscaled_image_path, image_file)})['file_infos'][0]['id']
       file_ids.append(file_id)
       comment += "Image upscaled successfully"
     except RuntimeError as err:
@@ -242,20 +229,11 @@ async def upscale_image_2x(file_ids, post, resize_w: int = 1024, resize_h: int =
         post_file.write(file_response.content)
     try:
       post_file_image = Image.open(post_file_path)
-      result = webui_api.extra_single_image(
-        post_file_image,
-        upscaling_resize=2,
-        upscaling_resize_w=resize_w,
-        upscaling_resize_h=resize_h,
-        upscaler_1=upscaler,
-      )
+      result = webui_api.extra_single_image(post_file_image, upscaling_resize=2, upscaling_resize_w=resize_w, upscaling_resize_h=resize_h, upscaler_1=upscaler)
       upscaled_image_path = f"upscaled_{post_file_id}.png"
       result.image.save(upscaled_image_path)
       with open(upscaled_image_path, 'rb') as image_file:
-        file_id = mm.files.upload_file(
-          post['channel_id'],
-          files={'files': (upscaled_image_path, image_file)}
-        )['file_infos'][0]['id']
+        file_id = mm.files.upload_file(post['channel_id'], files={'files': (upscaled_image_path, image_file)})['file_infos'][0]['id']
       file_ids.append(file_id)
       comment += "Image upscaled successfully"
     except RuntimeError as err:
@@ -295,23 +273,13 @@ async def instruct_pix2pix(file_ids, post):
       options['sd_model_checkpoint'] = 'instruct-pix2pix-00-22000.safetensors [fbc31a67aa]'
       options['sd_vae'] = "None"
       webui_api.set_options(options)
-      result = webui_api.img2img(
-        images = [post_file_image],
-        prompt = post['message'],
-        steps = 150,
-        seed = -1,
-        cfg_scale = 7.5,
-        denoising_strength=1.5,
-      )
+      result = webui_api.img2img(images = [post_file_image], prompt = post['message'], steps = 150, seed = -1, cfg_scale = 7.5, denoising_strength=1.5)
       if not result:
         raise RuntimeError("API returned an invalid response")
       processed_image_path = f"processed_{post_file_id}.png"
       result.image.save(processed_image_path)
       with open(processed_image_path, 'rb') as image_file:
-        file_id = mm.files.upload_file(
-          post['channel_id'],
-          files={'files': (processed_image_path, image_file)}
-        )['file_infos'][0]['id']
+        file_id = mm.files.upload_file(post['channel_id'], files={'files': (processed_image_path, image_file)})['file_infos'][0]['id']
       file_ids.append(file_id)
       comment += "Image processed successfully"
     except RuntimeError as err:
