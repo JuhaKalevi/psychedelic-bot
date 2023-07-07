@@ -373,8 +373,8 @@ async def captioner(post):
   headers = {"Content-Type": "application/json",
             "apikey": environ['STABLEHORDE_API_KEY']
             }
-  with open(post_file_path, 'rb') as foo:
-      img_byte = foo.read()
+  with open(post_file_path, 'rb') as perkele:
+    img_byte = perkele.read()
   source_image_base64 = base64.b64encode(img_byte).decode("utf-8")
   data = {
       "forms": [
@@ -386,7 +386,7 @@ async def captioner(post):
       "source_image": source_image_base64, # Here is the base64 image
       "slow_workers": True
   }
-  response = requests.post(url, headers=headers, data=json.dumps(data), timeout=420)
+  response = requests.post(url, headers=headers, data, timeout=420)
   print(response.json())
   response_content = response.json()
   id_value = response_content['id']
