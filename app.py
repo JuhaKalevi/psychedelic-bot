@@ -29,7 +29,8 @@ async def channel_from_post(post: dict) -> dict:
   return channel
 
 async def channel_context(post: dict) -> dict:
-  await return_maybe_debug(mm.posts.get_posts_for_channel(post['channel_id']))
+  channel_context = await return_maybe_debug(mm.posts.get_posts_for_channel(post['channel_id']))
+  return channel_context
 
 async def thread_context(post: dict) -> dict:
   await return_maybe_debug({'order':[post['id']], 'posts':{post['id']:post}})
