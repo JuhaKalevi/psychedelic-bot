@@ -140,7 +140,7 @@ def is_mainly_english(text: str) -> bool:
 def channel_from_post(post: dict) -> dict:
   return mm.channels.get_channel(post['channel_id'])
 
-def channel_context(post: dict) -> dict:
+async def channel_context(post: dict) -> dict:
   return mm.posts.get_posts_for_channel(post['channel_id'])
 
 def thread_context(post: dict) -> dict:
@@ -164,7 +164,7 @@ async def context_manager(event: dict):
       reply_to = post['id']
       response = await respond_to_magic_words(post, file_ids)
       if response is None:
-        response = await generate_text_from_context(channel_context(post))
+        response = await generate_text_from_context(await channel_context(post))
     elif thread == '' and BOT_NAME in message:
       reply_to = post['id']
       response = await respond_to_magic_words(post, file_ids)
