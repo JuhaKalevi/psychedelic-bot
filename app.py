@@ -3,6 +3,7 @@ from os import environ, path, listdir, remove
 import re
 import base64
 import asyncio
+import aiofiles
 import httpx
 import chardet
 import langdetect
@@ -377,7 +378,6 @@ async def captioner(post):
         async with aiofiles.open(post_file_path, 'wb') as post_file:
           await post_file.write(file_response.content)
       try:
-        post_file_image = Image.open(post_file_path)
         with open('source_image_path', 'rb') as perkele:
           img_byte = perkele.read()
         source_image_base64 = base64.b64encode(img_byte).decode("utf-8")
@@ -407,7 +407,7 @@ async def captioner(post):
       except RuntimeError as err:
         comment += f"Error occurred while upscaling image: {str(err)}"
       finally:
-        print("Done")
+        print("Done") 
     return caption
 
 mm = mattermostdriver.Driver({'url': environ['MATTERMOST_URL'], 'token': environ['MATTERMOST_TOKEN'], 'scheme':'https', 'port':443})
