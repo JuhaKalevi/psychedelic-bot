@@ -1,4 +1,4 @@
-from json import dumps, loads
+import json
 from os import environ, path, listdir, remove
 import re
 import base64
@@ -407,7 +407,7 @@ async def captioner(post):
       except RuntimeError as err:
         comment += f"Error occurred while upscaling image: {str(err)}"
       finally:
-        print("Done") 
+        print("Done")
     return caption
 
 mm = mattermostdriver.Driver({'url': environ['MATTERMOST_URL'], 'token': environ['MATTERMOST_TOKEN'], 'scheme':'https', 'port':443})
