@@ -70,7 +70,7 @@ async def textgen_chat_completion(user_input, history):
 
 async def openai_chat_completion(messages, model='gpt-4'):
   try:
-    return(await openai.ChatCompletion.acreate(model=model, messages=messages))
+    return await openai.ChatCompletion.acreate(model=model, messages=messages)
   except (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.ServiceUnavailableError, openai.error.Timeout) as err:
     return f"OpenAI API Error: {err}"
 
@@ -269,16 +269,16 @@ async def upscale_image_2x(file_ids, post, resize_w: int = 1024, resize_h: int =
 
 async def respond_to_magic_words(post, file_ids):
   if post['message'].lower().startswith("2x"):
-    openai_response_content = await upscale_image_2x(file_ids, post)
+    response = await upscale_image_2x(file_ids, post)
   elif post['message'].lower().startswith("4x"):
-    openai_response_content = await upscale_image_4x(file_ids, post)
+    response = await upscale_image_4x(file_ids, post)
   elif post['message'].lower().startswith("pix2pix"):
-    openai_response_content = await instruct_pix2pix(file_ids, post)
+    response = await instruct_pix2pix(file_ids, post)
   elif post['message'].lower().startswith("llm"):
-    openai_response_content = await textgen_chat_completion(post['message'], {'internal': [], 'visible': []})
+    response = await textgen_chat_completion(post['message'], {'internal': [], 'visible': []})
   else:
-    openai_response_content = None
-  return openai_response_content
+    return None
+  return response
 
 async def instruct_pix2pix(file_ids, post):
   comment = ''
