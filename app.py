@@ -85,7 +85,8 @@ async def choose_system_message(post):
   return [{'role':'system', 'content':'You are an assistant with no specific role determined right now.'}]
 
 async def generate_text_from_context(context):
-  context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
+  if 'order' in context:
+    context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
   system_message = await choose_system_message(context['posts'][context['order'][0]])
   context_messages = []
   context_tokens = count_tokens(context)
