@@ -201,12 +201,16 @@ async def context_manager(event: dict):
     elif thread == '' and BOT_NAME in message:
       reply_to = post['id']
       response = await respond_to_magic_words(post, file_ids)
-      if response is None and await is_asking_for_channel_summary(message):
-        context = await channel_context(post)
-      else:
-        context = await thread_context(post)
-      if response is None and await is_asking_for_image_generation(message):
-        if await is_asking_for_multiple_images(message):
+      if response is None:
+        summarize = await is_asking_for_channel_summary(message)
+        if summarize:
+          context = await channel_context(post)
+        else:
+          context = await thread_context(post)
+        response = await generate_text_from_context(context)
+      if response is None:
+        image_requested = await is_asking_for_image_generation(message)
+        if image_requested:
           response = await generate_images(file_ids, post, 8)
         else:
           response = await generate_images(file_ids, post, 1)
