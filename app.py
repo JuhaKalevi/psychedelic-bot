@@ -25,7 +25,8 @@ async def count_tokens(message: str) -> int:
   await return_maybe_debug(len(tiktoken.get_encoding('cl100k_base').encode(dumps(message))))
 
 async def channel_from_post(post: dict) -> dict:
-  await return_maybe_debug(mm.channels.get_channel(post['channel_id']))
+  channel = await return_maybe_debug(mm.channels.get_channel(post['channel_id']))
+  return channel
 
 async def channel_context(post: dict) -> dict:
   await return_maybe_debug(mm.posts.get_posts_for_channel(post['channel_id']))
