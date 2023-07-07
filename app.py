@@ -84,6 +84,8 @@ async def respond_to_magic_words(post: dict, file_ids: list):
     response = await instruct_pix2pix(file_ids, post)
   elif post['message'].lower().startswith("llm"):
     response = await textgen_chat_completion(post['message'], {'internal': [], 'visible': []})
+  elif post['message'].lower().startswith("transcribe"):
+    response = await youtube_transcription(post['message'], {'internal': [], 'visible': []})
   else:
     return None
   return response
@@ -329,6 +331,25 @@ async def instruct_pix2pix(file_ids, post):
         if path.exists(temporary_file_path):
           remove(temporary_file_path)
   return comment
+
+async def youtube_transcription(user_input):
+  print(user_input)
+  return user_input
+#  if user_input.startswith("transcribe @gpt3 "):
+#    print(user_input)
+#    regex = r"\[(.*?)\]\((.*?)\)"
+#    matches = re.findall(regex, user_input)
+#    if matches:
+        # matches[0][1] will give the URL present in user_input
+#      user_input = matches[0][1]
+#    else:
+#      return "Incorrect command format. Please use the following format: 'transcribe @gpt3 [http://youtubeURL](http://youtubeURL)'"
+#    client = Client(TRANSCRIPTION_API_URI)
+#    response = client.predict(user_input, fn_index=1)
+#    print(response)
+#    return response
+#  return "Incorrect command format. Please use the following format: 'transcribe @gpt3 [http://youtubeURL](http://youtubeURL)'"
+
 
 mm = mattermostdriver.Driver({'url': environ['MATTERMOST_URL'], 'token': environ['MATTERMOST_TOKEN'], 'scheme':'https', 'port':443})
 mm.login()
