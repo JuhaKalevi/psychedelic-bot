@@ -371,7 +371,7 @@ async def captioner(post):
       post_file_path = f'{post_file_id}.{file_type}'
   url = "https://stablehorde.net/api/v2/interrogate/async"
   headers = {"Content-Type": "application/json",
-            "apikey": environ['STABLEHORDE_API_KEY']
+            "apikey": "a8kMOjo-sgqlThYpupXS7g"
             }
   with open(post_file_path, 'rb') as perkele:
     img_byte = perkele.read()
