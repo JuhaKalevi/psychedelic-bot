@@ -13,25 +13,25 @@ DEBUG_LEVEL = environ['DEBUG_LEVEL']
 openai.api_key = environ['OPENAI_API_KEY']
 BOT_NAME = environ['MATTERMOST_BOTNAME']
 
-async def flow(object):
+async def return_maybe_debug(value):
   if DEBUG_LEVEL > 0:
-    print(object)
-  return object
+    print(value)
+  return value
 
 async def count_tokens(message: str) -> int:
-  flow(len(tiktoken.get_encoding('cl100k_base').encode(dumps(message))))
+  return_maybe_debug(len(tiktoken.get_encoding('cl100k_base').encode(dumps(message))))
 
 async def is_mainly_english(text: str) -> bool:
-  flow(langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en")
+  return_maybe_debug(langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en")
 
 async def channel_from_post(post: dict) -> dict:
-  flow(mm.channels.get_channel(post['channel_id']))
+  return_maybe_debug(mm.channels.get_channel(post['channel_id']))
 
 async def channel_context(post: dict) -> dict:
-  flow(mm.posts.get_posts_for_channel(post['channel_id']))
+  return_maybe_debug(mm.posts.get_posts_for_channel(post['channel_id']))
 
 async def thread_context(post: dict) -> dict:
-  flow({'order':[post['id']], 'posts':{post['id']:post}})
+  return_maybe_debug({'order':[post['id']], 'posts':{post['id']:post}})
 
 async def textgen_chat_completion(user_input, history):
   request = {
