@@ -106,7 +106,7 @@ async def generate_text_from_context(context):
   return await openai_chat_completion(system_message + context_messages, 'gpt-4')
 
 async def generate_text_from_message(message, model='gpt-4'):
-  return (await openai_chat_completion([{'role': 'user', 'content': message}], model)).startswith('True')
+  return await openai_chat_completion([{'role': 'user', 'content': message}], model)
 
 async def is_asking_for_channel_summary(message):
   return (await generate_text_from_message(f'Is this a message where a summary of past interactions in this chat/discussion/channel is requested? Answer only True or False: {message}')).startswith('True')
