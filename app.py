@@ -55,7 +55,7 @@ async def is_asking_for_channel_summary(message: dict) -> bool:
 
 async def is_asking_for_code_analysis(message: dict) -> bool:
   if message.startswith('@code-analysis'):
-    response = True
+    response = "True"
   else:
     response = await generate_text_from_message(f'Is this a message where knowledge or analysis of your code is requested? It does not matter whether you know about the files or not yet, you have a function that we will use later on if needed. Answer only True or False: {message}')
   return response.startswith('True')
