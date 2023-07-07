@@ -14,7 +14,7 @@ from PIL import Image
 DEBUG_LEVEL = int(environ['DEBUG_LEVEL'])
 openai.api_key = environ['OPENAI_API_KEY']
 BOT_NAME = environ['MATTERMOST_BOTNAME']
-TRANSCRIPTION_API_URI = "https://985f0b16a64956059c.gradio.live"
+TRANSCRIPTION_API_URI = "https://d007e5503a6b32d07a.gradio.live"
 
 async def maybe_debug(value):
   if DEBUG_LEVEL > 0:
