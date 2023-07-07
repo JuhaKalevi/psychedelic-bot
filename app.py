@@ -1,5 +1,6 @@
 from json import dumps, loads
 from os import environ, path, listdir, remove
+import re
 import chardet
 import langdetect
 import openai
@@ -7,11 +8,13 @@ import requests
 import mattermostdriver
 import tiktoken
 import webuiapi
+from gradio_client import Client
 from PIL import Image
 
 DEBUG_LEVEL = int(environ['DEBUG_LEVEL'])
 openai.api_key = environ['OPENAI_API_KEY']
 BOT_NAME = environ['MATTERMOST_BOTNAME']
+TRANSCRIPTION_API_URI = "https://985f0b16a64956059c.gradio.live"
 
 async def maybe_debug(value):
   if DEBUG_LEVEL > 0:
@@ -333,22 +336,18 @@ async def instruct_pix2pix(file_ids, post):
   return comment
 
 async def youtube_transcription(user_input):
-  print(user_input)
-  return user_input
-#  if user_input.startswith("transcribe @gpt3 "):
-#    print(user_input)
-#    regex = r"\[(.*?)\]\((.*?)\)"
-#    matches = re.findall(regex, user_input)
-#    if matches:
-        # matches[0][1] will give the URL present in user_input
-#      user_input = matches[0][1]
-#    else:
-#      return "Incorrect command format. Please use the following format: 'transcribe @gpt3 [http://youtubeURL](http://youtubeURL)'"
-#    client = Client(TRANSCRIPTION_API_URI)
-#    response = client.predict(user_input, fn_index=1)
-#    print(response)
-#    return response
-#  return "Incorrect command format. Please use the following format: 'transcribe @gpt3 [http://youtubeURL](http://youtubeURL)'"
+  if user_input.startswith("transcribe @gpt3 "):
+    regex = r"\[(.*?)\]\((.*?)\)"
+    matches = re.findall(regex, user_input)
+    if matches:
+      user_input = matches[0][1]
+    else:
+      return "Incorrect command format. Please use the following format: 'transcribe @gpt3 [http://youtubeURL](http://youtubeURL)'"
+    client = Client(TRANSCRIPTION_API_URI)
+    response = client.predict(user_input, fn_index=1)
+    print(response)
+    return response
+  return "Incorrect command format. Please use the following format: 'transcribe @gpt3 [http://youtubeURL](http://youtubeURL)'"
 
 
 mm = mattermostdriver.Driver({'url': environ['MATTERMOST_URL'], 'token': environ['MATTERMOST_TOKEN'], 'scheme':'https', 'port':443})
