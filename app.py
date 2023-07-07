@@ -408,7 +408,6 @@ async def captioner(post):
         return caption
       except RuntimeError as err:
         comment += f"Error occurred while generating captions: {str(err)}"
-    
 
 mm = mattermostdriver.Driver({'url': environ['MATTERMOST_URL'], 'token': environ['MATTERMOST_TOKEN'], 'scheme':'https', 'port':443})
 mm.login()
