@@ -345,7 +345,7 @@ async def youtube_transcription(user_input):
     client = Client(TRANSCRIPTION_API_URI)
     response = client.predict(user_input, fn_index=1)
     print(response)
-    ytsummary = generate_summary_from_transcription(response)
+    ytsummary = await generate_summary_from_transcription(response)
     print(ytsummary)
     return ytsummary
   print("No URL found in the input.")
