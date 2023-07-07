@@ -9,7 +9,7 @@ import tiktoken
 import webuiapi
 from PIL import Image
 
-DEBUG_LEVEL = environ['DEBUG_LEVEL']
+DEBUG_LEVEL = str(environ['DEBUG_LEVEL'])
 openai.api_key = environ['OPENAI_API_KEY']
 BOT_NAME = environ['MATTERMOST_BOTNAME']
 
