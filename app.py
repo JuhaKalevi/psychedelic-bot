@@ -92,8 +92,8 @@ async def respond_to_magic_words(post: dict, file_ids: list):
 
 async def create_mattermost_post(options: dict) -> dict:
   try:
-    post_result = await mm.posts.create_post(options=options)
-    return post_result
+    mm.posts.create_post(options=options)
+    return "Posted successfully"
   except (ConnectionResetError, mattermostdriver.exceptions.InvalidOrMissingParameters, mattermostdriver.exceptions.ResourceNotFound) as err:
     return f"Mattermost API Error: {err}"
 
