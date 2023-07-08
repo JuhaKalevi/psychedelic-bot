@@ -56,7 +56,7 @@ async def is_asking_for_multiple_images(message: dict) -> bool:
   response = await generate_text_from_message(f'Is this a message where multiple images are requested? Answer only True or False: {message}')
   return response.startswith('True')
 
-async def is_configured_for_replies_without_tagging(channel: dict) -> bool:
+async def is_configured_for_untagged_replies(channel: dict) -> bool:
   if channel['display_name'] == 'Testing':
     return True
   if f"{BOT_NAME} responds without tagging" in channel['purpose']:
@@ -190,17 +190,16 @@ async def choose_system_message(post: dict) -> list:
 async def context_manager(event: dict):
   file_ids = []
   event = loads(event)
-  response = None
+  signal = None
   if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != BOT_NAME:
     post = loads(event['data']['post'])
+    signal = await respond_to_magic_words(post, file_ids)
     message = post['message']
     channel = await channel_from_post(post)
-    reply_without_tagging = await is_configured_for_replies_without_tagging(channel)
-    if reply_without_tagging:
-      response = await respond_to_magic_words(post, file_ids)
-    if BOT_NAME in channel['purpose']:
-      response = await is_image_requested(message, file_ids, post)
-      if response:
+    reply_untagged = await is_configured_for_untagged_replies(channel)
+    if BOT_NAME in channel['purpose'] or reply_untagged:
+      signal = await is_image_requested(message, file_ids, post)
+      if not signal:
         summarize = await is_asking_for_channel_summary(message)
         if summarize:
           context = await channel_context(post)
@@ -213,9 +212,9 @@ async def context_manager(event: dict):
       context = await thread_context(post)
       reply_to = post['id']
       if any(BOT_NAME in context_post['message'] for context_post in context['posts'].values()):
-        response = await generate_text_from_context(context)
-    if response:
-      create_mattermost_post(options={'channel_id':post['channel_id'], 'message':response, 'file_ids':file_ids, 'root_id':reply_to})
+        signal = await generate_text_from_context(context)
+    if signal:
+      create_mattermost_post(options={'channel_id':post['channel_id'], 'message':signal, 'file_ids':file_ids, 'root_id':reply_to})
 
 async def is_image_requested(message, file_ids, post):
   image_requested = await is_asking_for_image_generation(message)
