@@ -97,25 +97,24 @@ async def context_manager(event:dict):
     message = post['message']
     channel = await channel_from_post(post)
     reply_untagged = await should_reply_untagged(channel)
-    print(f'reply_untagged: {reply_untagged}')
-    print(f'BOT_NAME in channel purpose: {BOT_NAME in channel["purpose"]}')
     if BOT_NAME in channel['purpose'] or reply_untagged:
+      reply_to = post['root_id']
+      print(f'reply_untagged: {reply_untagged}')
       signal = await consider_image_generation(message, file_ids, post)
-      if signal:
-        reply_to = post['root_id']
-      else:
+      if not signal:
         summarize = await is_asking_for_channel_summary(message)
         print(f'summarize: {summarize}')
         if summarize:
           context = await channel_context(post)
         else:
           context = await thread_context(post)
+        signal = await generate_text_from_context(context)
     elif BOT_NAME in message:
+      reply_to = post['root_id']
       context = await generate_text_from_message(message)
-      reply_to = post['root_id']
     else:
-      context = await thread_context(post)
       reply_to = post['root_id']
+      context = await thread_context(post)
       if any(BOT_NAME in context_post['message'] for context_post in context['posts'].values()):
         signal = await generate_text_from_context(context)
     if signal:
@@ -131,10 +130,10 @@ async def create_mattermost_post(options:dict):
   except (ConnectionResetError, mattermostdriver.exceptions.InvalidOrMissingParameters, mattermostdriver.exceptions.ResourceNotFound) as err:
     print(f"Mattermost API Error: {err}")
 
-async def fix_image_generation_prompt(prompt):
+async def fix_image_generation_prompt(prompt:str) -> str:
   return await generate_text_from_message(f"convert this to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features and you don't have to use full sentences, just a few keywords, separating these aspects by commas. Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally: {prompt}")
 
-async def generate_images(file_ids:list, post:dict, count:int):
+async def generate_images(file_ids:list, post:dict, count:int) -> str:
   comment = ''
   mainly_english = await is_mainly_english(post['message'].encode('utf-8'))
   if not mainly_english:
@@ -148,7 +147,7 @@ async def generate_images(file_ids:list, post:dict, count:int):
   for image in result.images:
     image.save("result.png")
     with open('result.png', 'rb') as image_file:
-      file_ids.append(mattermost.files.upload_file(post['channel_id'], files={'files': ('result.png', image_file)})['file_infos'][0]['id'])
+      file_ids.append(mattermost.files.upload_file(post['channel_id'], files={'files':('result.png', image_file)})['file_infos'][0]['id'])
   return comment
 
 async def generate_summary_from_transcription(message:dict, model='gpt-4'):
