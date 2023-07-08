@@ -31,9 +31,9 @@ async def channel_from_post(post:dict) -> dict:
   channel = mattermost.channels.get_channel(post['channel_id'])
   return channel
 
-async def choose_system_message(post:dict) -> list:
-  analyze_code = await is_asking_for_code_analysis(post['message'])
-  print(f'analyze_code: {analyze_code}')
+async def choose_system_message(post:dict, analyze_code:bool=False) -> list:
+  if not analyze_code:
+    analyze_code = await is_asking_for_code_analysis(post['message'])
   if analyze_code:
     code_snippets = []
     for file_path in [x for x in os.listdir() if x.endswith('.py')]:
@@ -45,7 +45,6 @@ async def choose_system_message(post:dict) -> list:
 
 async def consider_image_generation(message: dict, file_ids:list, post:dict):
   image_requested = await is_asking_for_image_generation(message)
-  print(f'image_requested: {image_requested}')
   if image_requested:
     asking_for_multiple_images = await is_asking_for_multiple_images(message)
     if asking_for_multiple_images:
@@ -69,16 +68,13 @@ async def context_manager(event:dict):
       reply_untagged = await should_reply_untagged(channel)
       if BOT_NAME in channel['purpose'] or reply_untagged:
         reply_to = post['root_id']
-        print(f'reply_untagged: {reply_untagged}')
         signal = await consider_image_generation(message, file_ids, post)
         if not signal:
           summarize = await is_asking_for_channel_summary(message)
-          print(f'summarize: {summarize}')
           if summarize:
             context = await channel_context(post)
           else:
             context = await thread_context(post)
-          print(f'context: {context}')
           signal = await generate_text_from_context(context)
       elif BOT_NAME in message:
         reply_to = post['root_id']
@@ -96,10 +92,9 @@ async def count_tokens(message:str) -> int:
 
 async def create_mattermost_post(options:dict):
   try:
-    print(f"create_post({options['message']})")
     mattermost.posts.create_post(options=options)
   except (ConnectionResetError, mattermostdriver.exceptions.InvalidOrMissingParameters, mattermostdriver.exceptions.ResourceNotFound) as err:
-    print(f"Mattermost API Error: {err}")
+    print(f'ERROR mattermost.posts.create_post(): {err}')
 
 async def fix_image_generation_prompt(prompt:str) -> str:
   return await generate_text_from_message(f"convert this to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features and you don't have to use full sentences, just a few keywords, separating these aspects by commas. Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally: {prompt}")
@@ -196,11 +191,17 @@ async def instruct_pix2pix(file_ids:list, post:dict):
   return comment
 
 async def is_asking_for_channel_summary(message:dict) -> bool:
-  response = await generate_text_from_message(f'Is this a message where a summary of past interactions in this chat/discussion/channel is requested? Answer only True or False: {message}')
+  if channel_from_post(message['channel_id']) == 'GitLab':
+    response = 'True'
+  else:
+    response = await generate_text_from_message(f'Is this a message where a summary of past interactions in this chat/discussion/channel is requested? Answer only True or False: {message}')
   return response.startswith('True')
 
-async def is_asking_for_code_analysis(message:dict) -> bool:
-  if message.startswith('@code-analysis'):
+async def is_asking_for_code_analysis(post:dict) -> bool:
+  message = post['message']
+  if channel_from_post(post['channel_id']) == 'GitLab':
+    response = 'True'
+  elif message.startswith('@code-analysis'):
     response = 'True'
   else:
     response = await generate_text_from_message(f'Is this a message where knowledge or analysis of your code is requested? It does not matter whether you know about the files or not yet, you have a function that we will use later on if needed. Answer only True or False: {message}')
@@ -220,7 +221,7 @@ async def is_mainly_english(text:str) -> bool:
 
 async def openai_chat_completion(messages:list, model='gpt-4'):
   try:
-    print(f'openai.ChatCompletion.acreate(model={model}, messages={messages})')
+    print(f"TRACE len(openai.ChatCompletion.acreate): {len(f'openai.ChatCompletion.acreate(model={model}, messages={messages})')}")
     response = await openai.ChatCompletion.acreate(model=model, messages=messages)
     return str(response['choices'][0]['message']['content'])
   except (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.ServiceUnavailableError, openai.error.Timeout) as err:
@@ -246,11 +247,8 @@ async def respond_to_magic_words(post:dict, file_ids:list):
   return response
 
 async def should_reply_untagged(channel:dict) -> bool:
-  if channel['type'] == 'D':
+  
     return True
-  if f"{BOT_NAME} responds without tagging" in channel['purpose']:
-    return True
-  return False
 
 async def textgen_chat_completion(user_input, history):
   request = {
@@ -369,15 +367,12 @@ async def youtube_transcription(user_input):
   url_pattern = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
   urls = re.findall(url_pattern, input_str)
   if urls:
-    new_user_input = urls[0]  # Take the first URL found
-    print(new_user_input)
-    client = gradio_client.Client(TRANSCRIPTION_API_URI)
-    response = client.predict(user_input, fn_index=1)
-    print(response)
-    ytsummary = await generate_summary_from_transcription(response)
-    print(ytsummary)
+    gradio = gradio_client.Client(TRANSCRIPTION_API_URI)
+    prediction = gradio.predict(user_input, fn_index=1)
+    if 'error' in prediction:
+      return f"ERROR gradio.predict(): {prediction['error']}"
+    ytsummary = await generate_summary_from_transcription(prediction)
     return ytsummary
-  print("No URL found in the input.")
 
 async def captioner(post):
   captions = []
