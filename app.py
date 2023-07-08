@@ -61,32 +61,35 @@ async def context_manager(event:dict):
   if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != BOT_NAME:
     post = json.loads(event['data']['post'])
     signal = await respond_to_magic_words(post, file_ids)
-    message = post['message']
-    channel = await channel_from_post(post)
-    reply_untagged = await should_reply_untagged(channel)
-    if BOT_NAME in channel['purpose'] or reply_untagged:
-      reply_to = post['root_id']
-      print(f'reply_untagged: {reply_untagged}')
-      signal = await consider_image_generation(message, file_ids, post)
-      if not signal:
-        summarize = await is_asking_for_channel_summary(message)
-        print(f'summarize: {summarize}')
-        if summarize:
-          context = await channel_context(post)
-        else:
-          context = await thread_context(post)
-        print(f'context: {context}')
-        signal = await generate_text_from_context(context)
-    elif BOT_NAME in message:
-      reply_to = post['root_id']
-      context = await generate_text_from_message(message)
-    else:
-      reply_to = post['root_id']
-      context = await thread_context(post)
-      if any(BOT_NAME in context_post['message'] for context_post in context['posts'].values()):
-        signal = await generate_text_from_context(context)
     if signal:
-      await create_mattermost_post(options={'channel_id':post['channel_id'], 'message':signal, 'file_ids':file_ids, 'root_id':reply_to})
+      await create_mattermost_post(options={'channel_id':post['channel_id'], 'message':signal, 'file_ids':file_ids, 'root_id':post['root_id']})
+    else:
+      message = post['message']
+      channel = await channel_from_post(post)
+      reply_untagged = await should_reply_untagged(channel)
+      if BOT_NAME in channel['purpose'] or reply_untagged:
+        reply_to = post['root_id']
+        print(f'reply_untagged: {reply_untagged}')
+        signal = await consider_image_generation(message, file_ids, post)
+        if not signal:
+          summarize = await is_asking_for_channel_summary(message)
+          print(f'summarize: {summarize}')
+          if summarize:
+            context = await channel_context(post)
+          else:
+            context = await thread_context(post)
+          print(f'context: {context}')
+          signal = await generate_text_from_context(context)
+      elif BOT_NAME in message:
+        reply_to = post['root_id']
+        context = await generate_text_from_message(message)
+      else:
+        reply_to = post['root_id']
+        context = await thread_context(post)
+        if any(BOT_NAME in context_post['message'] for context_post in context['posts'].values()):
+          signal = await generate_text_from_context(context)
+      if signal:
+        await create_mattermost_post(options={'channel_id':post['channel_id'], 'message':signal, 'file_ids':file_ids, 'root_id':reply_to})
 
 async def count_tokens(message:str) -> int:
   return len(tiktoken.get_encoding('cl100k_base').encode(json.dumps(message)))
