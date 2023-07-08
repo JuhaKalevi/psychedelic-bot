@@ -119,7 +119,7 @@ async def generate_images(file_ids:list, post:dict, count:int) -> str:
 async def generate_summary_from_transcription(message:dict, model='gpt-4'):
   response = await openai_chat_completion([
     {
-      'role': 'user', 
+      'role': 'user',
       'content': (f"Summarize in appropriate detail, adjusting the summary length"
         f" according to the transcription's length, the YouTube-video transcription below."
         f" Also make a guess on how many different characters' speech is included in the transcription."
@@ -247,7 +247,7 @@ async def respond_to_magic_words(post:dict, file_ids:list):
   return response
 
 async def should_reply_untagged(channel:dict) -> bool:
-  
+
     return True
 
 async def textgen_chat_completion(user_input, history):
@@ -264,7 +264,7 @@ async def textgen_chat_completion(user_input, history):
     'stop_at_newline': False,
     'chat_generation_attempts': 1,
     'chat-instruct_command': 'Continue the chat dialogue below. Write a single reply for the character "<|character|>".\n\n<|prompt|>',
-    'preset': 'None',  
+    'preset': 'None',
     'do_sample': True,
     'temperature': 0.7,
     'top_p': 0.1,
@@ -425,7 +425,7 @@ async def storyteller(post):
 async def generate_story_from_captions(message:dict, model='gpt-4'):
   response = await openai_chat_completion([
     {
-      'role': 'user', 
+      'role': 'user',
       'content': (f"Make a consistent story based on these image captions: {message}")
     }
 ], model)
