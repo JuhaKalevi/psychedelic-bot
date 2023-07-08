@@ -412,7 +412,7 @@ async def captioner(post):
           json_response = caption_res.json()
 
           caption=json_response['forms'][0]['result']['caption']
-          captions.append(caption)
+          captions.append(f"{post_file_path}: {caption}")
       except (RuntimeError, KeyError, IndexError) as err:
         captions.append(f"Error occurred while generating captions for file {post_file_id}: {str(err)}")
         continue
