@@ -80,12 +80,11 @@ async def respond_to_magic_words(post: dict, file_ids: list):
     return None
   return response
 
-async def create_mattermost_post(options: dict) -> dict:
+async def create_mattermost_post(options: dict):
   try:
     mm.posts.create_post(options=options)
-    return "Posted successfully"
   except (ConnectionResetError, mattermostdriver.exceptions.InvalidOrMissingParameters, mattermostdriver.exceptions.ResourceNotFound) as err:
-    return f"Mattermost API Error: {err}"
+    print(f"Mattermost API Error: {err}")
 
 async def generate_text_from_message(message: dict, model='gpt-4'):
   response = await openai_chat_completion([{'role': 'user', 'content': message}], model)
@@ -194,7 +193,6 @@ async def context_manager(event: dict):
   if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != BOT_NAME:
     post = loads(event['data']['post'])
     signal = await respond_to_magic_words(post, file_ids)
-    print(signal)
     message = post['message']
     channel = await channel_from_post(post)
     reply_untagged = await is_configured_for_untagged_replies(channel)
@@ -215,7 +213,8 @@ async def context_manager(event: dict):
       if any(BOT_NAME in context_post['message'] for context_post in context['posts'].values()):
         signal = await generate_text_from_context(context)
     if signal:
-      create_mattermost_post(options={'channel_id':post['channel_id'], 'message':signal, 'file_ids':file_ids, 'root_id':reply_to})
+      print(signal)
+      await create_mattermost_post(options={'channel_id':post['channel_id'], 'message':signal, 'file_ids':file_ids, 'root_id':reply_to})
 
 async def is_image_requested(message, file_ids, post):
   image_requested = await is_asking_for_image_generation(message)
