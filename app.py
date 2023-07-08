@@ -98,7 +98,7 @@ async def context_manager(event:dict):
     channel = await channel_from_post(post)
     reply_untagged = await should_reply_untagged(channel)
     print(f'reply_untagged: {reply_untagged}')
-    print(f'BOT_NAME in channel[\'purpose\']: {BOT_NAME in channel["purpose"]}')
+    print(f'BOT_NAME in channel purpose: {BOT_NAME in channel["purpose"]}')
     if BOT_NAME in channel['purpose'] or reply_untagged:
       signal = await consider_image_generation(message, file_ids, post)
       if signal:
