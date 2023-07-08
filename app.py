@@ -23,6 +23,10 @@ mattermost.login()
 webui_api = webuiapi.WebUIApi(host=os.environ['STABLE_DIFFUSION_WEBUI_HOST'], port=7860)
 webui_api.set_auth('psychedelic-bot', os.environ['STABLE_DIFFUSION_WEBUI_API_KEY'])
 
+async def channel_context(post:dict) -> dict:
+  context = mattermost.posts.get_posts_for_channel(post['channel_id'])
+  return context
+
 async def channel_from_post(post:dict) -> dict:
   channel = mattermost.channels.get_channel(post['channel_id'])
   return channel
@@ -376,7 +380,7 @@ async def captioner(post):
     for post_file_id in post['file_ids']:
       file_response = mattermost.files.get_file(file_id=post_file_id)
       if file_response.status_code == 200:
-        file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
+        file_type = os.path.splitext(file_response.headers["Content-Disposition"])[1][1:]
         post_file_path = f'{post_file_id}.{file_type}'
         async with aiofiles.open(post_file_path, 'wb') as post_file:
           await post_file.write(file_response.content)
