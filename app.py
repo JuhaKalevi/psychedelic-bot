@@ -66,8 +66,8 @@ async def channel_from_post(post:dict) -> dict:
 
 async def choose_system_message(post:dict) -> list:
   analyze_code = await is_asking_for_code_analysis(post['message'])
+  print(f'analyze_code: {analyze_code}')
   if analyze_code:
-    print('analyze_code: True')
     code_snippets = []
     for file_path in [x for x in os.listdir() if x.endswith('.py')]:
       with open(file_path, 'r', encoding='utf-8') as file:
@@ -98,12 +98,14 @@ async def context_manager(event:dict):
     channel = await channel_from_post(post)
     reply_untagged = await should_reply_untagged(channel)
     print(f'reply_untagged: {reply_untagged}')
+    print(f'BOT_NAME in channel[\'purpose\']: {BOT_NAME in channel["purpose"]}')
     if BOT_NAME in channel['purpose'] or reply_untagged:
       signal = await consider_image_generation(message, file_ids, post)
       if signal:
         reply_to = post['root_id']
       else:
         summarize = await is_asking_for_channel_summary(message)
+        print(f'summarize: {summarize}')
         if summarize:
           context = await channel_context(post)
         else:
@@ -124,6 +126,7 @@ async def count_tokens(message:str) -> int:
 
 async def create_mattermost_post(options:dict):
   try:
+    print(f"Mattermost API create_post()")
     mattermost.posts.create_post(options=options)
   except (ConnectionResetError, mattermostdriver.exceptions.InvalidOrMissingParameters, mattermostdriver.exceptions.ResourceNotFound) as err:
     print(f"Mattermost API Error: {err}")
