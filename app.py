@@ -183,6 +183,7 @@ async def generate_text_from_context(context:dict) -> str:
       context_tokens += message_tokens
     else:
       break
+  print(f'context_tokens: {context_tokens}')
   context_messages.reverse()
   openai_response = await openai_chat_completion(system_message + context_messages, 'gpt-4')
   return openai_response
