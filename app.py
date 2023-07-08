@@ -426,7 +426,7 @@ async def storyteller(post):
   captions = captioner(post)
   story = await generate_story_from_captions(captions)
   return story
-  
+
 async def generate_story_from_captions(message:dict, model='gpt-4'):
   response = await openai_chat_completion([
     {
