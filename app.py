@@ -335,7 +335,7 @@ async def textgen_chat_completion(user_input, history):
   return 'oops'
 
 async def thread_context(post:dict) -> dict:
-  context = {'order':[post['id']], 'posts':{post['id']:post}}
+  context = mattermost.posts.get_thread(post['id'])
   return context
 
 async def upscale_image_2x(file_ids:list, post:dict, resize_w:int=1024, resize_h:int=1024, upscaler="LDSR"):
