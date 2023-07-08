@@ -423,7 +423,7 @@ async def captioner(post):
   return '\n'.join(captions)
 
 async def storyteller(post):
-  captions = captioner(post)
+  captions = await captioner(post)
   story = await generate_story_from_captions(captions)
   return story
 
