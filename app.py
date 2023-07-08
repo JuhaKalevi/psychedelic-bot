@@ -199,8 +199,8 @@ async def context_manager(event: dict):
     if reply_without_tagging:
       response = await respond_to_magic_words(post, file_ids)
     if BOT_NAME in channel['purpose']:
-      response = await image_requested(message, file_ids, post)
-      if response is 'True':
+      response = await is_image_requested(message, file_ids, post)
+      if response:
         summarize = await is_asking_for_channel_summary(message)
         if summarize:
           context = await channel_context(post)
@@ -217,11 +217,11 @@ async def context_manager(event: dict):
     if response:
       create_mattermost_post(options={'channel_id':post['channel_id'], 'message':response, 'file_ids':file_ids, 'root_id':reply_to})
 
-async def image_requested(message, file_ids, post):
+async def is_image_requested(message, file_ids, post):
   image_requested = await is_asking_for_image_generation(message)
   if image_requested:
-    is_asking_for_multiple_images = await is_asking_for_multiple_images(message)
-    if is_asking_for_multiple_images:
+    asking_for_multiple_images = await is_asking_for_multiple_images(message)
+    if asking_for_multiple_images:
       response = await generate_images(file_ids, post, 8)
     else:
       response = await generate_images(file_ids, post, 1)
