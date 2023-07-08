@@ -374,7 +374,7 @@ async def captioner(post):
   caption = ''
   async with httpx.AsyncClient() as client:
     for post_file_id in post['file_ids']:
-      file_response = mm.files.get_file(file_id=post_file_id)
+      file_response = mattermost.files.get_file(file_id=post_file_id)
       if file_response.status_code == 200:
         file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
         post_file_path = f'{post_file_id}.{file_type}'
