@@ -131,7 +131,8 @@ async def fix_image_generation_prompt(prompt):
 
 async def generate_images(file_ids:list, post:dict, count:int):
   comment = ''
-  if not is_mainly_english(post['message'].encode('utf-8')):
+  mainly_english = await is_mainly_english(post['message'].encode('utf-8'))
+  if not mainly_english:
     comment = post['message'] = await fix_image_generation_prompt(post['message'])
   options = webui_api.get_options()
   options = {}
