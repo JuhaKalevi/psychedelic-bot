@@ -239,6 +239,8 @@ async def respond_to_magic_words(post:dict, file_ids:list):
     response = await youtube_transcription(post['message'])
   elif post['message'].lower().startswith("caption"):
     response = await captioner(post)
+  elif post['message'].lower().startswith("storyteller"):
+    response = await storyteller(post)
   else:
     return None
   return response
@@ -419,5 +421,19 @@ async def captioner(post):
         continue
 
   return '\n'.join(captions)
+
+async def storyteller(post):
+  captions = captioner(post)
+  story = await generate_story_from_captions(captions)
+  return story
+  
+async def generate_story_from_captions(message:dict, model='gpt-4'):
+  response = await openai_chat_completion([
+    {
+      'role': 'user', 
+      'content': (f"Make a consistent story based on these image captions: {message}")
+    }
+], model)
+  return response
 
 mattermost.init_websocket(context_manager)
