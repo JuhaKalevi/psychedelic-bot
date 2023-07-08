@@ -125,7 +125,7 @@ async def count_tokens(message:str) -> int:
 
 async def create_mattermost_post(options:dict):
   try:
-    print(f"Mattermost API create_post({options})")
+    print(f"create_post({options['message']})")
     mattermost.posts.create_post(options=options)
   except (ConnectionResetError, mattermostdriver.exceptions.InvalidOrMissingParameters, mattermostdriver.exceptions.ResourceNotFound) as err:
     print(f"Mattermost API Error: {err}")
@@ -248,6 +248,7 @@ async def is_mainly_english(text:str) -> bool:
 
 async def openai_chat_completion(messages:list, model='gpt-4'):
   try:
+    print(f'openai.ChatCompletion.acreate(model={model}, messages={messages})')
     response = await openai.ChatCompletion.acreate(model=model, messages=messages)
     return str(response['choices'][0]['message']['content'])
   except (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.ServiceUnavailableError, openai.error.Timeout) as err:
