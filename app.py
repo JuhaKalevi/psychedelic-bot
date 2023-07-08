@@ -417,6 +417,6 @@ async def captioner(post):
         captions.append(f"Error occurred while generating captions for file {post_file_id}: {str(err)}")
         continue
 
-  return ' '.join(captions)
+  return '\n'.join(captions)
 
 mattermost.init_websocket(context_manager)
