@@ -67,6 +67,7 @@ async def channel_from_post(post:dict) -> dict:
 async def choose_system_message(post:dict) -> list:
   analyze_code = await is_asking_for_code_analysis(post['message'])
   if analyze_code:
+    print('analyze_code: True')
     code_snippets = []
     for file_path in [x for x in os.listdir() if x.endswith('.py')]:
       with open(file_path, 'r', encoding='utf-8') as file:
