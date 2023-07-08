@@ -1,7 +1,7 @@
 import os
 import openai
 
-openai.api_key = os.environ['OPENAPI_API_KEY']
+openai.api_key = os.environ['OPENAI_API_KEY']
 
 summaries = []
 for path, dirs, files in os.walk('.'):
