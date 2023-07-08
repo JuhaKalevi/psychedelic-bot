@@ -1,11 +1,8 @@
-import json
 from json import dumps, loads
 from os import environ, path, listdir, remove
 import re
+import time
 import base64
-import asyncio
-import aiofiles
-import httpx
 import chardet
 import langdetect
 import openai
@@ -39,17 +36,6 @@ async def channel_context(post: dict) -> dict:
 async def thread_context(post: dict) -> dict:
   context = {'order':[post['id']], 'posts':{post['id']:post}}
   return context
-
-async def choose_system_message(post: dict) -> list:
-  analyze_code = await is_asking_for_code_analysis(post['message'])
-  if analyze_code:
-    code_snippets = []
-    for file_path in [x for x in listdir() if x.endswith('.py')]:
-      with open(file_path, 'r', encoding='utf-8') as file:
-        code = file.read()
-      code_snippets.append(f'--- BEGING {file_path} ---\n{code}\n')
-    return [{'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+'```'.join(code_snippets)}]
-  return [{'role':'system', 'content':'You are an assistant with no specific role determined right now.'}]
 
 async def is_asking_for_channel_summary(message: dict) -> bool:
   response = await generate_text_from_message(f'Is this a message where a summary of past interactions in this chat/discussion/channel is requested? Answer only True or False: {message}')
@@ -190,51 +176,56 @@ async def generate_text_from_context(context: dict) -> str:
   openai_response = await openai_chat_completion(system_message + context_messages, 'gpt-4')
   return openai_response
 
-async def process(post: dict, message: str, thread: str) -> dict:
-  summarize = await is_asking_for_channel_summary(message)
-  if summarize:
-    context = await channel_context(post)
-    reply_to = post['id']
-  else:
-    context = await thread_context(post)
-    reply_to = thread
-  return (context, reply_to)
+async def choose_system_message(post: dict) -> list:
+  analyze_code = await is_asking_for_code_analysis(post['message'])
+  if analyze_code:
+    code_snippets = []
+    for file_path in [x for x in listdir() if x.endswith('.py')]:
+      with open(file_path, 'r', encoding='utf-8') as file:
+        code = file.read()
+      code_snippets.append(f'--- BEGING {file_path} ---\n{code}\n')
+    return [{'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+'```'.join(code_snippets)}]
+  return [{'role':'system', 'content':'You are an assistant with no specific role determined right now.'}]
 
 async def context_manager(event: dict):
   file_ids = []
   event = loads(event)
-  answer = None
+  response = None
   if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != BOT_NAME:
     post = loads(event['data']['post'])
     message = post['message']
-    thread = post['root_id']
     channel = await channel_from_post(post)
-    answer = await respond_to_magic_words(post, file_ids)
-    reply_without_tagging = False
-    if answer is None:
-      reply_without_tagging = await is_configured_for_replies_without_tagging(channel)
+    reply_without_tagging = await is_configured_for_replies_without_tagging(channel)
     if reply_without_tagging:
-      if answer:
-        context, reply_to = await process(post, message, thread)
-      else:
-        answer = await generate_text_from_message(message)
-    elif thread:
-      reply_to = post['id']
-      answer = await generate_text_from_context(context)
-      if answer is None:
-        image_requested = await is_asking_for_image_generation(message)
-        if image_requested:
-          answer = await generate_images(file_ids, post, 8)
+      response = await respond_to_magic_words(post, file_ids)
+    if BOT_NAME in channel['purpose']:
+      response = await image_requested(message, file_ids, post)
+      if response is 'True':
+        summarize = await is_asking_for_channel_summary(message)
+        if summarize:
+          context = await channel_context(post)
         else:
-          answer = await generate_images(file_ids, post, 1)
-    else:
+          context = await thread_context(post)
+    elif BOT_NAME in message:
+      context = await generate_text_from_message(message)
       reply_to = post['id']
+    else:
       context = await thread_context(post)
+      reply_to = post['id']
       if any(BOT_NAME in context_post['message'] for context_post in context['posts'].values()):
-        answer = await generate_text_from_context(context)
-    if answer:
-      response_posted = await create_mattermost_post(options={'channel_id':post['channel_id'], 'message':answer, 'file_ids':file_ids, 'root_id':reply_to})
-      return response_posted
+        response = await generate_text_from_context(context)
+    if response:
+      create_mattermost_post(options={'channel_id':post['channel_id'], 'message':response, 'file_ids':file_ids, 'root_id':reply_to})
+
+async def image_requested(message, file_ids, post):
+  image_requested = await is_asking_for_image_generation(message)
+  if image_requested:
+    is_asking_for_multiple_images = await is_asking_for_multiple_images(message)
+    if is_asking_for_multiple_images:
+      response = await generate_images(file_ids, post, 8)
+    else:
+      response = await generate_images(file_ids, post, 1)
+    return response
 
 async def fix_image_generation_prompt(prompt):
   return await generate_text_from_message(f"convert this to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features and you don't have to use full sentences, just a few keywords, separating these aspects by commas. Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally: {prompt}")
@@ -371,44 +362,44 @@ async def generate_summary_from_transcription(message, model='gpt-4'):
 
 async def captioner(post):
   caption = ''
-  async with httpx.AsyncClient() as client:
-    for post_file_id in post['file_ids']:
-      file_response = mm.files.get_file(file_id=post_file_id)
-      if file_response.status_code == 200:
-        file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
-        post_file_path = f'{post_file_id}.{file_type}'
-        async with aiofiles.open(post_file_path, 'wb') as post_file:
-          await post_file.write(file_response.content)
-      try:
-        with open(post_file_path, 'rb') as perkele:
-          img_byte = perkele.read()
-        source_image_base64 = base64.b64encode(img_byte).decode("utf-8")
-        data = {
-          "forms": [
-            {
+  for post_file_id in post['file_ids']:
+    file_response = mm.files.get_file(file_id=post_file_id)
+    if file_response.status_code == 200:
+      file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
+      post_file_path = f'{post_file_id}.{file_type}'
+  url = "https://stablehorde.net/api/v2/interrogate/async"
+  headers = {"Content-Type": "application/json",
+            "apikey": "a8kMOjo-sgqlThYpupXS7g"
+            }
+  with open(post_file_path, 'rb') as perkele:
+    img_byte = perkele.read()
+  source_image_base64 = base64.b64encode(img_byte).decode("utf-8")
+  data = {
+      "forms": [
+          {
               "name": "caption",
               "payload": {} # Additional form payload data should go here, based on spec
-            }
-          ],
-          "source_image": source_image_base64, # Here is the base64 image
-          "slow_workers": True
-        }
-        url = "https://stablehorde.net/api/v2/interrogate/async"
-        headers = {"Content-Type": "application/json","apikey": "a8kMOjo-sgqlThYpupXS7g"}
-        response = await client.post(url, headers=headers, data=json.dumps(data))
-        print(response.json())
-        response_content = response.json()
-        id_value = response_content['id']
-        print(id_value)
-        await asyncio.sleep(20)
-        caption_res = await client.get('https://stablehorde.net/api/v2/interrogate/status/' + id_value, headers=headers, timeout=420)
-        json_response = caption_res.json()
-        print(json_response)
-        caption=json_response['forms'][0]['result']['caption']
-        print(caption)
-        return caption
-      except RuntimeError as err:
-        comment += f"Error occurred while generating captions: {str(err)}"
+          }
+      ],
+      "source_image": source_image_base64, # Here is the base64 image
+      "slow_workers": True
+  }
+  response = requests.post(url, headers=headers, data=data, timeout=420)
+  print(response.json())
+  response_content = response.json()
+  id_value = response_content['id']
+  print(id_value)
+  time.sleep(20)
+  caption = requests.get(
+      'https://stablehorde.net/api/v2/interrogate/status/' + id_value, 
+      headers=headers,
+      timeout=420
+  )
+  json_response = caption.json()
+  print(json_response)
+  caption=json_response['forms'][0]['result']['caption']
+  print(caption)
+  return caption
 
 mm = mattermostdriver.Driver({'url': environ['MATTERMOST_URL'], 'token': environ['MATTERMOST_TOKEN'], 'scheme':'https', 'port':443})
 mm.login()
