@@ -15,7 +15,7 @@ import PIL
 
 openai.api_key = os.environ['OPENAI_API_KEY']
 BOT_NAME = os.environ['MATTERMOST_BOTNAME']
-TRANSCRIPTION_API_URI = "https://c14e3fc547d558631b.gradio.live"
+TRANSCRIPTION_API_URI = os.environ['TRANSCRIPTION_API_URI']
 mattermost = mattermostdriver.Driver({'url': os.environ['MATTERMOST_URL'], 'token': os.environ['MATTERMOST_TOKEN'], 'scheme':'https', 'port':443})
 mattermost.login()
 webui_api = webuiapi.WebUIApi(host=os.environ['STABLE_DIFFUSION_WEBUI_HOST'], port=7860)
