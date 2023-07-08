@@ -66,25 +66,22 @@ async def context_manager(event:dict):
     reply_untagged = await should_reply_untagged(channel)
     if BOT_NAME in channel['purpose'] or reply_untagged:
       reply_to = post['root_id']
-      print(f'reply_untagged: {reply_untagged}')
       signal = await consider_image_generation(message, file_ids, post)
       if not signal:
         summarize = await is_asking_for_channel_summary(message)
-        print(f'summarize: {summarize}')
         if summarize:
           context = await channel_context(post)
         else:
           context = await thread_context(post)
-        print(f'context: {context}')
-        signal = await generate_text_from_context(context)
+        if summarize or any(BOT_NAME in context_post['message'] for context_post in context['posts'].values()):
+          signal = await generate_text_from_context(context)
     elif BOT_NAME in message:
       reply_to = post['root_id']
-      context = await generate_text_from_message(message)
-    else:
+      signal = await generate_text_from_message(message)
+    elif any(BOT_NAME in context_post['message'] for context_post in context['posts'].values()):
       reply_to = post['root_id']
       context = await thread_context(post)
-      if any(BOT_NAME in context_post['message'] for context_post in context['posts'].values()):
-        signal = await generate_text_from_context(context)
+      signal = await generate_text_from_context(context)
     if signal:
       await create_mattermost_post(options={'channel_id':post['channel_id'], 'message':signal, 'file_ids':file_ids, 'root_id':reply_to})
 
