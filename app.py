@@ -125,7 +125,7 @@ async def count_tokens(message:str) -> int:
 
 async def create_mattermost_post(options:dict):
   try:
-    print(f"Mattermost API create_post()")
+    print(f"Mattermost API create_post({options})")
     mattermost.posts.create_post(options=options)
   except (ConnectionResetError, mattermostdriver.exceptions.InvalidOrMissingParameters, mattermostdriver.exceptions.ResourceNotFound) as err:
     print(f"Mattermost API Error: {err}")
