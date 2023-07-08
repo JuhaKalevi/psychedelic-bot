@@ -108,10 +108,10 @@ async def context_manager(event:dict):
           context = await thread_context(post)
     elif BOT_NAME in message:
       context = await generate_text_from_message(message)
-      reply_to = post['id']
+      reply_to = post['root_id']
     else:
       context = await thread_context(post)
-      reply_to = post['id']
+      reply_to = post['root_id']
       if any(BOT_NAME in context_post['message'] for context_post in context['posts'].values()):
         signal = await generate_text_from_context(context)
     if signal:
@@ -138,7 +138,7 @@ async def generate_images(file_ids:list, post:dict, count:int):
   options['sd_model_checkpoint'] = 'realisticVisionV30_v30VAE.safetensors [c52892e92a]'
   options['sd_vae'] = 'vae-ft-mse-840000-ema-pruned.safetensors'
   webui_api.set_options(options)
-  result = webui_api.txt2img(prompt = post['message'], negative_prompt = "(unfinished:1.43), (sloppy and messy:1.43), (incoherent:1.43), (deformed:1.43)", steps = 42, sampler_name = 'UniPC', batch_size = count, restore_faces = True)
+  result = await webui_api.txt2img(prompt = post['message'], negative_prompt = "(unfinished:1.43), (sloppy and messy:1.43), (incoherent:1.43), (deformed:1.43)", steps = 42, sampler_name = 'UniPC', batch_size = count, restore_faces = True)
   for image in result.images:
     image.save("result.png")
     with open('result.png', 'rb') as image_file:
