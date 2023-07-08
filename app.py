@@ -194,6 +194,7 @@ async def context_manager(event: dict):
   if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != BOT_NAME:
     post = loads(event['data']['post'])
     signal = await respond_to_magic_words(post, file_ids)
+    print(signal)
     message = post['message']
     channel = await channel_from_post(post)
     reply_untagged = await is_configured_for_untagged_replies(channel)
