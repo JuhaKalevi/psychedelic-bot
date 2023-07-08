@@ -407,7 +407,7 @@ async def captioner(post):
           response = await client.post(url, headers=headers, data=json.dumps(data))
           response_content = response.json()
 
-          await asyncio.sleep(20)
+          await asyncio.sleep(10)
 
           caption_res = await client.get('https://stablehorde.net/api/v2/interrogate/status/' + response_content['id'], headers=headers, timeout=420)
           json_response = caption_res.json()
