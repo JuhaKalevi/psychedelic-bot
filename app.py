@@ -108,6 +108,7 @@ async def context_manager(event:dict):
           context = await channel_context(post)
         else:
           context = await thread_context(post)
+        print(f'context: {context}')
         signal = await generate_text_from_context(context)
     elif BOT_NAME in message:
       reply_to = post['root_id']
