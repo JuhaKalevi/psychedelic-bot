@@ -196,6 +196,7 @@ async def context_manager(event: dict):
     message = post['message']
     channel = await channel_from_post(post)
     reply_untagged = await is_configured_for_untagged_replies(channel)
+    print(f'reply_untagged: {reply_untagged}')
     if BOT_NAME in channel['purpose'] or reply_untagged:
       signal = await is_image_requested(message, file_ids, post)
       if not signal:
@@ -213,11 +214,11 @@ async def context_manager(event: dict):
       if any(BOT_NAME in context_post['message'] for context_post in context['posts'].values()):
         signal = await generate_text_from_context(context)
     if signal:
-      print(signal)
       await create_mattermost_post(options={'channel_id':post['channel_id'], 'message':signal, 'file_ids':file_ids, 'root_id':reply_to})
 
 async def is_image_requested(message, file_ids, post):
   image_requested = await is_asking_for_image_generation(message)
+  print(f'image_requested: {image_requested}')
   if image_requested:
     asking_for_multiple_images = await is_asking_for_multiple_images(message)
     if asking_for_multiple_images:
