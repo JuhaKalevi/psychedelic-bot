@@ -3,6 +3,9 @@ import json
 import os
 import re
 import time
+import asyncio
+import aiofiles
+import httpx
 import chardet
 import langdetect
 import requests
@@ -23,42 +26,44 @@ webui_api.set_auth('psychedelic-bot', os.environ['STABLE_DIFFUSION_WEBUI_API_KEY
 
 async def captioner(post):
   caption = ''
-  for post_file_id in post['file_ids']:
-    file_response = mattermost.files.get_file(file_id=post_file_id)
-    if file_response.status_code == 200:
-      file_type = os.path.splitext(file_response.headers["Content-Disposition"])[1][1:]
-      post_file_path = f'{post_file_id}.{file_type}'
-  url = "https://stablehorde.net/api/v2/interrogate/async"
-  headers = {"Content-Type": "application/json", "apikey": "a8kMOjo-sgqlThYpupXS7g"}
-  with open(post_file_path, 'rb') as perkele:
-    img_byte = perkele.read()
-  source_image_base64 = base64.b64encode(img_byte).decode("utf-8")
-  data = {
-      "forms": [
-          {
+  async with httpx.AsyncClient() as client:
+    for post_file_id in post['file_ids']:
+      file_response = mm.files.get_file(file_id=post_file_id)
+      if file_response.status_code == 200:
+        file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
+        post_file_path = f'{post_file_id}.{file_type}'
+        async with aiofiles.open(post_file_path, 'wb') as post_file:
+          await post_file.write(file_response.content)
+      try:
+        with open(post_file_path, 'rb') as perkele:
+          img_byte = perkele.read()
+        source_image_base64 = base64.b64encode(img_byte).decode("utf-8")
+        data = {
+          "forms": [
+            {
               "name": "caption",
               "payload": {} # Additional form payload data should go here, based on spec
-          }
-      ],
-      "source_image": source_image_base64, # Here is the base64 image
-      "slow_workers": True
-  }
-  response = post(url, headers=headers, data=data, timeout=420)
-  print(response.json())
-  response_content = response.json()
-  id_value = response_content['id']
-  print(id_value)
-  time.sleep(20)
-  caption = requests.get(f"https://stablehorde.net/api/v2/interrogate/status/{id_value}", headers=headers, timeout=420)
-  json_response = caption.json()
-  print(json_response)
-  caption=json_response['forms'][0]['result']['caption']
-  print(caption)
-  return caption
-
-async def channel_context(post:dict) -> dict:
-  context = mattermost.posts.get_posts_for_channel(post['channel_id'])
-  return context
+            }
+          ],
+          "source_image": source_image_base64, # Here is the base64 image
+          "slow_workers": True
+        }
+        url = "https://stablehorde.net/api/v2/interrogate/async"
+        headers = {"Content-Type": "application/json","apikey": "a8kMOjo-sgqlThYpupXS7g"}
+        response = await client.post(url, headers=headers, data=json.dumps(data))
+        print(response.json())
+        response_content = response.json()
+        id_value = response_content['id']
+        print(id_value)
+        await asyncio.sleep(20)
+        caption_res = await client.get('https://stablehorde.net/api/v2/interrogate/status/' + id_value, headers=headers, timeout=420)
+        json_response = caption_res.json()
+        print(json_response)
+        caption=json_response['forms'][0]['result']['caption']
+        print(caption)
+        return caption
+      except RuntimeError as err:
+        comment += f"Error occurred while generating captions: {str(err)}"
 
 async def channel_from_post(post:dict) -> dict:
   channel = mattermost.channels.get_channel(post['channel_id'])
