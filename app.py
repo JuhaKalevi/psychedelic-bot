@@ -1,9 +1,9 @@
 import base64
+import json
 import os
 import re
 import time
 import chardet
-import json
 import langdetect
 import requests
 import gradio_client
