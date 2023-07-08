@@ -385,6 +385,7 @@ async def captioner(post):
       try:
         if file_response.status_code == 200:
           file_type = os.path.splitext(file_response.headers["Content-Disposition"])[1][1:]
+          file_path_in_content = re.findall('filename="(.+)"', file_response.headers["Content-Disposition"])[0]
           post_file_path = f'{post_file_id}.{file_type}'
           async with aiofiles.open(post_file_path, 'wb') as post_file:
             await post_file.write(file_response.content)
@@ -412,7 +413,7 @@ async def captioner(post):
           json_response = caption_res.json()
 
           caption=json_response['forms'][0]['result']['caption']
-          captions.append(f"{post_file_path}: {caption}")
+          captions.append(f"{file_path_in_content}: {caption}")
       except (RuntimeError, KeyError, IndexError) as err:
         captions.append(f"Error occurred while generating captions for file {post_file_id}: {str(err)}")
         continue
