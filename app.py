@@ -100,7 +100,9 @@ async def context_manager(event:dict):
     print(f'reply_untagged: {reply_untagged}')
     if BOT_NAME in channel['purpose'] or reply_untagged:
       signal = await consider_image_generation(message, file_ids, post)
-      if not signal:
+      if signal:
+        reply_to = post['root_id']
+      else:
         summarize = await is_asking_for_channel_summary(message)
         if summarize:
           context = await channel_context(post)
