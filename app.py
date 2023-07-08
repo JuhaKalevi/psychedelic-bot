@@ -378,44 +378,47 @@ async def youtube_transcription(user_input):
   print("No URL found in the input.")
 
 async def captioner(post):
-  caption = ''
+  captions = []
   async with httpx.AsyncClient() as client:
     for post_file_id in post['file_ids']:
       file_response = mattermost.files.get_file(file_id=post_file_id)
-      if file_response.status_code == 200:
-        file_type = os.path.splitext(file_response.headers["Content-Disposition"])[1][1:]
-        post_file_path = f'{post_file_id}.{file_type}'
-        async with aiofiles.open(post_file_path, 'wb') as post_file:
-          await post_file.write(file_response.content)
       try:
-        with open(post_file_path, 'rb') as perkele:
-          img_byte = perkele.read()
-        source_image_base64 = base64.b64encode(img_byte).decode("utf-8")
-        data = {
-          "forms": [
-            {
-              "name": "caption",
-              "payload": {} # Additional form payload data should go here, based on spec
-            }
-          ],
-          "source_image": source_image_base64, # Here is the base64 image
-          "slow_workers": True
-        }
-        url = "https://stablehorde.net/api/v2/interrogate/async"
-        headers = {"Content-Type": "application/json","apikey": "a8kMOjo-sgqlThYpupXS7g"}
-        response = await client.post(url, headers=headers, data=json.dumps(data))
-        print(response.json())
-        response_content = response.json()
-        id_value = response_content['id']
-        print(id_value)
-        await asyncio.sleep(20)
-        caption_res = await client.get('https://stablehorde.net/api/v2/interrogate/status/' + id_value, headers=headers, timeout=420)
-        json_response = caption_res.json()
-        print(json_response)
-        caption=json_response['forms'][0]['result']['caption']
-        print(caption)
-        return caption
-      except RuntimeError as err:
-        comment += f"Error occurred while generating captions: {str(err)}"
+        if file_response.status_code == 200:
+          file_type = os.path.splitext(file_response.headers["Content-Disposition"])[1][1:]
+          post_file_path = f'{post_file_id}.{file_type}'
+          async with aiofiles.open(post_file_path, 'wb') as post_file:
+            await post_file.write(file_response.content)
+          
+          with open(post_file_path, 'rb') as perkele:
+            img_byte = perkele.read()
+          
+          source_image_base64 = base64.b64encode(img_byte).decode("utf-8")
+          data = {
+            "forms": [
+              {
+                "name": "caption",
+                "payload": {} # Additional form payload data should go here, based on spec
+              }
+            ],
+            "source_image": source_image_base64, # Here is the base64 image
+            "slow_workers": True
+          }
+          url = "https://stablehorde.net/api/v2/interrogate/async"
+          headers = {"Content-Type": "application/json","apikey": "a8kMOjo-sgqlThYpupXS7g"}
+          response = await client.post(url, headers=headers, data=json.dumps(data))
+          response_content = response.json()
+
+          await asyncio.sleep(20)
+
+          caption_res = await client.get('https://stablehorde.net/api/v2/interrogate/status/' + response_content['id'], headers=headers, timeout=420)
+          json_response = caption_res.json()
+
+          caption=json_response['forms'][0]['result']['caption']
+          captions.append(caption)
+      except (RuntimeError, KeyError, IndexError) as err:
+        captions.append(f"Error occurred while generating captions for file {post_file_id}: {str(err)}")
+        continue
+
+  return captions
 
 mattermost.init_websocket(context_manager)
