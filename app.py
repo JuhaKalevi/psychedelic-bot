@@ -239,7 +239,7 @@ async def is_asking_for_multiple_images(message:dict) -> bool:
   return response.startswith('True')
 
 async def is_mainly_english(text:str) -> bool:
-  response = await langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
+  response = langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
   return response
 
 async def openai_chat_completion(messages:list, model='gpt-4'):
