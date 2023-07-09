@@ -195,10 +195,10 @@ async def is_asking_for_channel_summary(message:dict) -> bool:
     response = 'True'
   else:
     response = await generate_text_from_message(f'Is this a message where a summary of past interactions in this chat/discussion/channel is requested? Answer only True or False: {message}')
+  print(f'is_asking_for_channel_summary(): {response.startswith("True")}')
   return response.startswith('True')
 
 async def is_asking_for_code_analysis(post:dict) -> bool:
-  print('is_asking_for_code_analysis?')
   message = post['message']
   if channel_from_post(post['channel_id']) == 'GitLab':
     response = 'True'
@@ -206,11 +206,12 @@ async def is_asking_for_code_analysis(post:dict) -> bool:
     response = 'True'
   else:
     response = await generate_text_from_message(f'Is this a message where knowledge or analysis of your code is requested? It does not matter whether you know about the files or not yet, you have a function that we will use later on if needed. Answer only True or False: {message}')
+  print (f'is_asking_for_code_analysis(): {response.startswith("True")}')
   return response.startswith('True')
 
 async def is_asking_for_image_generation(message:dict) -> bool:
-  print('is_asking_for_image_generation?')
   response = await generate_text_from_message(f'Is this a message where an image is probably requested? Answer only True or False: {message}')
+  print(f'is_asking_for_image_generation(): {response.startswith("True")}')
   return response.startswith('True')
 
 async def is_asking_for_multiple_images(message:dict) -> bool:
@@ -220,6 +221,7 @@ async def is_asking_for_multiple_images(message:dict) -> bool:
 
 async def is_mainly_english(text:str) -> bool:
   response = langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
+  print(f'is_mainly_english(): {response}')
   return response
 
 async def openai_chat_completion(messages:list, model='gpt-4'):
@@ -250,9 +252,12 @@ async def respond_to_magic_words(post:dict, file_ids:list):
   return response
 
 async def should_always_reply(channel:dict) -> bool:
-  return f'{BOT_NAME} always reply' in channel['purpose']
+  answer = (f'{BOT_NAME} always reply' in channel['purpose'])
+  print(f'should_always_reply: {answer}')
+  return answer
 
 async def textgen_chat_completion(user_input, history):
+  print(f"TRACE textgen_chat_completion(): len(user_input)={len(user_input)}, len(history)={len(history)}")")
   request = {
     'user_input': user_input,
     'max_new_tokens': 1200,
