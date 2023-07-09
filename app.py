@@ -35,7 +35,7 @@ async def channel_from_post(post:dict) -> dict:
 
 async def choose_system_message(post:dict, analyze_code:bool=False) -> list:
   if not analyze_code:
-    analyze_code = await is_asking_for_code_analysis(post['message'])
+    analyze_code = await is_asking_for_code_analysis(post)
   if analyze_code:
     code_snippets = []
     for file_path in [x for x in os.listdir() if x.endswith('.py')]:
