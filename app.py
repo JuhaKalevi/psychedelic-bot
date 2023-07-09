@@ -29,7 +29,7 @@ async def channel_context(post:dict) -> dict:
   return context
 
 async def channel_from_post(post:dict) -> dict:
-  channel = await mattermost.channels.get_channel(post['channel_id'])
+  channel = mattermost.channels.get_channel(post['channel_id'])
   print(f'TRACE: channel_from_post(): {channel}')
   return channel
 
