@@ -252,7 +252,7 @@ async def respond_to_magic_words(post:dict, file_ids:list):
   return response
 
 async def should_always_reply(channel:dict) -> bool:
-  answer = (f'{BOT_NAME} always reply' in channel['purpose'])
+  answer = f'{BOT_NAME} always reply' in channel['purpose']
   print(f'should_always_reply: {answer}')
   return answer
 
