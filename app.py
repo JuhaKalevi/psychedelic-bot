@@ -257,7 +257,7 @@ async def should_always_reply(channel:dict) -> bool:
   return answer
 
 async def textgen_chat_completion(user_input, history):
-  print(f"TRACE textgen_chat_completion(): len(user_input)={len(user_input)}, len(history)={len(history)}")")
+  print(f"TRACE textgen_chat_completion(): len(user_input)={len(user_input)}, len(history)={len(history)}")
   request = {
     'user_input': user_input,
     'max_new_tokens': 1200,
