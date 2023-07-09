@@ -191,17 +191,17 @@ async def instruct_pix2pix(file_ids:list, post:dict):
           os.remove(temporary_file_path)
   return comment
 
-async def is_asking_for_channel_summary(message:dict) -> bool:
-  if channel_from_post(message['channel_id'])['display_name'] == 'GitLab':
+async def is_asking_for_channel_summary(post:dict) -> bool:
+  if channel_from_post(post)['display_name'] == 'GitLab':
     response = 'True'
   else:
-    response = await generate_text_from_message(f'Is this a message where a summary of past interactions in this chat/discussion/channel is requested? Answer only True or False: {message}')
+    response = await generate_text_from_message(f'Is this a message where a summary of past interactions in this chat/discussion/channel is requested? Answer only True or False: {post["message"]}')
   print(f'is_asking_for_channel_summary(): {response.startswith("True")}')
   return response.startswith('True')
 
 async def is_asking_for_code_analysis(post:dict) -> bool:
   message = post['message']
-  if channel_from_post(post['channel_id'])['display_name'] == 'GitLab':
+  if channel_from_post(post)['display_name'] == 'GitLab':
     response = 'True'
   elif message.startswith('@code-analysis'):
     response = 'True'
@@ -316,6 +316,7 @@ async def textgen_chat_completion(user_input, history):
 
 async def thread_context(post:dict) -> dict:
   context = mattermost.posts.get_thread(post['id'])
+  print(f"TRACE len(context)={len(context)}")
   return context
 
 async def upscale_image_2x(file_ids:list, post:dict, resize_w:int=1024, resize_h:int=1024, upscaler="LDSR"):
