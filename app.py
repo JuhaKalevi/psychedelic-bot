@@ -24,11 +24,13 @@ webui_api = webuiapi.WebUIApi(host=os.environ['STABLE_DIFFUSION_WEBUI_HOST'], po
 webui_api.set_auth('psychedelic-bot', os.environ['STABLE_DIFFUSION_WEBUI_API_KEY'])
 
 async def channel_context(post:dict) -> dict:
-  context = await mattermost.posts.get_posts_for_channel(post['channel_id'])
+  context = mattermost.posts.get_posts_for_channel(post['channel_id'])
+  print(f'TRACE: channel_context(): {context}')
   return context
 
 async def channel_from_post(post:dict) -> dict:
   channel = await mattermost.channels.get_channel(post['channel_id'])
+  print(f'TRACE: channel_from_post(): {channel}')
   return channel
 
 async def choose_system_message(post:dict, analyze_code:bool=False) -> list:
