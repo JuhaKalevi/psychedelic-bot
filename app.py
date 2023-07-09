@@ -252,7 +252,7 @@ async def should_always_reply(channel:dict) -> bool:
 async def textgen_chat_completion(user_input, history):
   request = {
     'user_input': user_input,
-    'max_new_tokens': 800,
+    'max_new_tokens': 1200,
     'history': history,
     'mode': 'instruct',
     'character': 'Example',
@@ -262,7 +262,7 @@ async def textgen_chat_completion(user_input, history):
     '_continue': False,
     'stop_at_newline': False,
     'chat_generation_attempts': 1,
-    'chat-instruct_command': 'Continue the chat dialogue below. Write a single reply for the character "<|character|>".\n\n<|prompt|>',
+    'chat-instruct_command': 'Continue the chat dialogue below. Write a lengthy step-by-step answer for the character "<|character|>".\n\n<|prompt|>',
     'preset': 'None',
     'do_sample': True,
     'temperature': 0.7,
