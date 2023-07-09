@@ -65,8 +65,8 @@ async def context_manager(event:dict):
     else:
       message = post['message']
       channel = await channel_from_post(post)
-      reply_untagged = await should_reply_untagged(channel)
-      if BOT_NAME in channel['purpose'] or reply_untagged:
+      always_reply = await should_always_reply(channel)
+      if always_reply:
         reply_to = post['root_id']
         signal = await consider_image_generation(message, file_ids, post)
         if not signal:
@@ -246,9 +246,8 @@ async def respond_to_magic_words(post:dict, file_ids:list):
     return None
   return response
 
-async def should_reply_untagged(channel:dict) -> bool:
-
-    return True
+async def should_always_reply(channel:dict) -> bool:
+  return f'{BOT_NAME} always reply' in channel['purpose']
 
 async def textgen_chat_completion(user_input, history):
   request = {
