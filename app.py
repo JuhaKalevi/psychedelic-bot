@@ -194,7 +194,7 @@ async def instruct_pix2pix(file_ids:list, post:dict):
   return comment
 
 async def is_asking_for_channel_summary(post:dict) -> bool:
-  channel = channel_from_post(post)
+  channel = await channel_from_post(post)
   if channel['display_name'] == 'GitLab':
     response = 'True'
   else:
