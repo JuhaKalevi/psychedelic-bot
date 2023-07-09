@@ -24,12 +24,11 @@ webui_api = webuiapi.WebUIApi(host=os.environ['STABLE_DIFFUSION_WEBUI_HOST'], po
 webui_api.set_auth('psychedelic-bot', os.environ['STABLE_DIFFUSION_WEBUI_API_KEY'])
 
 async def channel_context(post:dict) -> dict:
-  context = mattermost.posts.get_posts_for_channel(post['channel_id'])
+  context = await mattermost.posts.get_posts_for_channel(post['channel_id'])
   return context
 
 async def channel_from_post(post:dict) -> dict:
-  channel = mattermost.channels.get_channel(post['channel_id'])
-  print(channel)
+  channel = await mattermost.channels.get_channel(post['channel_id'])
   return channel
 
 async def choose_system_message(post:dict, analyze_code:bool=False) -> list:
@@ -98,7 +97,8 @@ async def create_mattermost_post(options:dict):
     print(f'ERROR mattermost.posts.create_post(): {err}')
 
 async def fix_image_generation_prompt(prompt:str) -> str:
-  return await generate_text_from_message(f"convert this to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features and you don't have to use full sentences, just a few keywords, separating these aspects by commas. Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally: {prompt}")
+  fixed_prompt = await generate_text_from_message(f"convert this to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features and you don't have to use full sentences, just a few keywords, separating these aspects by commas. Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally: {prompt}")
+  return fixed_prompt
 
 async def generate_images(file_ids:list, post:dict, count:int) -> str:
   comment = ''
@@ -197,7 +197,7 @@ async def is_asking_for_channel_summary(post:dict) -> bool:
     response = 'True'
   else:
     response = await generate_text_from_message(f'Is this a message where a summary of past interactions in this chat/discussion/channel is requested? Answer only True or False: {post["message"]}')
-  print(f'is_asking_for_channel_summary(): {response.startswith("True")}')
+  print(f'TRACE: is_asking_for_channel_summary(): {response.startswith("True")}')
   return response.startswith('True')
 
 async def is_asking_for_code_analysis(post:dict) -> bool:
@@ -209,12 +209,12 @@ async def is_asking_for_code_analysis(post:dict) -> bool:
     response = 'True'
   else:
     response = await generate_text_from_message(f'Is this a message where knowledge or analysis of your code is requested? It does not matter whether you know about the files or not yet, you have a function that we will use later on if needed. Answer only True or False: {message}')
-  print (f'is_asking_for_code_analysis(): {response.startswith("True")}')
+  print (f'TRACE: is_asking_for_code_analysis(): {response.startswith("True")}')
   return response.startswith('True')
 
 async def is_asking_for_image_generation(message:dict) -> bool:
   response = await generate_text_from_message(f'Is this a message where an image is probably requested? Answer only True or False: {message}')
-  print(f'is_asking_for_image_generation(): {response.startswith("True")}')
+  print(f'TRACE: is_asking_for_image_generation(): {response.startswith("True")}')
   return response.startswith('True')
 
 async def is_asking_for_multiple_images(message:dict) -> bool:
@@ -224,12 +224,12 @@ async def is_asking_for_multiple_images(message:dict) -> bool:
 
 async def is_mainly_english(text:str) -> bool:
   response = langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
-  print(f'is_mainly_english(): {response}')
+  print(f'TRACE: is_mainly_english(): {response}')
   return response
 
 async def openai_chat_completion(messages:list, model='gpt-4'):
   try:
-    print(f"TRACE openai.ChatCompletion.acreate(), len({messages}")
+    print(f"TRACE: openai.ChatCompletion.acreate(), len({messages}")
     response = await openai.ChatCompletion.acreate(model=model, messages=messages)
     return str(response['choices'][0]['message']['content'])
   except (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.ServiceUnavailableError, openai.error.Timeout) as err:
