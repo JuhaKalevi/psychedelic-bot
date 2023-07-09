@@ -198,6 +198,7 @@ async def is_asking_for_channel_summary(message:dict) -> bool:
   return response.startswith('True')
 
 async def is_asking_for_code_analysis(post:dict) -> bool:
+  print('is_asking_for_code_analysis?')
   message = post['message']
   if channel_from_post(post['channel_id']) == 'GitLab':
     response = 'True'
@@ -208,10 +209,12 @@ async def is_asking_for_code_analysis(post:dict) -> bool:
   return response.startswith('True')
 
 async def is_asking_for_image_generation(message:dict) -> bool:
+  print('is_asking_for_image_generation?')
   response = await generate_text_from_message(f'Is this a message where an image is probably requested? Answer only True or False: {message}')
   return response.startswith('True')
 
 async def is_asking_for_multiple_images(message:dict) -> bool:
+  print('is_asking_for_multiple_images?')
   response = await generate_text_from_message(f'Is this a message where multiple images are requested? Answer only True or False: {message}')
   return response.startswith('True')
 
