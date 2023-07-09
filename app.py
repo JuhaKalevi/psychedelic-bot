@@ -221,7 +221,7 @@ async def is_mainly_english(text:str) -> bool:
 
 async def openai_chat_completion(messages:list, model='gpt-4'):
   try:
-    print(f"TRACE len(openai.ChatCompletion.acreate): {len(f'openai.ChatCompletion.acreate(model={model}, messages={messages})')}")
+    print(f"TRACE openai.ChatCompletion.acreate(), len({messages}")
     response = await openai.ChatCompletion.acreate(model=model, messages=messages)
     return str(response['choices'][0]['message']['content'])
   except (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.ServiceUnavailableError, openai.error.Timeout) as err:
