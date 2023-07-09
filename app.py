@@ -256,7 +256,7 @@ async def respond_to_magic_words(post:dict, file_ids:list):
 
 async def should_always_reply(channel:dict) -> bool:
   answer = f'{BOT_NAME} always reply' in channel['purpose']
-  print(f'should_always_reply: {answer}')
+  print(f'TRACE: should_always_reply: {answer}')
   return answer
 
 async def textgen_chat_completion(user_input, history):
@@ -414,13 +414,9 @@ async def captioner(post):
           headers = {"Content-Type": "application/json","apikey": "a8kMOjo-sgqlThYpupXS7g"}
           response = await client.post(url, headers=headers, data=json.dumps(data))
           response_content = response.json()
-
-          await asyncio.sleep(15)
-
+          await asyncio.sleep(15) # WHY IS THIS NECESSARY?!
           caption_res = await client.get('https://stablehorde.net/api/v2/interrogate/status/' + response_content['id'], headers=headers, timeout=420)
-          json_response = caption_res.json()
-
-          caption=json_response['forms'][0]['result']['caption']
+          caption = caption_res.json()['forms'][0]['result']['caption']
           captions.append(f"{file_path_in_content}: {caption}")
       except (RuntimeError, KeyError, IndexError) as err:
         captions.append(f"Error occurred while generating captions for file {post_file_id}: {str(err)}")
