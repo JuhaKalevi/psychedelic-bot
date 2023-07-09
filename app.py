@@ -192,7 +192,7 @@ async def instruct_pix2pix(file_ids:list, post:dict):
   return comment
 
 async def is_asking_for_channel_summary(message:dict) -> bool:
-  if channel_from_post(message['channel_id']) == 'GitLab':
+  if channel_from_post(message['channel_id'])['display_name'] == 'GitLab':
     response = 'True'
   else:
     response = await generate_text_from_message(f'Is this a message where a summary of past interactions in this chat/discussion/channel is requested? Answer only True or False: {message}')
@@ -201,7 +201,7 @@ async def is_asking_for_channel_summary(message:dict) -> bool:
 
 async def is_asking_for_code_analysis(post:dict) -> bool:
   message = post['message']
-  if channel_from_post(post['channel_id']) == 'GitLab':
+  if channel_from_post(post['channel_id'])['display_name'] == 'GitLab':
     response = 'True'
   elif message.startswith('@code-analysis'):
     response = 'True'
