@@ -72,7 +72,7 @@ async def context_manager(event:dict):
         reply_to = post['root_id']
         signal = await consider_image_generation(message, file_ids, post)
         if not signal:
-          summarize = await is_asking_for_channel_summary(message)
+          summarize = await is_asking_for_channel_summary(post)
           if summarize:
             context = await channel_context(post)
           else:
