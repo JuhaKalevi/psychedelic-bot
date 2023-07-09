@@ -29,6 +29,7 @@ async def channel_context(post:dict) -> dict:
 
 async def channel_from_post(post:dict) -> dict:
   channel = mattermost.channels.get_channel(post['channel_id'])
+  print(channel)
   return channel
 
 async def choose_system_message(post:dict, analyze_code:bool=False) -> list:
