@@ -1,10 +1,9 @@
-import json
-import os
+from json import dumps, loads
+from os import listdir, environ
 import requests
-import bot
-import openai_api
 import tiktoken
 import txt2bool
+from openai_api import openai_chat_completion
 
 async def choose_system_message(post:dict, analyze_code:bool=False) -> list:
   default_system_message = [{'role':'system', 'content':'You are an assistant with no specific role determined right now.'}]
@@ -12,22 +11,22 @@ async def choose_system_message(post:dict, analyze_code:bool=False) -> list:
     analyze_code = await txt2bool.is_asking_for_code_analysis(post)
   if analyze_code:
     code_snippets = []
-    for file_path in [x for x in os.listdir() if x.endswith('.py')]:
+    for file_path in [x for x in listdir() if x.endswith('.py')]:
       with open(file_path, 'r', encoding='utf-8') as file:
         code = file.read()
       code_snippets.append(f'--- BEGIN {file_path} ---\n{code}\n')
     default_system_message = [{'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+'```'.join(code_snippets)}]
-  return bot._return(default_system_message)
+  return default_system_message
 
 async def count_tokens(message:str) -> int:
-  return len(tiktoken.get_encoding('cl100k_base').encode(json.dumps(message)))
+  return len(tiktoken.get_encoding('cl100k_base').encode(dumps(message)))
 
 async def fix_image_generation_prompt(prompt:str) -> str:
   fixed_prompt = await generate_text_from_message(f"convert this to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features and you don't have to use full sentences, just a few keywords, separating these aspects by commas. Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally: {prompt}")
-  return bot._return(fixed_prompt)
+  return fixed_prompt
 
 async def generate_story_from_captions(message:dict, model='gpt-4') -> str:
-  story = await openai_api.chat_completion([{'role':'user', 'content':(f"Make a consistent story based on these image captions: {message}")}], model)
+  story = await openai_chat_completion([{'role':'user', 'content':(f"Make a consistent story based on these image captions: {message}")}], model)
   return story
 
 async def generate_text_from_context(context:dict, model='gpt-4') -> str:
@@ -48,15 +47,29 @@ async def generate_text_from_context(context:dict, model='gpt-4') -> str:
       context_tokens += message_tokens
     else:
       break
-  if os.environ['LOG_LEVEL'] == 'Trace':
+  if environ['LOG_LEVEL'] == 'Trace':
     print(f'TRACE: context_tokens: {context_tokens}')
   context_messages.reverse()
-  openai_response = await openai_api.chat_completion(system_message + context_messages, model)
-  return bot._return(openai_response)
+  openai_response = await openai_chat_completion(system_message + context_messages, model)
+  return openai_response
 
 async def generate_text_from_message(message:dict, model='gpt-4') -> str:
-  response = await openai_api.chat_completion([{'role': 'user', 'content': message}], model)
-  return bot._return(response)
+  response = await openai_chat_completion([{'role': 'user', 'content': message}], model)
+  return response
+
+async def generate_summary_from_transcription(message:dict, model='gpt-4'):
+  response = await openai_chat_completion([
+    {
+      'role': 'user',
+      'content': (f"Summarize in appropriate detail, adjusting the summary length"
+        f" according to the transcription's length, the YouTube-video transcription below."
+        f" Also make a guess on how many different characters' speech is included in the transcription."
+        f" Also analyze the style of this video (comedy, drama, instructional, educational, etc.)."
+        f" IGNORE all advertisement(s), sponsorship(s), discount(s), promotions(s),"
+        f" all War Thunder/Athletic Green etc. talk completely. Also give scoring 0-10 about the video for each of these three categories: originality, difficulty, humor, boringness, creativity, artful, . Transcription: {message}")
+    }
+], model)
+  return response
 
 async def textgen_chat_completion(user_input:str, history:dict) -> str:
   request = {
@@ -100,9 +113,9 @@ async def textgen_chat_completion(user_input:str, history:dict) -> str:
     'skip_special_tokens': True,
     'stopping_strings': []
   }
-  response = requests.post(os.environ['TEXTGEN_WEBUI_URI'], json=request, timeout=420)
+  response = requests.post(environ['TEXTGEN_WEBUI_URI'], json=request, timeout=420)
   if response.status_code == 200:
-    response_content = json.loads(response.text)
+    response_content = loads(response.text)
     results = response_content["results"]
     for result in results:
       chat_history = result.get("history", {})
