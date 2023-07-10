@@ -194,7 +194,7 @@ async def is_asking_for_channel_summary(post:dict) -> bool:
     response = 'True'
   else:
     response = await generate_text_from_message(f'Is this a message where a summary of past interactions in this chat/discussion/channel is requested? Answer only True or False: {post["message"]}')
-  _return(response.startswith('True'))
+  return _return(response.startswith('True'))
 
 async def is_asking_for_code_analysis(post:dict) -> bool:
   message = post['message']
@@ -205,19 +205,19 @@ async def is_asking_for_code_analysis(post:dict) -> bool:
     response = 'True'
   else:
     response = await generate_text_from_message(f'Is this a message where knowledge or analysis of your code is requested? It does not matter whether you know about the files or not yet, you have a function that we will use later on if needed. Answer only True or False: {message}')
-  _return(response.startswith('True'))
+  return _return(response.startswith('True'))
 
 async def is_asking_for_image_generation(message:dict) -> bool:
   response = await generate_text_from_message(f'Is this a message where an image is probably requested? Answer only True or False: {message}')
-  _return(response.startswith('True'))
+  return _return(response.startswith('True'))
 
 async def is_asking_for_multiple_images(message:dict) -> bool:
   response = await generate_text_from_message(f'Is this a message where multiple images are requested? Answer only True or False: {message}')
-  _return(response.startswith('True'))
+  return _return(response.startswith('True'))
 
 async def is_mainly_english(text:str) -> bool:
   response = langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
-  _return(response)
+  return _return(response)
 
 async def openai_chat_completion(messages:list, model='gpt-4'):
   try:
@@ -244,11 +244,11 @@ async def respond_to_magic_words(post:dict, file_ids:list):
     response = await storyteller(post)
   else:
     return None
-  _return(response)
+  return _return(response)
 
 async def should_always_reply(channel:dict) -> bool:
   answer = f"{os.environ['MATTERMOST_BOT_NAME']} always reply" in channel['purpose']
-  _return(answer)
+  return _return(answer)
 
 async def textgen_chat_completion(user_input, history):
   request = {
@@ -308,7 +308,7 @@ async def textgen_chat_completion(user_input, history):
 
 async def thread_context(post:dict) -> dict:
   context = mattermost.posts.get_thread(post['id'])
-  _return(context)
+  return _return(context)
 
 async def upscale_image_2x(file_ids:list, post:dict, resize_w:int=1024, resize_h:int=1024, upscaler="LDSR"):
   comment = ''
