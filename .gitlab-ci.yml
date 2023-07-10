@@ -1,16 +1,32 @@
+image: python:3.10.6-slim-bullseye
+
 stages:
+- build
 - test
 - deploy
 
-test:
-  image: python:3.10.6-slim-bullseye
+venv:
+  artifacts:
+    when: on_success
+    paths:
+    - venv/
   interruptible: true
   script:
-  - source venv/bin/activate
-  - venv/bin/pylint *.py
+  - python -um venv venv
+  - . venv/bin/activate
+  - pip install -r requirements.txt
+  stage: build
+
+pylint:
+  interruptible: true
+  needs:
+  - venv
+  script:
+  - . venv/bin/activate
+  - pylint *.py
   stage: test
 
-deploy:
+update:
   before_script:
   - 'command -v ssh-agent >/dev/null || (apt-get update -y && apt-get install openssh-client -y)'
   - eval $(ssh-agent -s)
@@ -19,14 +35,14 @@ deploy:
   - mkdir -pm 700 ~/.ssh
   environment:
     name: $CI_COMMIT_BRANCH
-  image: debian:trixie
   interruptible: true
   needs:
-  - test
-  script:
-  - ssh -oStrictHostKeyChecking=no psychedelic-bot@ai.psychedelic.fi $CI_COMMIT_BRANCH
-  stage: deploy
+  - venv
+  - pylint
   rules:
   - if: $CI_COMMIT_TAG
     when: never
   - when: on_success
+  script:
+  - ssh -oStrictHostKeyChecking=no psychedelic-bot@ai.psychedelic.fi $CI_COMMIT_BRANCH
+  stage: deploy
