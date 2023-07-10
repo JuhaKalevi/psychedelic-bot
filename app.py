@@ -432,8 +432,5 @@ async def _return(data):
     print(f"TRACE {sys._getframe(1).f_code.co_name}: len(data)={len(data)}")
   return data
 
-async def main():
-  await mattermost.login()
-  await mattermost.init_websocket(context_manager)
-
-asyncio.run(main())
+mattermost.login()
+mattermost.init_websocket(context_manager)
