@@ -7,6 +7,7 @@ test:
   interruptible: true
   script:
   - pip install pylint
+  - . venv/bin/activate
   - pylint *.py
   stage: test
 
