@@ -2,7 +2,7 @@ FROM debian:trixie
 #RUN apt-get update
 #RUN apt-get -y install --no-install-recommends python3-dev python3-venv
 WORKDIR /app
-RUN python3 -m venv venv
+#RUN python3 -m venv venv
 RUN . venv/bin/activate
 #RUN git clone https://github.com/Vaelor/python-mattermost-driver
 #WORKDIR /app/python-mattermost-driver
