@@ -49,22 +49,22 @@ async def context_manager(event:dict) -> None:
 async def respond_to_magic_words(post:dict, file_ids:list):
   lowercase_message = post['message'].lower()
   if lowercase_message.startswith("2x"):
-    response = await txt2img.upscale_image_2x(file_ids, post)
+    magic_response = await img2img.upscale_image_2x(file_ids, post)
   elif lowercase_message.startswith("4x"):
-    response = await txt2img.upscale_image_4x(file_ids, post)
+    magic_response = await img2img.upscale_image_4x(file_ids, post)
   elif lowercase_message.startswith("pix2pix"):
-    response = await img2img.instruct_pix2pix(file_ids, post)
+    magic_response = await img2img.instruct_pix2pix(file_ids, post)
   elif lowercase_message.startswith("llm"):
-    response = await txt2txt.textgen_chat_completion(post['message'], {'internal': [], 'visible': []})
+    magic_response = await txt2txt.textgen_chat_completion(post['message'], {'internal': [], 'visible': []})
   elif lowercase_message.startswith("summary"):
-    response = await transcription.youtube_transcription(post['message'])
+    magic_response = await transcription.youtube_transcription(post['message'])
   elif lowercase_message.startswith("caption"):
-    response = await transcription.captioner(post)
+    magic_response = await transcription.captioner(file_ids)
   elif lowercase_message.startswith("storyteller"):
-    response = await transcription.storyteller(post)
+    magic_response = await transcription.storyteller(post)
   else:
     return None
-  return _return(response)
+  return _return(magic_response)
 
 async def _return(data):
   if os.environ['LOG_LEVEL'] == 'TRACE':

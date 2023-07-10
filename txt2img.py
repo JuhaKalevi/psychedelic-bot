@@ -23,9 +23,9 @@ async def generate_images(file_ids:list, post:dict, count:int) -> str:
   options['sd_model_checkpoint'] = 'realisticVisionV30_v30VAE.safetensors [c52892e92a]'
   options['sd_vae'] = 'vae-ft-mse-840000-ema-pruned.safetensors'
   bot.webui_api.set_options(options)
-  result = bot.webui_api.txt2img(prompt = post['message'], negative_prompt = "(unfinished:1.43), (sloppy and messy:1.43), (incoherent:1.43), (deformed:1.43)", steps = 42, sampler_name = 'UniPC', batch_size = count, restore_faces = True)
+  result = bot.webui_api.txt2img(prompt=post['message'], negative_prompt="(unfinished:1.43),(sloppy and messy:1.43),(incoherent:1.43),(deformed:1.43)", steps=42, sampler_name='UniPC', batch_size=count, restore_faces=True)
   for image in result.images:
     image.save("result.png")
     with open('result.png', 'rb') as image_file:
-      file_ids.append(mattermost_api.files.upload_file(post['channel_id'], files={'files':('result.png', image_file)})['file_infos'][0]['id'])
+      file_ids.append(mattermost_api.upload_file(post['channel_id'], files={'files':('result.png', image_file)}))
   return comment

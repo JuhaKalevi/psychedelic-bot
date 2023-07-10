@@ -51,14 +51,14 @@ async def generate_text_from_context(context:dict, model='gpt-4') -> str:
   if os.environ['LOG_LEVEL'] == 'Trace':
     print(f'TRACE: context_tokens: {context_tokens}')
   context_messages.reverse()
-  openai_response = await openai_api.openai_chat_completion(system_message + context_messages, model)
+  openai_response = await openai_api.chat_completion(system_message + context_messages, model)
   return bot._return(openai_response)
 
 async def generate_text_from_message(message:dict, model='gpt-4') -> str:
-  response = await openai_api.openai_chat_completion([{'role': 'user', 'content': message}], model)
+  response = await openai_api.chat_completion([{'role': 'user', 'content': message}], model)
   return bot._return(response)
 
-async def textgen_chat_completion(user_input:str, history) -> str:
+async def textgen_chat_completion(user_input:str, history:dict) -> str:
   request = {
     'user_input': user_input,
     'max_new_tokens': 1200,

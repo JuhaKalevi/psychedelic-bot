@@ -25,3 +25,6 @@ async def should_always_reply(channel:dict) -> bool:
 async def thread_context(post:dict) -> dict:
   context = mattermost.posts.get_thread(post['id'])
   return bot._return(context)
+
+async def upload_file(channel_id:str, files:dict):
+  return bot._return(mattermost.files.upload_file(channel_id, files=files)['file_infos'][0]['id'])

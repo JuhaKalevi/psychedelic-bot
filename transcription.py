@@ -11,10 +11,10 @@ import mattermost_api
 import openai_api
 import txt2txt
 
-async def captioner(post):
+async def captioner(file_ids:list):
   captions = []
   async with httpx.AsyncClient() as client:
-    for post_file_id in post['file_ids']:
+    for post_file_id in file_ids:
       file_response = mattermost_api.files.get_file(file_id=post_file_id)
       try:
         if file_response.status_code == 200:
@@ -68,7 +68,7 @@ async def storyteller(post):
   story = await txt2txt.generate_story_from_captions(captions)
   return story
 
-async def youtube_transcription(user_input):
+async def youtube_transcription(user_input:str) -> str:
   input_str = user_input
   url_pattern = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
   urls = re.findall(url_pattern, input_str)
