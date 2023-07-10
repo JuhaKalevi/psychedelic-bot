@@ -9,7 +9,7 @@ for path, dirs, files in os.walk('.'):
     if file.endswith(".py"):
       with open(os.path.join(path, file), "r", encoding="utf-8") as source:
         text = source.read()
-        response = openai.Completion.create(
+        response = openai.ChatCompletion.create(
           model="gpt-4",
           prompt=f"Summarize the following Python code:\n```python\n{text}\n```",
           temperature=0.3,
@@ -21,7 +21,7 @@ response = openai.Completion.create(
   model="gpt-4",
   prompt=f"Generate a README for a project with the following source files:\n{SOURCE_SUMMARIES}",
   temperature=0.3,
-  max_tokens=512
+  max_tokens=1337
 )
 with open("README.md", "w", encoding="utf-8") as readme_file:
   readme_file.write(response.choices[0].text.strip())
