@@ -2,6 +2,7 @@ import base64
 import json
 import os
 import re
+import sys
 import asyncio
 import aiofiles
 import httpx
@@ -16,20 +17,15 @@ import webuiapi
 import PIL
 
 openai.api_key = os.environ['OPENAI_API_KEY']
-BOT_NAME = os.environ['MATTERMOST_BOTNAME']
-TRANSCRIPTION_API_URI = os.environ['TRANSCRIPTION_API_URI']
-mattermost = mattermostdriver.Driver({'url': os.environ['MATTERMOST_URL'], 'token': os.environ['MATTERMOST_TOKEN'], 'scheme':'https', 'port':443})
-mattermost.login()
+mattermost = mattermostdriver.Driver({'url':os.environ['MATTERMOST_URL'], 'token':os.environ['MATTERMOST_TOKEN'],'scheme':'https', 'port':443})
 webui_api = webuiapi.WebUIApi(host=os.environ['STABLE_DIFFUSION_WEBUI_HOST'], port=7860)
 webui_api.set_auth('psychedelic-bot', os.environ['STABLE_DIFFUSION_WEBUI_API_KEY'])
 
 async def channel_context(post:dict) -> dict:
-  context = mattermost.posts.get_posts_for_channel(post['channel_id'])
-  print(f'TRACE: channel_context(): {context}')
-  return context
+  _return(mattermost.posts.get_posts_for_channel(post['channel_id']))
 
 async def channel_from_post(post:dict) -> dict:
-  return mattermost.channels.get_channel(post['channel_id'])
+  _return(mattermost.channels.get_channel(post['channel_id']))
 
 async def choose_system_message(post:dict, analyze_code:bool=False) -> list:
   if not analyze_code:
@@ -57,7 +53,7 @@ async def context_manager(event:dict):
   file_ids = []
   event = json.loads(event)
   signal = None
-  if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != BOT_NAME:
+  if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != os.environ['MATTERMOST_BOT_NAME']:
     post = json.loads(event['data']['post'])
     signal = await respond_to_magic_words(post, file_ids)
     if signal:
@@ -76,13 +72,13 @@ async def context_manager(event:dict):
           else:
             context = await thread_context(post)
           signal = await generate_text_from_context(context)
-      elif BOT_NAME in message:
+      elif os.environ['MATTERMOST_BOT_NAME'] in message:
         reply_to = post['root_id']
         context = await generate_text_from_message(message)
       else:
         reply_to = post['root_id']
         context = await thread_context(post)
-        if any(BOT_NAME in context_post['message'] for context_post in context['posts'].values()):
+        if any(os.environ['MATTERMOST_BOT_NAME'] in context_post['message'] for context_post in context['posts'].values()):
           signal = await generate_text_from_context(context)
       if signal:
         await create_mattermost_post(options={'channel_id':post['channel_id'], 'message':signal, 'file_ids':file_ids, 'root_id':reply_to})
@@ -99,6 +95,7 @@ async def create_mattermost_post(options:dict):
 async def fix_image_generation_prompt(prompt:str) -> str:
   fixed_prompt = await generate_text_from_message(f"convert this to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features and you don't have to use full sentences, just a few keywords, separating these aspects by commas. Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally: {prompt}")
   return fixed_prompt
+
 
 async def generate_images(file_ids:list, post:dict, count:int) -> str:
   comment = ''
@@ -197,8 +194,7 @@ async def is_asking_for_channel_summary(post:dict) -> bool:
     response = 'True'
   else:
     response = await generate_text_from_message(f'Is this a message where a summary of past interactions in this chat/discussion/channel is requested? Answer only True or False: {post["message"]}')
-  print(f'TRACE: is_asking_for_channel_summary(): {response.startswith("True")}')
-  return response.startswith('True')
+  _return(response.startswith('True'))
 
 async def is_asking_for_code_analysis(post:dict) -> bool:
   message = post['message']
@@ -209,23 +205,19 @@ async def is_asking_for_code_analysis(post:dict) -> bool:
     response = 'True'
   else:
     response = await generate_text_from_message(f'Is this a message where knowledge or analysis of your code is requested? It does not matter whether you know about the files or not yet, you have a function that we will use later on if needed. Answer only True or False: {message}')
-  print (f'TRACE: is_asking_for_code_analysis(): {response.startswith("True")}')
-  return response.startswith('True')
+  _return(response.startswith('True'))
 
 async def is_asking_for_image_generation(message:dict) -> bool:
   response = await generate_text_from_message(f'Is this a message where an image is probably requested? Answer only True or False: {message}')
-  print(f'TRACE: is_asking_for_image_generation(): {response.startswith("True")}')
-  return response.startswith('True')
+  _return(response.startswith('True'))
 
 async def is_asking_for_multiple_images(message:dict) -> bool:
-  print('is_asking_for_multiple_images?')
   response = await generate_text_from_message(f'Is this a message where multiple images are requested? Answer only True or False: {message}')
-  return response.startswith('True')
+  _return(response.startswith('True'))
 
 async def is_mainly_english(text:str) -> bool:
   response = langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
-  print(f'TRACE: is_mainly_english(): {response}')
-  return response
+  _return(response)
 
 async def openai_chat_completion(messages:list, model='gpt-4'):
   try:
@@ -252,15 +244,13 @@ async def respond_to_magic_words(post:dict, file_ids:list):
     response = await storyteller(post)
   else:
     return None
-  return response
+  _return(response)
 
 async def should_always_reply(channel:dict) -> bool:
-  answer = f'{BOT_NAME} always reply' in channel['purpose']
-  print(f'TRACE: should_always_reply: {answer}')
-  return answer
+  answer = f"{os.environ['MATTERMOST_BOT_NAME']} always reply" in channel['purpose']
+  _return(answer)
 
 async def textgen_chat_completion(user_input, history):
-  print(f"TRACE textgen_chat_completion(): len(user_input)={len(user_input)}, len(history)={len(history)}")
   request = {
     'user_input': user_input,
     'max_new_tokens': 1200,
@@ -318,8 +308,7 @@ async def textgen_chat_completion(user_input, history):
 
 async def thread_context(post:dict) -> dict:
   context = mattermost.posts.get_thread(post['id'])
-  print(f"TRACE len(context)={len(context)}")
-  return context
+  _return(context)
 
 async def upscale_image_2x(file_ids:list, post:dict, resize_w:int=1024, resize_h:int=1024, upscaler="LDSR"):
   comment = ''
@@ -378,7 +367,7 @@ async def youtube_transcription(user_input):
   url_pattern = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
   urls = re.findall(url_pattern, input_str)
   if urls:
-    gradio = gradio_client.Client(TRANSCRIPTION_API_URI)
+    gradio = gradio_client.Client(os.environ['TRANSCRIPTION_API_URI'])
     prediction = gradio.predict(user_input, fn_index=1)
     if 'error' in prediction:
       return f"ERROR gradio.predict(): {prediction['error']}"
@@ -438,4 +427,13 @@ async def generate_story_from_captions(message:dict, model='gpt-4'):
 ], model)
   return response
 
-mattermost.init_websocket(context_manager)
+async def _return(data):
+  if os.environ['LOG_LEVEL'] == 'TRACE':
+    print(f"TRACE {sys._getframe(1).f_code.co_name}: len(data)={len(data)}")
+  return data
+
+async def main():
+  await mattermost.login()
+  await mattermost.init_websocket(context_manager)
+
+asyncio.run(main())
