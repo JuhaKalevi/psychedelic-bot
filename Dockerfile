@@ -1,4 +1,4 @@
-FROM debian:bullseye
+FROM debian:trixie
 #RUN apt-get update
 #RUN apt-get -y install --no-install-recommends python3-dev python3-venv
 WORKDIR /app
