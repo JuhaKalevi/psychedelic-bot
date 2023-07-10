@@ -3,11 +3,10 @@ stages:
 - deploy
 
 test:
-  image: python:3.10.6-slim-bullseye
+  image: python:3.10.6-slim-trixie
   interruptible: true
   script:
-  - cd /builds/ai/bots/psychedelic-bot
-  - pip install -r requirements.txt 
+  - pylint *.py
   stage: test
 
 deploy:
@@ -19,6 +18,7 @@ deploy:
   - mkdir -pm 700 ~/.ssh
   environment:
     name: $CI_COMMIT_BRANCH
+  image: debian:trixie
   interruptible: true
   needs:
   - test
