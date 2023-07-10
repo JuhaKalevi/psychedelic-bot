@@ -3,7 +3,7 @@ stages:
 - deploy
 
 test:
-  image: python:3.10.6-slim-trixie
+  image: python:3.10.6:slim-bookworm
   interruptible: true
   script:
   - pylint *.py
