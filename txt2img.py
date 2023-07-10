@@ -1,6 +1,7 @@
-from bot import upload_mattermost_file, webui_api
+from mattermost_bot import upload_mattermost_file
 from txt2txt import fix_image_generation_prompt
 from txt2bool import is_asking_for_multiple_images, is_asking_for_image_generation, is_mainly_english
+from webui_api import webui_api
 
 async def consider_image_generation(message: dict, file_ids:list, post:dict) -> (str | None):
   image_requested = await is_asking_for_image_generation(message)

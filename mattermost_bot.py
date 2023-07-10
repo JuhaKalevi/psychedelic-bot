@@ -1,20 +1,21 @@
 from json import loads
 from os import environ
-import webuiapi
 from mattermostdriver import Driver
 from mattermostdriver.exceptions import InvalidOrMissingParameters, ResourceNotFound
-from img2img import instruct_pix2pix, upscale_image_2x, upscale_image_4x
 from img2txt import captioner, storyteller
-from txt2img import consider_image_generation
+from img2img import instruct_pix2pix, upscale_image_2x, upscale_image_4x
 from txt2bool import is_asking_for_channel_summary
+from txt2img import consider_image_generation
 from txt2txt import generate_text_from_context, generate_text_from_message, textgen_chat_completion
 from vid2txt import youtube_transcription
 
+mattermost_bot = Driver({'url':environ['MATTERMOST_URL'], 'token':environ['MATTERMOST_TOKEN'],'scheme':'https', 'port':443})
+
 async def channel_context(post:dict) -> dict:
-  return mattermost.posts.get_posts_for_channel(post['channel_id'])
+  return mattermost_bot.posts.get_posts_for_channel(post['channel_id'])
 
 async def channel_from_post(post:dict) -> dict:
-  return mattermost.channels.get_channel(post['channel_id'])
+  return mattermost_bot.channels.get_channel(post['channel_id'])
 
 async def context_manager(event:dict) -> None:
   file_ids = []
@@ -52,12 +53,15 @@ async def context_manager(event:dict) -> None:
 
 async def create_post(options:dict) -> None:
   try:
-    mattermost.posts.create_post(options=options)
+    mattermost_bot.posts.create_post(options=options)
   except (ConnectionResetError, InvalidOrMissingParameters, ResourceNotFound) as err:
     print(f'ERROR mattermost.posts.create_post(): {err}')
 
 async def get_mattermost_file(file_id:str) -> dict:
-  return mattermost.files.get_file(file_id=file_id)
+  return mattermost_bot.files.get_file(file_id=file_id)
+
+async def thread_context(post:dict) -> dict:
+  return mattermost_bot.posts.get_thread(post['id'])
 
 async def respond_to_magic_words(post:dict, file_ids:list):
   lowercase_message = post['message'].lower()
@@ -82,15 +86,5 @@ async def respond_to_magic_words(post:dict, file_ids:list):
 async def should_always_reply(channel:dict) -> bool:
   return f"{environ['MATTERMOST_BOT_NAME']} always reply" in channel['purpose']
 
-async def thread_context(post:dict) -> dict:
-  return mattermost.posts.get_thread(post['id'])
-
 async def upload_mattermost_file(channel_id:str, files:dict):
-  return mattermost.files.upload_file(channel_id, files=files)['file_infos'][0]['id']
-
-mattermost = Driver({'url':environ['MATTERMOST_URL'], 'token':environ['MATTERMOST_TOKEN'],'scheme':'https', 'port':443})
-mattermost.login()
-mattermost.init_websocket(context_manager)
-webui_api = webuiapi.WebUIApi(host=environ['STABLE_DIFFUSION_WEBUI_HOST'], port=7860)
-webui_api.set_auth('psychedelic-bot', environ['STABLE_DIFFUSION_WEBUI_API_KEY'])
-
+  return mattermost_bot.files.upload_file(channel_id, files=files)['file_infos'][0]['id']

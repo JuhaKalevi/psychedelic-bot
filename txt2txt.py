@@ -2,13 +2,13 @@ from json import dumps, loads
 from os import listdir, environ
 import requests
 import tiktoken
-import txt2bool
 from openai_api import openai_chat_completion
+from txt2bool import is_asking_for_code_analysis
 
 async def choose_system_message(post:dict, analyze_code:bool=False) -> list:
   default_system_message = [{'role':'system', 'content':'You are an assistant with no specific role determined right now.'}]
   if not analyze_code:
-    analyze_code = await txt2bool.is_asking_for_code_analysis(post)
+    analyze_code = await is_asking_for_code_analysis(post)
   if analyze_code:
     code_snippets = []
     for file_path in [x for x in listdir() if x.endswith('.py')]:

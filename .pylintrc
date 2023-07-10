@@ -1,9 +1,11 @@
 [MASTER]
 disable=
+
+    C0415, # import-outside-toplevel
     C0114, # missing-module-docstring
     C0116, # missing-function-docstring
+    R0401, # cyclic-import
     R0914, # too-many-locals
-    #W0212, # protected-access
 max-branches=14
 [FORMAT]
 indent-string='  '

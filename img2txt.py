@@ -5,7 +5,7 @@ from os import path
 import re
 from httpx import AsyncClient
 import aiofiles
-from bot import get_mattermost_file
+from mattermost_bot import get_mattermost_file
 from txt2txt import generate_story_from_captions
 
 async def captioner(file_ids:list) -> str:

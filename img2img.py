@@ -1,7 +1,7 @@
-
 from os import path, remove
 from PIL import Image
-from bot import get_mattermost_file, upload_mattermost_file, webui_api
+from mattermost_bot import get_mattermost_file, upload_mattermost_file
+from webui_api import webui_api
 
 async def instruct_pix2pix(file_ids:list, post:dict):
   comment = ''
