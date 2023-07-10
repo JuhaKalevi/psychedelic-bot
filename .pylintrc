@@ -8,4 +8,4 @@ max-branches=14
 [FORMAT]
 indent-string='  '
 indent-after-paren=2
-max-line-length=500
+max-line-length=666
