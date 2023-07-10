@@ -3,12 +3,11 @@ stages:
 - deploy
 
 test:
-  image: python:3.9
+  image: python:3.10.6-slim-bullseye
   interruptible: true
   script:
   - cd /builds/ai/bots/psychedelic-bot
-  - pip install chardet langdetect openai mattermostdriver-asyncio pylint tiktoken webuiapi gradio_client aiofiles httpx
-  - pylint *.py
+  - pip install -r requirements.txt 
   stage: test
 
 deploy:
