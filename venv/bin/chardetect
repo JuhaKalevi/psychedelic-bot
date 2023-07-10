@@ -1,4 +1,4 @@
-#!/home/juha/psychedelic-bot/venv/bin/python3.10
+#!/builds/ai/bots/psychedelic-bot/venv/bin/python3.10
 # -*- coding: utf-8 -*-
 import re
 import sys

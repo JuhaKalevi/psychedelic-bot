@@ -1,4 +1,4 @@
-#!/home/juha/psychedelic-bot/venv/bin/python3.10
+#!/builds/ai/bots/psychedelic-bot/venv/bin/python3.10
 from __future__ import print_function, unicode_literals
 import argparse
 import sys
