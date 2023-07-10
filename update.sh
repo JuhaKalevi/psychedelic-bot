@@ -1,4 +1,4 @@
-#!/bin/bash -eux
+#!/bin/bash -eu
 echo "Deploying $SSH_ORIGINAL_COMMAND"
 git fetch --all
 git checkout $SSH_ORIGINAL_COMMAND
