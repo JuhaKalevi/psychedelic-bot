@@ -7,7 +7,7 @@ test:
   interruptible: true
   script:
   - . venv/bin/activate
-  - pylint *.py
+  - venv/bin/pylint *.py
   stage: test
 
 deploy:
