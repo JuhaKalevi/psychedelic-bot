@@ -7,9 +7,10 @@ stages:
 
 venv:
   artifacts:
-    when: on_success
     paths:
     - venv/
+    untracked: true
+    when: on_success
   interruptible: true
   script:
     - apt-get update
