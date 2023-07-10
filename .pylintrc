@@ -3,6 +3,7 @@ disable=
     C0114, # missing-module-docstring
     C0116, # missing-function-docstring
     R0914, # too-many-locals
+    W0212, # protected-access
 max-branches=14
 [FORMAT]
 indent-string='  '
