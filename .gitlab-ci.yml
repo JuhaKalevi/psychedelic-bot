@@ -6,9 +6,8 @@ test:
   image: python:3.10.6-slim-bullseye
   interruptible: true
   script:
-  - pip install pylint
   - . venv/bin/activate
-  - pylint *.py
+  - venv/bin/pylint *.py
   stage: test
 
 deploy:
