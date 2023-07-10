@@ -22,7 +22,7 @@ venv:
 
 pylint:
   interruptible: true
-  needs:
+  dependencies:
   - venv
   script:
   - . venv/bin/activate
