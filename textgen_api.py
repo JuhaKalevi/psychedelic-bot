@@ -2,7 +2,7 @@ from os import environ
 from json import loads
 from requests import post
 
-async def textgen_chat_completion(user_input:str, history:dict) -> str:
+async def textgen_chat_completion(user_input, history):
   request = {
     'user_input': user_input,
     'max_new_tokens': 1200,

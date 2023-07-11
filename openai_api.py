@@ -1,6 +1,6 @@
 import openai
 
-async def generate_summary_from_transcription(message:dict, model='gpt-4'):
+async def generate_summary_from_transcription(message, model='gpt-4'):
   response = await openai_chat_completion([
     {
       'role': 'user',
@@ -14,7 +14,7 @@ async def generate_summary_from_transcription(message:dict, model='gpt-4'):
 ], model)
   return response
 
-async def openai_chat_completion(messages:list, model='gpt-4') -> str:
+async def openai_chat_completion(messages, model='gpt-4'):
   try:
     response = await openai.ChatCompletion.acreate(model=model, messages=messages)
     return str(response['choices'][0]['message']['content'])

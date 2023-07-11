@@ -5,12 +5,12 @@ import openai
 from mattermostdriver import Driver
 from webuiapi import WebUIApi
 import PIL
-from basic_parsing import count_tokens, choose_system_message, fix_image_generation_prompt, generate_story_from_captions, generate_text_from_message, is_asking_for_channel_summary, is_asking_for_image_generation, is_asking_for_multiple_images, is_mainly_english, should_always_reply_on_channel
-from mattermost_api import channel_context, channel_from_post, create_post, get_mattermost_file, thread_context, upload_mattermost_file
-from openai_api import generate_summary_from_transcription, openai_chat_completion
+from basic_parsing import bot_name,count_tokens,choose_system_message,fix_image_generation_prompt,generate_story_from_captions,generate_text_from_message,is_asking_for_channel_summary,is_asking_for_image_generation,is_asking_for_multiple_images,is_mainly_english,should_always_reply_on_channel
+from mattermost_api import channel_context,channel_from_post,create_post,get_mattermost_file,thread_context,upload_mattermost_file
+from openai_api import generate_summary_from_transcription,openai_chat_completion
 from textgen_api import textgen_chat_completion
 
-TRACE = environ['LOG_LEVEL'] == 'TRACE'
+bot_name = environ['MATTERMOST_BOT_NAME']
 
 bot = Driver({'url':environ['MATTERMOST_URL'], 'token':environ['MATTERMOST_TOKEN'],'scheme':'https', 'port':443})
 bot.login()
@@ -18,27 +18,24 @@ openai.api_key = environ['OPENAI_API_KEY']
 webui_api = WebUIApi(host=environ['STABLE_DIFFUSION_WEBUI_HOST'], port=7860)
 webui_api.set_auth('psychedelic-bot', environ['STABLE_DIFFUSION_WEBUI_API_KEY'])
 
-async def context_manager(event:dict) -> None:
-  bot_name = environ['MATTERMOST_BOT_NAME']
+async def context_manager(event):
   file_ids = []
   event = loads(event)
   signal = None
   if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != bot_name:
     post = loads(event['data']['post'])
-    if TRACE:
-      print(f'context_manager TRACE: event: {event}')
     signal = await respond_to_magic_words(post, file_ids)
     if signal:
       create_post({'channel_id':post['channel_id'], 'message':signal, 'file_ids':file_ids, 'root_id':post['root_id']}, bot)
     else:
       message = post['message']
       channel = channel_from_post(post, bot)
-      always_reply = should_always_reply_on_channel(channel['purpose'], bot_name)
+      always_reply = should_always_reply_on_channel(channel['purpose'])
       if always_reply:
         reply_to = post['root_id']
         signal = await consider_image_generation(message, file_ids, post)
         if not signal:
-          summarize = await is_asking_for_channel_summary(post, channel, bot_name)
+          summarize = await is_asking_for_channel_summary(post, channel)
           if summarize:
             context = channel_context(post, bot)
           else:
@@ -56,11 +53,7 @@ async def context_manager(event:dict) -> None:
         create_post({'channel_id':post['channel_id'], 'message':signal, 'file_ids':file_ids, 'root_id':reply_to}, bot)
 
 async def generate_text_from_context(context:dict, channel, model='gpt-4') -> str:
-  if TRACE:
-    print(f'generate_text_from_context TRACE: channel: {channel}')
   if 'order' in context:
-    if TRACE:
-      print(f'generate_text_from_context TRACE: context: {context}')
     context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
   system_message = await choose_system_message(context['posts'][context['order'][0]], channel)
   context_messages = []
@@ -77,8 +70,6 @@ async def generate_text_from_context(context:dict, channel, model='gpt-4') -> st
       context_tokens += message_tokens
     else:
       break
-  if TRACE:
-    print(f'generate_text_from_context TRACE: context_tokens: {context_tokens}')
   context_messages.reverse()
   openai_response = await openai_chat_completion(system_message + context_messages, model)
   return openai_response
@@ -116,12 +107,12 @@ async def captioner(file_ids:list) -> str:
         continue
   return '\n'.join(captions)
 
-async def storyteller(post:dict) -> str:
+async def storyteller(post):
   captions = await captioner(post)
   story = await generate_story_from_captions(captions)
   return story
 
-async def consider_image_generation(message: dict, file_ids:list, post:dict) -> str:
+async def consider_image_generation(message, file_ids, post):
   image_requested = await is_asking_for_image_generation(message)
   if image_requested:
     asking_for_multiple_images = await is_asking_for_multiple_images(message)
@@ -132,7 +123,7 @@ async def consider_image_generation(message: dict, file_ids:list, post:dict) -> 
     return image_generation_comment
   return ''
 
-async def generate_images(file_ids:list, post:dict, count:int) -> str:
+async def generate_images(file_ids, post, count):
   comment = ''
   mainly_english = await is_mainly_english(post['message'].encode('utf-8'))
   if not mainly_english:
@@ -149,7 +140,7 @@ async def generate_images(file_ids:list, post:dict, count:int) -> str:
       file_ids.append(upload_mattermost_file(post['channel_id'], {'files':('result.png', image_file)}, bot))
   return comment
 
-async def upscale_image_2x(file_ids:list, post:dict, resize_w:int=1024, resize_h:int=1024, upscaler="LDSR"):
+async def upscale_image_2x(file_ids, post, resize_w=1024, resize_h=1024, upscaler="LDSR"):
   comment = ''
   for post_file_id in post['file_ids']:
     file_response = get_mattermost_file(post_file_id, bot)
@@ -175,7 +166,7 @@ async def upscale_image_2x(file_ids:list, post:dict, resize_w:int=1024, resize_h
           remove(temporary_file_path)
   return comment
 
-async def upscale_image_4x(file_ids:list, post:dict, resize_w:int=2048, resize_h:int=2048, upscaler="LDSR"):
+async def upscale_image_4x(file_ids, post, resize_w=2048, resize_h=2048, upscaler="LDSR"):
   comment = ''
   for post_file_id in post['file_ids']:
     file_response = get_mattermost_file(post_file_id, bot)
@@ -201,7 +192,7 @@ async def upscale_image_4x(file_ids:list, post:dict, resize_w:int=2048, resize_h
           remove(temporary_file_path)
   return comment
 
-async def youtube_transcription(user_input:str) -> str:
+async def youtube_transcription(user_input):
   from gradio_client import Client
   input_str = user_input
   url_pattern = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
@@ -214,7 +205,7 @@ async def youtube_transcription(user_input:str) -> str:
     ytsummary = await generate_summary_from_transcription(prediction)
     return ytsummary
 
-async def instruct_pix2pix(file_ids:list, post:dict):
+async def instruct_pix2pix(file_ids, post):
   comment = ''
   for input_image_id in post['file_ids']:
     file_response = get_mattermost_file(input_image_id, bot)
@@ -247,7 +238,7 @@ async def instruct_pix2pix(file_ids:list, post:dict):
           remove(temporary_file_path)
   return comment
 
-async def respond_to_magic_words(post:dict, file_ids:list):
+async def respond_to_magic_words(post, file_ids):
   lowercase_message = post['message'].lower()
   if lowercase_message.startswith("caption"):
     magic_response = await captioner(file_ids)
