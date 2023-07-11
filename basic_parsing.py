@@ -5,6 +5,8 @@ import langdetect
 import tiktoken
 from openai_api import openai_chat_completion
 
+TRACE = os.environ['LOG_LEVEL'] == 'True'
+
 CODE_ANALYSIS_CHANNELS = [
   'GitLab',
   'Testing'
@@ -40,10 +42,14 @@ async def generate_text_from_message(message:str, model='gpt-4') -> str:
 async def is_asking_for_channel_summary(message:str, channel:dict, bot_name:str) -> bool:
   if channel['purpose'] == f"{bot_name} use channel context":
     return True
+  if TRACE:
+    print('is_asking_for_channel_summary')
   response = await generate_text_from_message(f'Is this a message where a summary of past interactions in this chat/discussion/channel is requested? Answer only True or False: {message}')
   return response.startswith('True')
 
 async def is_asking_for_code_analysis(message:str, channel:dict) -> bool:
+  if TRACE:
+    print('is_asking_for_code_analysis')
   response = await generate_text_from_message(f"Is this a message where knowledge or analysis of your code is requested? It does not matter whether you know about the files or not yet, you have a function that we will use later on if needed. Answer only True or False: {message}")
   return response.startswith('True')
 
