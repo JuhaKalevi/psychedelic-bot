@@ -8,9 +8,6 @@ deploy:
   environment:
     name: $CI_COMMIT_BRANCH
   interruptible: true
-  needs:
-  - venv
-  - pylint
   rules:
   - if: $CI_COMMIT_TAG
     when: never
