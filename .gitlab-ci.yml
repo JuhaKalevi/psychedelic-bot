@@ -1,4 +1,4 @@
-image: debian:trixie-slim
+image: debian:bookworm-slim
 
 stages:
   - deploy
@@ -14,5 +14,8 @@ deploy:
   script:
     - apt-get update
     - apt-get install -y openssh-client
+    - eval $(ssh-agent -s)
+    - chmod 400 "$SSH_DEPLOY_KEY"
+    - ssh-add "$SSH_DEPLOY_KEY"
     - ssh -oStrictHostKeyChecking=no psychedelic-bot@ai.psychedelic.fi $CI_COMMIT_BRANCH
   stage: deploy
