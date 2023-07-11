@@ -7,7 +7,6 @@ from openai_api import openai_chat_completion
 
 async def choose_system_message(post:dict, channel, analyze_code:bool=False) -> list:
   if channel['display_name'] == 'GitLab':
-    default_system_message = [{'role':'system', 'content':'Make a thorough review of your code, looking for any potential bugs, security vulnerabilities, and other issues. If you are not sure about something, ask for help.'}]
     analyze_code = True
   else:
     default_system_message = [{'role':'system', 'content':'You are an assistant with no specific role determined right now.'}]
