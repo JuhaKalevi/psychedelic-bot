@@ -10,7 +10,7 @@ from basic_parsing import count_tokens, choose_system_message, generate_text_fro
 from mattermost_api import channel_context, channel_from_post, create_post, get_mattermost_file, thread_context, upload_mattermost_file
 from openai_api import generate_summary_from_transcription, openai_chat_completion
 
-DEBUG_LEVEL = environ['DEBUG_LEVEL']
+TRACE = environ['LOG_LEVEL'] == 'TRACE'
 
 bot = Driver({'url':environ['MATTERMOST_URL'], 'token':environ['MATTERMOST_TOKEN'],'scheme':'https', 'port':443})
 bot.login()
@@ -25,6 +25,8 @@ async def context_manager(event:dict) -> None:
   signal = None
   if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != bot_name:
     post = loads(event['data']['post'])
+    if TRACE:
+      print(f'context_manager TRACE: event: {event}')
     signal = await respond_to_magic_words(post, file_ids)
     if signal:
       await create_post({'channel_id':post['channel_id'], 'message':signal, 'file_ids':file_ids, 'root_id':post['root_id']}, bot)
@@ -80,12 +82,12 @@ async def upscale_image_2x(file_ids:list, post:dict, resize_w:int=1024, resize_h
   return comment
 
 async def generate_text_from_context(context:dict, channel, model='gpt-4') -> str:
-  if DEBUG_LEVEL == 'TRACE':
+  if TRACE:
     print(f'generate_text_from_context TRACE: channel: {channel}')
   if 'order' in context:
-    if DEBUG_LEVEL == 'TRACE':
+    if TRACE:
       print(f'generate_text_from_context TRACE: context: {context}')
-      context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
+    context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
   system_message = await choose_system_message(context['posts'][context['order'][0]], channel)
   context_messages = []
   context_tokens = await count_tokens(context)
@@ -101,7 +103,7 @@ async def generate_text_from_context(context:dict, channel, model='gpt-4') -> st
       context_tokens += message_tokens
     else:
       break
-  if DEBUG_LEVEL == 'TRACE':
+  if TRACE:
     print(f'generate_text_from_context TRACE: context_tokens: {context_tokens}')
   context_messages.reverse()
   openai_response = await openai_chat_completion(system_message + context_messages, model)
