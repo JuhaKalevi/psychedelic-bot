@@ -9,7 +9,7 @@ from mattermostdriver import Driver
 from webuiapi import WebUIApi
 import PIL
 
-DEBUG_LEVEL = environ['LOG_LEVEL']
+DEBUG_LEVEL = environ['DEBUG_LEVEL']
 BOT_NAME = environ['MATTERMOST_BOT_NAME']
 
 mattermost_bot = Driver({'url':environ['MATTERMOST_URL'], 'token':environ['MATTERMOST_TOKEN'],'scheme':'https', 'port':443})
