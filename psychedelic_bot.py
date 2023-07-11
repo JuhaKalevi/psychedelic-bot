@@ -1,14 +1,14 @@
 from json import dumps, loads
 from os import environ, path, remove
 import re
-import requests
 import openai
 from mattermostdriver import Driver
 from webuiapi import WebUIApi
 import PIL
-from basic_parsing import count_tokens, choose_system_message, generate_text_from_message, is_mainly_english, should_always_reply_on_channel
+from basic_parsing import count_tokens, choose_system_message, fix_image_generation_prompt, generate_story_from_captions, generate_text_from_message, is_asking_for_channel_summary, is_asking_for_multiple_images, is_mainly_english, should_always_reply_on_channel
 from mattermost_api import channel_context, channel_from_post, create_post, get_mattermost_file, thread_context, upload_mattermost_file
 from openai_api import generate_summary_from_transcription, openai_chat_completion
+from textgen_api import textgen_chat_completion
 
 TRACE = environ['LOG_LEVEL'] == 'TRACE'
 
@@ -38,7 +38,7 @@ async def context_manager(event:dict) -> None:
         reply_to = post['root_id']
         signal = await consider_image_generation(message, file_ids, post)
         if not signal:
-          summarize = await is_asking_for_channel_summary(post)
+          summarize = await is_asking_for_channel_summary(post, channel)
           if summarize:
             context = await channel_context(post, bot)
           else:
@@ -54,32 +54,6 @@ async def context_manager(event:dict) -> None:
           signal = await generate_text_from_context(context, channel)
       if signal:
         await create_post({'channel_id':post['channel_id'], 'message':signal, 'file_ids':file_ids, 'root_id':reply_to}, bot)
-
-async def upscale_image_2x(file_ids:list, post:dict, resize_w:int=1024, resize_h:int=1024, upscaler="LDSR"):
-  comment = ''
-  for post_file_id in post['file_ids']:
-    file_response = get_mattermost_file(post_file_id, bot)
-    if file_response.status_code == 200:
-      file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
-      post_file_path = f'{post_file_id}.{file_type}'
-      async with open(post_file_path, 'wb') as post_file:
-        post_file.write(file_response.content)
-    try:
-      post_file_image = PIL.Image.open(post_file_path)
-      result = webui_api.extra_single_image(post_file_image, upscaling_resize=2, upscaling_resize_w=resize_w, upscaling_resize_h=resize_h, upscaler_1=upscaler)
-      upscaled_image_path = f"upscaled_{post_file_id}.png"
-      result.image.save(upscaled_image_path)
-      async with open(upscaled_image_path, 'rb') as image_file:
-        file_id = upload_mattermost_file(post['channel_id'], {'files':(upscaled_image_path, image_file)}, bot)
-      file_ids.append(file_id)
-      comment += "Image upscaled successfully"
-    except RuntimeError as err:
-      comment += f"Error occurred while upscaling image: {str(err)}"
-    finally:
-      for temporary_file_path in (post_file_path, upscaled_image_path):
-        if path.exists(temporary_file_path):
-          remove(temporary_file_path)
-  return comment
 
 async def generate_text_from_context(context:dict, channel, model='gpt-4') -> str:
   if TRACE:
@@ -147,32 +121,6 @@ async def storyteller(post:dict) -> str:
   story = await generate_story_from_captions(captions)
   return story
 
-async def upscale_image_4x(file_ids:list, post:dict, resize_w:int=2048, resize_h:int=2048, upscaler="LDSR"):
-  comment = ''
-  for post_file_id in post['file_ids']:
-    file_response = get_mattermost_file(post_file_id, bot)
-    if file_response.status_code == 200:
-      file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
-      post_file_path = f'{post_file_id}.{file_type}'
-      async with open(post_file_path, 'wb') as post_file:
-        post_file.write(file_response.content)
-    try:
-      post_file_image = PIL.Image.open(post_file_path)
-      result = webui_api.extra_single_image(post_file_image, upscaling_resize=4, upscaling_resize_w=resize_w, upscaling_resize_h=resize_h, upscaler_1=upscaler)
-      upscaled_image_path = f"upscaled_{post_file_id}.png"
-      result.image.save(upscaled_image_path)
-      async with open(upscaled_image_path, 'rb') as image_file:
-        file_id = upload_mattermost_file(post['channel_id'], {'files': (upscaled_image_path, image_file)}, bot)
-      file_ids.append(file_id)
-      comment += "Image upscaled successfully"
-    except RuntimeError as err:
-      comment += f"Error occurred while upscaling image: {str(err)}"
-    finally:
-      for temporary_file_path in (post_file_path, upscaled_image_path):
-        if path.exists(temporary_file_path):
-          remove(temporary_file_path)
-  return comment
-
 async def consider_image_generation(message: dict, file_ids:list, post:dict) -> str:
   image_requested = await is_asking_for_image_generation(message)
   if image_requested:
@@ -201,84 +149,61 @@ async def generate_images(file_ids:list, post:dict, count:int) -> str:
       file_ids.appe(upload_mattermost_file(post['channel_id'], {'files':('result.png', image_file)}, bot))
   return comment
 
-async def is_asking_for_channel_summary(post:dict) -> bool:
-  channel = await channel_from_post(post, bot)
-  if channel['display_name'] == 'GitLab':
-    return 'True'
-  response = await generate_text_from_message(f'Is this a message where a summary of past interactions in this chat/discussion/channel is requested? Answer only True or False: {post["message"]}')
-  return response.startswith('True')
+async def upscale_image_2x(file_ids:list, post:dict, resize_w:int=1024, resize_h:int=1024, upscaler="LDSR"):
+  comment = ''
+  for post_file_id in post['file_ids']:
+    file_response = get_mattermost_file(post_file_id, bot)
+    if file_response.status_code == 200:
+      file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
+      post_file_path = f'{post_file_id}.{file_type}'
+      async with open(post_file_path, 'wb') as post_file:
+        post_file.write(file_response.content)
+    try:
+      post_file_image = PIL.Image.open(post_file_path)
+      result = webui_api.extra_single_image(post_file_image, upscaling_resize=2, upscaling_resize_w=resize_w, upscaling_resize_h=resize_h, upscaler_1=upscaler)
+      upscaled_image_path = f"upscaled_{post_file_id}.png"
+      result.image.save(upscaled_image_path)
+      async with open(upscaled_image_path, 'rb') as image_file:
+        file_id = upload_mattermost_file(post['channel_id'], {'files':(upscaled_image_path, image_file)}, bot)
+      file_ids.append(file_id)
+      comment += "Image upscaled successfully"
+    except RuntimeError as err:
+      comment += f"Error occurred while upscaling image: {str(err)}"
+    finally:
+      for temporary_file_path in (post_file_path, upscaled_image_path):
+        if path.exists(temporary_file_path):
+          remove(temporary_file_path)
+  return comment
+
+async def upscale_image_4x(file_ids:list, post:dict, resize_w:int=2048, resize_h:int=2048, upscaler="LDSR"):
+  comment = ''
+  for post_file_id in post['file_ids']:
+    file_response = get_mattermost_file(post_file_id, bot)
+    if file_response.status_code == 200:
+      file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
+      post_file_path = f'{post_file_id}.{file_type}'
+      async with open(post_file_path, 'wb') as post_file:
+        post_file.write(file_response.content)
+    try:
+      post_file_image = PIL.Image.open(post_file_path)
+      result = webui_api.extra_single_image(post_file_image, upscaling_resize=4, upscaling_resize_w=resize_w, upscaling_resize_h=resize_h, upscaler_1=upscaler)
+      upscaled_image_path = f"upscaled_{post_file_id}.png"
+      result.image.save(upscaled_image_path)
+      async with open(upscaled_image_path, 'rb') as image_file:
+        file_id = upload_mattermost_file(post['channel_id'], {'files': (upscaled_image_path, image_file)}, bot)
+      file_ids.append(file_id)
+      comment += "Image upscaled successfully"
+    except RuntimeError as err:
+      comment += f"Error occurred while upscaling image: {str(err)}"
+    finally:
+      for temporary_file_path in (post_file_path, upscaled_image_path):
+        if path.exists(temporary_file_path):
+          remove(temporary_file_path)
+  return comment
 
 async def is_asking_for_image_generation(message:dict) -> bool:
   response = await generate_text_from_message(f"Is this a message where an image is probably requested? Answer only True or False: {message}")
   return response.startswith('True')
-
-async def is_asking_for_multiple_images(message:dict) -> bool:
-  response = await generate_text_from_message(f"Is this a message where multiple images are requested? Answer only True or False: {message}")
-  return response.startswith('True')
-
-async def fix_image_generation_prompt(prompt:str) -> str:
-  fixed_prompt = await generate_text_from_message(f"convert this to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features and you don't have to use full sentences, just a few keywords, separating these aspects by commas. Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally: {prompt}")
-  return fixed_prompt
-
-async def generate_story_from_captions(message:dict, model='gpt-4') -> str:
-  story = await openai_chat_completion([{'role':'user', 'content':(f"Make a consistent story based on these image captions: {message}")}], model)
-  return story
-
-async def textgen_chat_completion(user_input:str, history:dict) -> str:
-  request = {
-    'user_input': user_input,
-    'max_new_tokens': 1200,
-    'history': history,
-    'mode': 'instruct',
-    'character': 'Example',
-    'instruction_template': 'WizardLM',
-    'your_name': 'You',
-    'regenerate': False,
-    '_continue': False,
-    'stop_at_newline': False,
-    'chat_generation_attempts': 1,
-    'chat-instruct_command': 'Continue the chat dialogue below. Write a lengthy step-by-step answer for the character "<|character|>".\n\n<|prompt|>',
-    'preset': 'None',
-    'do_sample': True,
-    'temperature': 0.7,
-    'top_p': 0.1,
-    'typical_p': 1,
-    'epsilon_cutoff': 0,  # In units of 1e-4
-    'eta_cutoff': 0,  # In units of 1e-4
-    'tfs': 1,
-    'top_a': 0,
-    'repetition_penalty': 1.18,
-    'repetition_penalty_range': 0,
-    'top_k': 40,
-    'min_length': 0,
-    'no_repeat_ngram_size': 0,
-    'num_beams': 1,
-    'penalty_alpha': 0,
-    'length_penalty': 1,
-    'early_stopping': False,
-    'mirostat_mode': 0,
-    'mirostat_tau': 5,
-    'mirostat_eta': 0.1,
-    'seed': -1,
-    'add_bos_token': True,
-    'truncation_length': 2048,
-    'ban_eos_token': False,
-    'skip_special_tokens': True,
-    'stopping_strings': []
-  }
-  response = requests.post(environ['TEXTGEN_WEBUI_URI'], json=request, timeout=420)
-  if response.status_code == 200:
-    response_content = loads(response.text)
-    results = response_content["results"]
-    for result in results:
-      chat_history = result.get("history", {})
-      internal_history = chat_history.get("internal", [])
-      if internal_history:
-        last_entry = internal_history[-1]
-        if len(last_entry) > 1:
-          answer = last_entry[1]
-          return answer
-  return 'oops'
 
 async def youtube_transcription(user_input:str) -> str:
   from gradio_client import Client
