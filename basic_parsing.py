@@ -6,7 +6,11 @@ import tiktoken
 from openai_api import openai_chat_completion
 
 async def choose_system_message(post:dict, channel, analyze_code:bool=False) -> list:
-  default_system_message = [{'role':'system', 'content':'You are an assistant with no specific role determined right now.'}]
+  if channel['display_name'] == 'GitLab':
+    default_system_message = [{'role':'system', 'content':'Make a thorough review of your code, looking for any potential bugs, security vulnerabilities, and other issues. If you are not sure about something, ask for help.'}]
+    analyze_code = True
+  else:
+    default_system_message = [{'role':'system', 'content':'You are an assistant with no specific role determined right now.'}]
   if not analyze_code:
     analyze_code = await is_asking_for_code_analysis(post, channel)
   if analyze_code:
@@ -34,8 +38,6 @@ async def generate_text_from_message(message:dict, model='gpt-4') -> str:
   return response
 
 async def is_asking_for_channel_summary(post:dict, channel) -> bool:
-  if channel['display_name'] == 'GitLab':
-    return 'True'
   response = await generate_text_from_message(f'Is this a message where a summary of past interactions in this chat/discussion/channel is requested? Answer only True or False: {post["message"]}')
   return response.startswith('True')
 
