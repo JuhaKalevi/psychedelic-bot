@@ -9,6 +9,6 @@ RUN python3 -u setup.py install
 WORKDIR /app
 RUN python3 -m venv venv
 RUN . venv/bin/activate
-RUN pip install -r aiofiles chardet gradio_client langdetect mattermostdriver openai tiktokenwebuiapi
+RUN pip install aiofiles chardet gradio_client langdetect mattermostdriver openai tiktokenwebuiapi
 COPY *.py requirements.txt /app/
 CMD python3 -u psychedelic_bot.py
