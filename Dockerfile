@@ -8,7 +8,7 @@ RUN . venv/bin/activate
 #WORKDIR /app/python-mattermost-driver
 #RUN pip install -r requirements.txt
 #RUN python3 -u setup.py install
-#WORKDIR /app
+WORKDIR /app
 RUN pip install -r requirements.txt
 COPY *.py /app/
 CMD python3 -u app.py
