@@ -8,6 +8,7 @@ import openai
 from mattermostdriver import Driver
 from webuiapi import WebUIApi
 import PIL
+from openai_api import openai_chat_completion
 
 DEBUG_LEVEL = environ['DEBUG_LEVEL']
 BOT_NAME = environ['MATTERMOST_BOT_NAME']
@@ -409,12 +410,5 @@ async def should_always_reply(channel:dict) -> bool:
 
 async def upload_mattermost_file(channel_id:str, files:dict):
   return mattermost_bot.files.upload_file(channel_id, files=files)['file_infos'][0]['id']
-
-async def openai_chat_completion(messages:list, model='gpt-4') -> str:
-  try:
-    response = await openai.ChatCompletion.acreate(model=model, messages=messages)
-    return str(response['choices'][0]['message']['content'])
-  except (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.ServiceUnavailableError, openai.error.Timeout) as err:
-    return f"OpenAI API Error: {err}"
 
 mattermost_bot.init_websocket(context_manager)
