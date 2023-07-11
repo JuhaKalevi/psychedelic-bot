@@ -9,6 +9,6 @@ RUN . venv/bin/activate
 #RUN pip install -r requirements.txt
 #RUN python3 -u setup.py install
 WORKDIR /app
-RUN pip install aiofiles chardet gradio_client langdetect mattermostdriver-asyncio openai tiktoken webuiapi
+RUN pip install -r requirements.txt
 COPY *.py /app/
 CMD python3 -u app.py

@@ -1,0 +1,8 @@
+aiofiles
+chardet
+gradio_client
+langdetect
+mattermostdriver-asyncio
+openai
+tiktoken
+webuiapi
