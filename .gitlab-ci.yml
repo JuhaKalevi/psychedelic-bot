@@ -12,5 +12,7 @@ deploy:
       when: never
     - when: on_success
   script:
+    - apt-get update
+    - apt-get install -y openssh-client
     - ssh -oStrictHostKeyChecking=no psychedelic-bot@ai.psychedelic.fi $CI_COMMIT_BRANCH
   stage: deploy
