@@ -5,7 +5,7 @@ import openai
 from mattermostdriver import Driver
 from webuiapi import WebUIApi
 import PIL
-from basic_parsing import count_tokens, choose_system_message, fix_image_generation_prompt, generate_story_from_captions, generate_text_from_message, is_asking_for_channel_summary, is_asking_for_multiple_images, is_mainly_english, should_always_reply_on_channel
+from basic_parsing import count_tokens, choose_system_message, fix_image_generation_prompt, generate_story_from_captions, generate_text_from_message, is_asking_for_channel_summary, is_asking_for_image_generation, is_asking_for_multiple_images, is_mainly_english, should_always_reply_on_channel
 from mattermost_api import channel_context, channel_from_post, create_post, get_mattermost_file, thread_context, upload_mattermost_file
 from openai_api import generate_summary_from_transcription, openai_chat_completion
 from textgen_api import textgen_chat_completion
@@ -200,10 +200,6 @@ async def upscale_image_4x(file_ids:list, post:dict, resize_w:int=2048, resize_h
         if path.exists(temporary_file_path):
           remove(temporary_file_path)
   return comment
-
-async def is_asking_for_image_generation(message:dict) -> bool:
-  response = await generate_text_from_message(f"Is this a message where an image is probably requested? Answer only True or False: {message}")
-  return response.startswith('True')
 
 async def youtube_transcription(user_input:str) -> str:
   from gradio_client import Client
