@@ -1,5 +1,5 @@
 FROM debian:bullseye
-COPY *.py /app/
+COPY *.py requirements.txt /app/
 RUN apt-get update
 RUN apt-get -y install --no-install-recommends python3-dev python3-pip python3-venv
 #RUN git clone https://github.com/Vaelor/python-mattermost-driver
