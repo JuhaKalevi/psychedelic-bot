@@ -1,62 +1,62 @@
 from json import dumps, loads
-from os import environ, path, listdir, remove
+from os import environ, path, remove
 import re
-import chardet
-import langdetect
 import requests
 import openai
 from mattermostdriver import Driver
 from webuiapi import WebUIApi
 import PIL
-from openai_api import openai_chat_completion
+from basic_parsing import count_tokens, choose_system_message, generate_text_from_message, is_mainly_english, should_always_reply_on_channel
+from mattermost_api import channel_context, channel_from_post, create_post, get_mattermost_file, thread_context, upload_mattermost_file
+from openai_api import generate_summary_from_transcription, openai_chat_completion
 
 DEBUG_LEVEL = environ['DEBUG_LEVEL']
-BOT_NAME = environ['MATTERMOST_BOT_NAME']
 
-mattermost_bot = Driver({'url':environ['MATTERMOST_URL'], 'token':environ['MATTERMOST_TOKEN'],'scheme':'https', 'port':443})
-mattermost_bot.login()
+bot = Driver({'url':environ['MATTERMOST_URL'], 'token':environ['MATTERMOST_TOKEN'],'scheme':'https', 'port':443})
+bot.login()
 openai.api_key = environ['OPENAI_API_KEY']
 webui_api = WebUIApi(host=environ['STABLE_DIFFUSION_WEBUI_HOST'], port=7860)
 webui_api.set_auth('psychedelic-bot', environ['STABLE_DIFFUSION_WEBUI_API_KEY'])
 
 async def context_manager(event:dict) -> None:
+  bot_name = environ['MATTERMOST_BOT_NAME']
   file_ids = []
   event = loads(event)
   signal = None
-  if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != BOT_NAME:
+  if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != bot_name:
     post = loads(event['data']['post'])
     signal = await respond_to_magic_words(post, file_ids)
     if signal:
-      await create_post(options={'channel_id':post['channel_id'], 'message':signal, 'file_ids':file_ids, 'root_id':post['root_id']})
+      await create_post({'channel_id':post['channel_id'], 'message':signal, 'file_ids':file_ids, 'root_id':post['root_id']}, bot)
     else:
       message = post['message']
-      channel = await channel_from_post(post)
-      always_reply = await should_always_reply(channel)
+      channel = await channel_from_post(post, bot)
+      always_reply = await should_always_reply_on_channel(channel['purpose'], bot_name)
       if always_reply:
         reply_to = post['root_id']
         signal = await consider_image_generation(message, file_ids, post)
         if not signal:
           summarize = await is_asking_for_channel_summary(post)
           if summarize:
-            context = await channel_context(post)
+            context = await channel_context(post, bot)
           else:
-            context = await thread_context(post)
+            context = await thread_context(post, bot)
           signal = await generate_text_from_context(context, channel)
-      elif BOT_NAME in message:
+      elif bot_name in message:
         reply_to = post['root_id']
         context = await generate_text_from_message(message)
       else:
         reply_to = post['root_id']
-        context = await thread_context(post)
-        if any(BOT_NAME in context_post['message'] for context_post in context['posts'].values()):
+        context = await thread_context(post, bot)
+        if any(bot_name in context_post['message'] for context_post in context['posts'].values()):
           signal = await generate_text_from_context(context, channel)
       if signal:
-        await create_post(options={'channel_id':post['channel_id'], 'message':signal, 'file_ids':file_ids, 'root_id':reply_to})
+        await create_post({'channel_id':post['channel_id'], 'message':signal, 'file_ids':file_ids, 'root_id':reply_to}, bot)
 
 async def upscale_image_2x(file_ids:list, post:dict, resize_w:int=1024, resize_h:int=1024, upscaler="LDSR"):
   comment = ''
   for post_file_id in post['file_ids']:
-    file_response = get_mattermost_file(post_file_id)
+    file_response = get_mattermost_file(post_file_id, bot)
     if file_response.status_code == 200:
       file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
       post_file_path = f'{post_file_id}.{file_type}'
@@ -68,7 +68,7 @@ async def upscale_image_2x(file_ids:list, post:dict, resize_w:int=1024, resize_h
       upscaled_image_path = f"upscaled_{post_file_id}.png"
       result.image.save(upscaled_image_path)
       async with open(upscaled_image_path, 'rb') as image_file:
-        file_id = upload_mattermost_file(post['channel_id'], files={'files':(upscaled_image_path, image_file)})
+        file_id = upload_mattermost_file(post['channel_id'], {'files':(upscaled_image_path, image_file)}, bot)
       file_ids.append(file_id)
       comment += "Image upscaled successfully"
     except RuntimeError as err:
@@ -79,6 +79,34 @@ async def upscale_image_2x(file_ids:list, post:dict, resize_w:int=1024, resize_h
           remove(temporary_file_path)
   return comment
 
+async def generate_text_from_context(context:dict, channel, model='gpt-4') -> str:
+  if DEBUG_LEVEL == 'TRACE':
+    print(f'generate_text_from_context TRACE: channel: {channel}')
+  if 'order' in context:
+    if DEBUG_LEVEL == 'TRACE':
+      print(f'generate_text_from_context TRACE: context: {context}')
+      context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
+  system_message = await choose_system_message(context['posts'][context['order'][0]], channel)
+  context_messages = []
+  context_tokens = await count_tokens(context)
+  for post_id in context['order']:
+    if 'from_bot' in context['posts'][post_id]['props']:
+      role = 'assistant'
+    else:
+      role = 'user'
+    message = {'role': role, 'content': context['posts'][post_id]['message']}
+    message_tokens = await count_tokens(message)
+    if context_tokens + message_tokens < 7777:
+      context_messages.append(message)
+      context_tokens += message_tokens
+    else:
+      break
+  if DEBUG_LEVEL == 'TRACE':
+    print(f'generate_text_from_context TRACE: context_tokens: {context_tokens}')
+  context_messages.reverse()
+  openai_response = await openai_chat_completion(system_message + context_messages, model)
+  return openai_response
+
 async def captioner(file_ids:list) -> str:
   from base64 import b64encode
   from asyncio import sleep
@@ -87,7 +115,7 @@ async def captioner(file_ids:list) -> str:
   from httpx import AsyncClient
   async with AsyncClient() as client:
     for post_file_id in file_ids:
-      file_response = get_mattermost_file(post_file_id)
+      file_response = get_mattermost_file(post_file_id, bot)
       try:
         if file_response.status_code == 200:
           file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
@@ -120,7 +148,7 @@ async def storyteller(post:dict) -> str:
 async def upscale_image_4x(file_ids:list, post:dict, resize_w:int=2048, resize_h:int=2048, upscaler="LDSR"):
   comment = ''
   for post_file_id in post['file_ids']:
-    file_response = get_mattermost_file(post_file_id)
+    file_response = get_mattermost_file(post_file_id, bot)
     if file_response.status_code == 200:
       file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
       post_file_path = f'{post_file_id}.{file_type}'
@@ -132,7 +160,7 @@ async def upscale_image_4x(file_ids:list, post:dict, resize_w:int=2048, resize_h
       upscaled_image_path = f"upscaled_{post_file_id}.png"
       result.image.save(upscaled_image_path)
       async with open(upscaled_image_path, 'rb') as image_file:
-        file_id = upload_mattermost_file(post['channel_id'], files={'files': (upscaled_image_path, image_file)})
+        file_id = upload_mattermost_file(post['channel_id'], {'files': (upscaled_image_path, image_file)}, bot)
       file_ids.append(file_id)
       comment += "Image upscaled successfully"
     except RuntimeError as err:
@@ -168,25 +196,14 @@ async def generate_images(file_ids:list, post:dict, count:int) -> str:
   for image in result.images:
     image.save("result.png")
     with open('result.png', 'rb') as image_file:
-      file_ids.append(upload_mattermost_file(post['channel_id'], files={'files':('result.png', image_file)}))
+      file_ids.appe(upload_mattermost_file(post['channel_id'], {'files':('result.png', image_file)}, bot))
   return comment
 
-async def generate_text_from_message(message:dict, model='gpt-4') -> str:
-  response = await openai_chat_completion([{'role': 'user', 'content': message}], model)
-  return response
-
 async def is_asking_for_channel_summary(post:dict) -> bool:
-  channel = await channel_from_post(post)
+  channel = await channel_from_post(post, bot)
   if channel['display_name'] == 'GitLab':
     return 'True'
   response = await generate_text_from_message(f'Is this a message where a summary of past interactions in this chat/discussion/channel is requested? Answer only True or False: {post["message"]}')
-  return response.startswith('True')
-
-async def is_asking_for_code_analysis(post:dict) -> bool:
-  channel = await channel_from_post(post)
-  if channel['display_name'] == 'GitLab' or post['message'].startswith('@code-analysis'):
-    return 'True'
-  response = await generate_text_from_message(f"Is this a message where knowledge or analysis of your code is requested? It does not matter whether you know about the files or not yet, you have a function that we will use later on if needed. Answer only True or False: {post['message']}")
   return response.startswith('True')
 
 async def is_asking_for_image_generation(message:dict) -> bool:
@@ -197,27 +214,6 @@ async def is_asking_for_multiple_images(message:dict) -> bool:
   response = await generate_text_from_message(f"Is this a message where multiple images are requested? Answer only True or False: {message}")
   return response.startswith('True')
 
-async def is_mainly_english(text:str) -> bool:
-  response = langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
-  return response
-
-async def choose_system_message(post:dict, analyze_code:bool=False) -> list:
-  default_system_message = [{'role':'system', 'content':'You are an assistant with no specific role determined right now.'}]
-  if not analyze_code:
-    analyze_code = await is_asking_for_code_analysis(post)
-  if analyze_code:
-    code_snippets = []
-    for file_path in [x for x in listdir() if x.endswith('.py')]:
-      with open(file_path, 'r', encoding='utf-8') as file:
-        code = file.read()
-      code_snippets.append(f'--- BEGIN {file_path} ---\n{code}\n')
-    default_system_message = [{'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+'```'.join(code_snippets)}]
-  return default_system_message
-
-async def count_tokens(message:str) -> int:
-  from tiktoken import get_encoding
-  return len(get_encoding('cl100k_base').encode(dumps(message)))
-
 async def fix_image_generation_prompt(prompt:str) -> str:
   fixed_prompt = await generate_text_from_message(f"convert this to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features and you don't have to use full sentences, just a few keywords, separating these aspects by commas. Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally: {prompt}")
   return fixed_prompt
@@ -225,44 +221,6 @@ async def fix_image_generation_prompt(prompt:str) -> str:
 async def generate_story_from_captions(message:dict, model='gpt-4') -> str:
   story = await openai_chat_completion([{'role':'user', 'content':(f"Make a consistent story based on these image captions: {message}")}], model)
   return story
-
-async def generate_text_from_context(context:dict, model='gpt-4') -> str:
-  if 'order' in context:
-    context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
-  system_message = await choose_system_message(context['posts'][context['order'][0]])
-  context_messages = []
-  context_tokens = await count_tokens(context)
-  for post_id in context['order']:
-    if 'from_bot' in context['posts'][post_id]['props']:
-      role = 'assistant'
-    else:
-      role = 'user'
-    message = {'role': role, 'content': context['posts'][post_id]['message']}
-    message_tokens = await count_tokens(message)
-    if context_tokens + message_tokens < 7777:
-      context_messages.append(message)
-      context_tokens += message_tokens
-    else:
-      break
-  if environ['DEBUG_LEVEL'] == 'TRACE':
-    print(f'TRACE: context_tokens: {context_tokens}')
-  context_messages.reverse()
-  openai_response = await openai_chat_completion(system_message + context_messages, model)
-  return openai_response
-
-async def generate_summary_from_transcription(message:dict, model='gpt-4'):
-  response = await openai_chat_completion([
-    {
-      'role': 'user',
-      'content': (f"Summarize in appropriate detail, adjusting the summary length"
-        f" according to the transcription's length, the YouTube-video transcription below."
-        f" Also make a guess on how many different characters' speech is included in the transcription."
-        f" Also analyze the style of this video (comedy, drama, instructional, educational, etc.)."
-        f" IGNORE all advertisement(s), sponsorship(s), discount(s), promotions(s),"
-        f" all War Thunder/Athletic Green etc. talk completely. Also give scoring 0-10 about the video for each of these three categories: originality, difficulty, humor, boringness, creativity, artful, . Transcription: {message}")
-    }
-], model)
-  return response
 
 async def textgen_chat_completion(user_input:str, history:dict) -> str:
   request = {
@@ -335,13 +293,13 @@ async def youtube_transcription(user_input:str) -> str:
 
 async def instruct_pix2pix(file_ids:list, post:dict):
   comment = ''
-  for post_file_id in post['file_ids']:
-    file_response = get_mattermost_file(post_file_id)
+  for input_image_id in post['file_ids']:
+    file_response = get_mattermost_file(input_image_id, bot)
     if file_response.status_code == 200:
       file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
-      post_file_path = f'{post_file_id}.{file_type}'
-      async with open(post_file_path, 'wb') as post_file:
-        post_file.write(file_response.content)
+      post_file_path = f'{input_image_id}.{file_type}'
+      async with open(post_file_path, 'wb') as new_image:
+        new_image.write(file_response.content)
     try:
       post_file_image = PIL.Image.open(post_file_path)
       options = webui_api.get_options()
@@ -352,10 +310,10 @@ async def instruct_pix2pix(file_ids:list, post:dict):
       result = webui_api.img2img(images=[post_file_image], prompt=post['message'], steps=150, seed=-1, cfg_scale=7.5, denoising_strength=1.5)
       if not result:
         raise RuntimeError("API returned an invalid response")
-      processed_image_path = f"processed_{post_file_id}.png"
+      processed_image_path = f"processed_{input_image_id}.png"
       result.image.save(processed_image_path)
       async with open(processed_image_path, 'rb') as image_file:
-        file_id = upload_mattermost_file(post['channel_id'], files={'files': (processed_image_path, image_file)})
+        file_id = upload_mattermost_file(post['channel_id'], {'files': (processed_image_path, image_file)}, bot)
       file_ids.append(file_id)
       comment += "Image processed successfully"
     except RuntimeError as err:
@@ -386,29 +344,4 @@ async def respond_to_magic_words(post:dict, file_ids:list):
     return None
   return magic_response
 
-async def channel_context(post:dict) -> dict:
-  return mattermost_bot.posts.get_posts_for_channel(post['channel_id'])
-
-async def channel_from_post(post:dict) -> dict:
-  return mattermost_bot.channels.get_channel(post['channel_id'])
-
-async def create_post(options:dict) -> None:
-  from mattermostdriver.exceptions import InvalidOrMissingParameters, ResourceNotFound
-  try:
-    mattermost_bot.posts.create_post(options=options)
-  except (ConnectionResetError, InvalidOrMissingParameters, ResourceNotFound) as err:
-    print(f'ERROR mattermost.posts.create_post(): {err}')
-
-async def get_mattermost_file(file_id:str) -> dict:
-  return mattermost_bot.files.get_file(file_id=file_id)
-
-async def thread_context(post:dict) -> dict:
-  return mattermost_bot.posts.get_thread(post['id'])
-
-async def should_always_reply(channel:dict) -> bool:
-  return f"{BOT_NAME} always reply" in channel['purpose']
-
-async def upload_mattermost_file(channel_id:str, files:dict):
-  return mattermost_bot.files.upload_file(channel_id, files=files)['file_infos'][0]['id']
-
-mattermost_bot.init_websocket(context_manager)
+bot.init_websocket(context_manager)
