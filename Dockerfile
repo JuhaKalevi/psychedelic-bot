@@ -6,9 +6,9 @@ RUN git clone https://github.com/Vaelor/python-mattermost-driver
 WORKDIR /app/python-mattermost-driver
 RUN pip install -r requirements.txt
 RUN python3 -u setup.py install
-COPY *.py requirements.txt /app/
 WORKDIR /app
 RUN python3 -m venv venv
 RUN . venv/bin/activate
-RUN pip install -r requirements.txt
-CMD python3 -u chatbot.py
+RUN pip install -r aiofiles chardet gradio_client langdetect mattermostdriver openai tiktokenwebuiapi
+COPY *.py requirements.txt /app/
+CMD python3 -u psychedelic_bot.py

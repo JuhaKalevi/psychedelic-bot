@@ -1,19 +1,53 @@
-import re
-from asyncio import sleep
-from base64 import b64encode
 from json import dumps, loads
-from os import environ, listdir, path, remove
+from os import environ, path, listdir, remove
+import re
 import chardet
 import langdetect
-from httpx import AsyncClient
-import aiofiles
 import requests
-import gradio_client
-import tiktoken
-from PIL import Image
-from mattermost_bot import channel_from_post, get_mattermost_file, upload_mattermost_file
-from openai_api import openai_chat_completion
-from webui_api import webui_api
+import openai
+from mattermostdriver import Driver
+from webuiapi import WebUIApi
+import PIL
+
+mattermost_bot = Driver({'url':environ['MATTERMOST_URL'], 'token':environ['MATTERMOST_TOKEN'],'scheme':'https', 'port':443})
+mattermost_bot.login()
+openai.api_key = environ['OPENAI_API_KEY']
+webui_api = WebUIApi(host=environ['STABLE_DIFFUSION_WEBUI_HOST'], port=7860)
+webui_api.set_auth('psychedelic-bot', environ['STABLE_DIFFUSION_WEBUI_API_KEY'])
+
+async def context_manager(event:dict) -> None:
+  file_ids = []
+  event = loads(event)
+  signal = None
+  if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != environ['MATTERMOST_BOT_NAME']:
+    post = loads(event['data']['post'])
+    signal = await respond_to_magic_words(post, file_ids)
+    if signal:
+      await create_post(options={'channel_id':post['channel_id'], 'message':signal, 'file_ids':file_ids, 'root_id':post['root_id']})
+    else:
+      message = post['message']
+      channel = await channel_from_post(post)
+      always_reply = await should_always_reply(channel)
+      if always_reply:
+        reply_to = post['root_id']
+        signal = await consider_image_generation(message, file_ids, post)
+        if not signal:
+          summarize = await is_asking_for_channel_summary(post)
+          if summarize:
+            context = await channel_context(post)
+          else:
+            context = await thread_context(post)
+          signal = await generate_text_from_context(context, channel)
+      elif environ['MATTERMOST_BOT_NAME'] in message:
+        reply_to = post['root_id']
+        context = await generate_text_from_message(message)
+      else:
+        reply_to = post['root_id']
+        context = await thread_context(post)
+        if any(environ['MATTERMOST_BOT_NAME'] in context_post['message'] for context_post in context['posts'].values()):
+          signal = await generate_text_from_context(context, channel)
+      if signal:
+        await create_post(options={'channel_id':post['channel_id'], 'message':signal, 'file_ids':file_ids, 'root_id':reply_to})
 
 async def upscale_image_2x(file_ids:list, post:dict, resize_w:int=1024, resize_h:int=1024, upscaler="LDSR"):
   comment = ''
@@ -25,7 +59,7 @@ async def upscale_image_2x(file_ids:list, post:dict, resize_w:int=1024, resize_h
       async with open(post_file_path, 'wb') as post_file:
         post_file.write(file_response.content)
     try:
-      post_file_image = Image.open(post_file_path)
+      post_file_image = PIL.Image.open(post_file_path)
       result = webui_api.extra_single_image(post_file_image, upscaling_resize=2, upscaling_resize_w=resize_w, upscaling_resize_h=resize_h, upscaler_1=upscaler)
       upscaled_image_path = f"upscaled_{post_file_id}.png"
       result.image.save(upscaled_image_path)
@@ -42,7 +76,11 @@ async def upscale_image_2x(file_ids:list, post:dict, resize_w:int=1024, resize_h
   return comment
 
 async def captioner(file_ids:list) -> str:
+  from base64 import b64encode
+  from asyncio import sleep
+  import aiofiles
   captions = []
+  from httpx import AsyncClient
   async with AsyncClient() as client:
     for post_file_id in file_ids:
       file_response = get_mattermost_file(post_file_id)
@@ -85,7 +123,7 @@ async def upscale_image_4x(file_ids:list, post:dict, resize_w:int=2048, resize_h
       async with open(post_file_path, 'wb') as post_file:
         post_file.write(file_response.content)
     try:
-      post_file_image = Image.open(post_file_path)
+      post_file_image = PIL.Image.open(post_file_path)
       result = webui_api.extra_single_image(post_file_image, upscaling_resize=4, upscaling_resize_w=resize_w, upscaling_resize_h=resize_h, upscaler_1=upscaler)
       upscaled_image_path = f"upscaled_{post_file_id}.png"
       result.image.save(upscaled_image_path)
@@ -173,7 +211,8 @@ async def choose_system_message(post:dict, analyze_code:bool=False) -> list:
   return default_system_message
 
 async def count_tokens(message:str) -> int:
-  return len(tiktoken.get_encoding('cl100k_base').encode(dumps(message)))
+  from tiktoken import get_encoding
+  return len(get_encoding('cl100k_base').encode(dumps(message)))
 
 async def fix_image_generation_prompt(prompt:str) -> str:
   fixed_prompt = await generate_text_from_message(f"convert this to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features and you don't have to use full sentences, just a few keywords, separating these aspects by commas. Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally: {prompt}")
@@ -278,13 +317,101 @@ async def textgen_chat_completion(user_input:str, history:dict) -> str:
   return 'oops'
 
 async def youtube_transcription(user_input:str) -> str:
+  from gradio_client import Client
   input_str = user_input
   url_pattern = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
   urls = re.findall(url_pattern, input_str)
   if urls:
-    gradio = gradio_client.Client(environ['TRANSCRIPTION_API_URI'])
+    gradio = Client(environ['TRANSCRIPTION_API_URI'])
     prediction = gradio.predict(user_input, fn_index=1)
     if 'error' in prediction:
       return f"ERROR gradio.predict(): {prediction['error']}"
     ytsummary = await generate_summary_from_transcription(prediction)
     return ytsummary
+
+async def instruct_pix2pix(file_ids:list, post:dict):
+  comment = ''
+  for post_file_id in post['file_ids']:
+    file_response = get_mattermost_file(post_file_id)
+    if file_response.status_code == 200:
+      file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
+      post_file_path = f'{post_file_id}.{file_type}'
+      async with open(post_file_path, 'wb') as post_file:
+        post_file.write(file_response.content)
+    try:
+      post_file_image = PIL.Image.open(post_file_path)
+      options = webui_api.get_options()
+      options = {}
+      options['sd_model_checkpoint'] = 'instruct-pix2pix-00-22000.safetensors [fbc31a67aa]'
+      options['sd_vae'] = "None"
+      webui_api.set_options(options)
+      result = webui_api.img2img(images=[post_file_image], prompt=post['message'], steps=150, seed=-1, cfg_scale=7.5, denoising_strength=1.5)
+      if not result:
+        raise RuntimeError("API returned an invalid response")
+      processed_image_path = f"processed_{post_file_id}.png"
+      result.image.save(processed_image_path)
+      async with open(processed_image_path, 'rb') as image_file:
+        file_id = upload_mattermost_file(post['channel_id'], files={'files': (processed_image_path, image_file)})
+      file_ids.append(file_id)
+      comment += "Image processed successfully"
+    except RuntimeError as err:
+      comment += f"Error occurred while processing image: {str(err)}"
+    finally:
+      for temporary_file_path in (post_file_path, processed_image_path):
+        if path.exists(temporary_file_path):
+          remove(temporary_file_path)
+  return comment
+
+async def respond_to_magic_words(post:dict, file_ids:list):
+  lowercase_message = post['message'].lower()
+  if lowercase_message.startswith("caption"):
+    magic_response = await captioner(file_ids)
+  elif lowercase_message.startswith("pix2pix"):
+    magic_response = await instruct_pix2pix(file_ids, post)
+  elif lowercase_message.startswith("2x"):
+    magic_response = await upscale_image_2x(file_ids, post)
+  elif lowercase_message.startswith("4x"):
+    magic_response = await upscale_image_4x(file_ids, post)
+  elif lowercase_message.startswith("llm"):
+    magic_response = await textgen_chat_completion(post['message'], {'internal': [], 'visible': []})
+  elif lowercase_message.startswith("storyteller"):
+    magic_response = await storyteller(post)
+  elif lowercase_message.startswith("summary"):
+    magic_response = await youtube_transcription(post['message'])
+  else:
+    return None
+  return magic_response
+
+async def channel_context(post:dict) -> dict:
+  return mattermost_bot.posts.get_posts_for_channel(post['channel_id'])
+
+async def channel_from_post(post:dict) -> dict:
+  return mattermost_bot.channels.get_channel(post['channel_id'])
+
+async def create_post(options:dict) -> None:
+  from mattermostdriver.exceptions import InvalidOrMissingParameters, ResourceNotFound
+  try:
+    mattermost_bot.posts.create_post(options=options)
+  except (ConnectionResetError, InvalidOrMissingParameters, ResourceNotFound) as err:
+    print(f'ERROR mattermost.posts.create_post(): {err}')
+
+async def get_mattermost_file(file_id:str) -> dict:
+  return mattermost_bot.files.get_file(file_id=file_id)
+
+async def thread_context(post:dict) -> dict:
+  return mattermost_bot.posts.get_thread(post['id'])
+
+async def should_always_reply(channel:dict) -> bool:
+  return f"{environ['MATTERMOST_BOT_NAME']} always reply" in channel['purpose']
+
+async def upload_mattermost_file(channel_id:str, files:dict):
+  return mattermost_bot.files.upload_file(channel_id, files=files)['file_infos'][0]['id']
+
+async def openai_chat_completion(messages:list, model='gpt-4') -> str:
+  try:
+    response = await openai.ChatCompletion.acreate(model=model, messages=messages)
+    return str(response['choices'][0]['message']['content'])
+  except (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.ServiceUnavailableError, openai.error.Timeout) as err:
+    return f"OpenAI API Error: {err}"
+
+mattermost_bot.init_websocket(context_manager)

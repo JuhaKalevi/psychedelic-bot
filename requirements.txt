@@ -3,7 +3,6 @@ chardet
 gradio_client
 langdetect
 mattermostdriver
-mattermostdriver-asyncio
 openai
 pylint
 tiktoken
