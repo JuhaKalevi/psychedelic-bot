@@ -9,6 +9,9 @@ from mattermostdriver import Driver
 from webuiapi import WebUIApi
 import PIL
 
+DEBUG_LEVEL = environ['LOG_LEVEL']
+BOT_NAME = environ['MATTERMOST_BOT_NAME']
+
 mattermost_bot = Driver({'url':environ['MATTERMOST_URL'], 'token':environ['MATTERMOST_TOKEN'],'scheme':'https', 'port':443})
 mattermost_bot.login()
 openai.api_key = environ['OPENAI_API_KEY']
@@ -19,7 +22,7 @@ async def context_manager(event:dict) -> None:
   file_ids = []
   event = loads(event)
   signal = None
-  if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != environ['MATTERMOST_BOT_NAME']:
+  if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != BOT_NAME:
     post = loads(event['data']['post'])
     signal = await respond_to_magic_words(post, file_ids)
     if signal:
@@ -38,13 +41,13 @@ async def context_manager(event:dict) -> None:
           else:
             context = await thread_context(post)
           signal = await generate_text_from_context(context, channel)
-      elif environ['MATTERMOST_BOT_NAME'] in message:
+      elif BOT_NAME in message:
         reply_to = post['root_id']
         context = await generate_text_from_message(message)
       else:
         reply_to = post['root_id']
         context = await thread_context(post)
-        if any(environ['MATTERMOST_BOT_NAME'] in context_post['message'] for context_post in context['posts'].values()):
+        if any(BOT_NAME in context_post['message'] for context_post in context['posts'].values()):
           signal = await generate_text_from_context(context, channel)
       if signal:
         await create_post(options={'channel_id':post['channel_id'], 'message':signal, 'file_ids':file_ids, 'root_id':reply_to})
@@ -240,7 +243,7 @@ async def generate_text_from_context(context:dict, model='gpt-4') -> str:
       context_tokens += message_tokens
     else:
       break
-  if environ['LOG_LEVEL'] == 'Trace':
+  if environ['DEBUG_LEVEL'] == 'TRACE':
     print(f'TRACE: context_tokens: {context_tokens}')
   context_messages.reverse()
   openai_response = await openai_chat_completion(system_message + context_messages, model)
@@ -402,7 +405,7 @@ async def thread_context(post:dict) -> dict:
   return mattermost_bot.posts.get_thread(post['id'])
 
 async def should_always_reply(channel:dict) -> bool:
-  return f"{environ['MATTERMOST_BOT_NAME']} always reply" in channel['purpose']
+  return f"{BOT_NAME} always reply" in channel['purpose']
 
 async def upload_mattermost_file(channel_id:str, files:dict):
   return mattermost_bot.files.upload_file(channel_id, files=files)['file_infos'][0]['id']
