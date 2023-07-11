@@ -29,7 +29,7 @@ async def context_manager(event:dict) -> None:
       print(f'context_manager TRACE: event: {event}')
     signal = await respond_to_magic_words(post, file_ids)
     if signal:
-      create_post({'channel_id':post['channel_id'], 'message':signal, 'file_ids':file_ids, 'root_id':post['root_id']}, bot)
+      await create_post({'channel_id':post['channel_id'], 'message':signal, 'file_ids':file_ids, 'root_id':post['root_id']}, bot)
     else:
       message = post['message']
       channel = await channel_from_post(post, bot)
@@ -53,7 +53,7 @@ async def context_manager(event:dict) -> None:
         if any(bot_name in context_post['message'] for context_post in context['posts'].values()):
           signal = await generate_text_from_context(context, channel)
       if signal:
-        create_post({'channel_id':post['channel_id'], 'message':signal, 'file_ids':file_ids, 'root_id':reply_to}, bot)
+        await create_post({'channel_id':post['channel_id'], 'message':signal, 'file_ids':file_ids, 'root_id':reply_to}, bot)
 
 async def generate_text_from_context(context:dict, channel, model='gpt-4') -> str:
   if TRACE:
