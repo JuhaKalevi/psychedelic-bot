@@ -101,7 +101,7 @@ async def upscale_image_4x(file_ids:list, post:dict, resize_w:int=2048, resize_h
           remove(temporary_file_path)
   return comment
 
-async def consider_image_generation(message: dict, file_ids:list, post:dict) -> (str | None):
+async def consider_image_generation(message: dict, file_ids:list, post:dict) -> str | None:
   image_requested = await is_asking_for_image_generation(message)
   if image_requested:
     asking_for_multiple_images = await is_asking_for_multiple_images(message)
