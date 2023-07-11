@@ -29,31 +29,31 @@ async def context_manager(event:dict) -> None:
       print(f'context_manager TRACE: event: {event}')
     signal = await respond_to_magic_words(post, file_ids)
     if signal:
-      await create_post({'channel_id':post['channel_id'], 'message':signal, 'file_ids':file_ids, 'root_id':post['root_id']}, bot)
+      create_post({'channel_id':post['channel_id'], 'message':signal, 'file_ids':file_ids, 'root_id':post['root_id']}, bot)
     else:
       message = post['message']
-      channel = await channel_from_post(post, bot)
-      always_reply = await should_always_reply_on_channel(channel['purpose'], bot_name)
+      channel = channel_from_post(post, bot)
+      always_reply = should_always_reply_on_channel(channel['purpose'], bot_name)
       if always_reply:
         reply_to = post['root_id']
         signal = await consider_image_generation(message, file_ids, post)
         if not signal:
-          summarize = await is_asking_for_channel_summary(post, channel)
+          summarize = await is_asking_for_channel_summary(post, channel, bot_name)
           if summarize:
-            context = await channel_context(post, bot)
+            context = channel_context(post, bot)
           else:
-            context = await thread_context(post, bot)
+            context = thread_context(post, bot)
           signal = await generate_text_from_context(context, channel)
       elif bot_name in message:
         reply_to = post['root_id']
         context = await generate_text_from_message(message)
       else:
         reply_to = post['root_id']
-        context = await thread_context(post, bot)
+        context = thread_context(post, bot)
         if any(bot_name in context_post['message'] for context_post in context['posts'].values()):
           signal = await generate_text_from_context(context, channel)
       if signal:
-        await create_post({'channel_id':post['channel_id'], 'message':signal, 'file_ids':file_ids, 'root_id':reply_to}, bot)
+        create_post({'channel_id':post['channel_id'], 'message':signal, 'file_ids':file_ids, 'root_id':reply_to}, bot)
 
 async def generate_text_from_context(context:dict, channel, model='gpt-4') -> str:
   if TRACE:

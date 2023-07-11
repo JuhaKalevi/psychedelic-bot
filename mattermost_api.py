@@ -1,12 +1,12 @@
 from mattermostdriver import Driver
 
-def channel_context(post:dict, bot) -> dict:
+def channel_context(post:dict, bot:Driver) -> dict:
   return bot.posts.get_posts_for_channel(post['channel_id'])
 
-def channel_from_post(post:dict, bot) -> dict:
+def channel_from_post(post:dict, bot:Driver) -> dict:
   return bot.channels.get_channel(post['channel_id'])
 
-def create_post(options:dict, bot) -> None:
+def create_post(options:dict, bot:Driver) -> None:
   from mattermostdriver.exceptions import InvalidOrMissingParameters, ResourceNotFound
   try:
     bot.posts.create_post(options=options)
@@ -19,5 +19,5 @@ def get_mattermost_file(file_id:str, bot:Driver) -> dict:
 def thread_context(post:dict, bot:Driver) -> dict:
   return bot.posts.get_thread(post['id'])
 
-def upload_mattermost_file(channel_id:str, files:dict, bot:str):
+def upload_mattermost_file(channel_id:str, files:dict, bot:Driver):
   return bot.files.upload_file(channel_id, files=files)['file_infos'][0]['id']
