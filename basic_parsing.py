@@ -5,20 +5,21 @@ import langdetect
 import tiktoken
 from openai_api import openai_chat_completion
 
-async def choose_system_message(post:dict, channel, analyze_code:bool=False) -> list:
-  if channel['display_name'] == 'GitLab':
-    analyze_code = True
-  else:
-    default_system_message = [{'role':'system', 'content':'You are an assistant with no specific role determined right now.'}]
-  if not analyze_code:
-    analyze_code = await is_asking_for_code_analysis(post, channel)
-  if analyze_code:
+CODE_ANALYSIS_CHANNELS = [
+  'GitLab',
+  'Testing'
+]
+
+async def choose_system_message(post:dict, channel) -> list:
+  if channel['display_name'] in CODE_ANALYSIS_CHANNELS or await is_asking_for_code_analysis(post['message'], channel):
     code_snippets = []
     for file_path in [x for x in os.listdir() if x.endswith('.py')]:
       with open(file_path, 'r', encoding='utf-8') as file:
         code = file.read()
       code_snippets.append(f'--- BEGIN {file_path} ---\n{code}\n')
     default_system_message = [{'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+'```'.join(code_snippets)}]
+  else:
+    default_system_message = [{'role':'system', 'content':'You are an assistant with no specific role determined right now.'}]
   return default_system_message
 
 async def generate_story_from_captions(message:str, model='gpt-4') -> str:
@@ -36,15 +37,13 @@ async def generate_text_from_message(message:str, model='gpt-4') -> str:
   response = await openai_chat_completion([{'role':'user', 'content':message}], model)
   return response
 
-async def is_asking_for_channel_summary(message:str, channel, bot_name:str) -> bool:
+async def is_asking_for_channel_summary(message:str, channel:dict, bot_name:str) -> bool:
   if channel['purpose'] == f"{bot_name} use channel context":
     return True
   response = await generate_text_from_message(f'Is this a message where a summary of past interactions in this chat/discussion/channel is requested? Answer only True or False: {message}')
   return response.startswith('True')
 
-async def is_asking_for_code_analysis(message:str, channel) -> bool:
-  if channel['display_name'] == 'GitLab' or message.startswith('@code-analysis'):
-    return True
+async def is_asking_for_code_analysis(message:str, channel:dict) -> bool:
   response = await generate_text_from_message(f"Is this a message where knowledge or analysis of your code is requested? It does not matter whether you know about the files or not yet, you have a function that we will use later on if needed. Answer only True or False: {message}")
   return response.startswith('True')
 
