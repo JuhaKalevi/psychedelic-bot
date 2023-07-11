@@ -1,10 +1,11 @@
+from os import environ
 from asyncio import get_event_loop
+from mattermostdriver import Driver
 from context_manager import context_manager
-from mattermost_bot import mattermost_bot
 
 async def main():
-  mattermost_bot.login()
-  mattermost_bot.init_websocket(context_manager)
+  mattermost_bot = Driver({'url':environ['MATTERMOST_URL'], 'token':environ['MATTERMOST_TOKEN'],'scheme':'https', 'port':443})
+  await mattermost_bot.login()
+  await mattermost_bot.init_websocket(context_manager)
 
-if __name__ == "__main__":
-  get_event_loop().run_until_complete(main())
+get_event_loop().run_until_complete(main())
