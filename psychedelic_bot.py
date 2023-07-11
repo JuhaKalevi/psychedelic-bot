@@ -28,15 +28,18 @@ async def context_manager(event):
     if signal:
       create_post({'channel_id':post['channel_id'], 'message':signal, 'file_ids':file_ids, 'root_id':post['root_id']}, bot)
     else:
+      print('no magic words')
       message = post['message']
       channel = channel_from_post(post, bot)
       always_reply = should_always_reply_on_channel(channel['purpose'])
       if always_reply:
+        print('always_reply')
         reply_to = post['root_id']
         signal = await consider_image_generation(message, file_ids, post)
         if not signal:
           summarize = await is_asking_for_channel_summary(post, channel)
           if summarize:
+            print('summarize')
             context = channel_context(post, bot)
           else:
             context = thread_context(post, bot)
