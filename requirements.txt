@@ -4,5 +4,6 @@ gradio_client
 langdetect
 mattermostdriver-asyncio
 openai
+pylint
 tiktoken
 webuiapi
