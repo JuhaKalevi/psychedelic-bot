@@ -1,6 +1,4 @@
 image: python:3.10.6-slim-bullseye
-variables:
-  GIT_CLEAN_FLAGS: -ffdx -e venv/
 
 stages:
 - build
@@ -24,7 +22,7 @@ venv:
 
 pylint:
   interruptible: true
-  dependencies:
+  needs:
   - venv
   script:
   - . venv/bin/activate
