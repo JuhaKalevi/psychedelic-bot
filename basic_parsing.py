@@ -37,7 +37,7 @@ async def generate_text_from_message(message:dict, model='gpt-4') -> str:
   response = await openai_chat_completion([{'role':'user', 'content':message}], model)
   return response
 
-async def is_asking_for_channel_summary(post:dict, channel) -> bool:
+async def is_asking_for_channel_summary(post:dict, channel, bot_name) -> bool:
   if channel['purpose'] == f"{bot_name} always reply":
     return True
   response = await generate_text_from_message(f'Is this a message where a summary of past interactions in this chat/discussion/channel is requested? Answer only True or False: {post["message"]}')
