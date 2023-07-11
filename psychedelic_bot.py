@@ -146,7 +146,7 @@ async def generate_images(file_ids:list, post:dict, count:int) -> str:
   for image in result.images:
     image.save("result.png")
     with open('result.png', 'rb') as image_file:
-      file_ids.appe(upload_mattermost_file(post['channel_id'], {'files':('result.png', image_file)}, bot))
+      file_ids.append(upload_mattermost_file(post['channel_id'], {'files':('result.png', image_file)}, bot))
   return comment
 
 async def upscale_image_2x(file_ids:list, post:dict, resize_w:int=1024, resize_h:int=1024, upscaler="LDSR"):
