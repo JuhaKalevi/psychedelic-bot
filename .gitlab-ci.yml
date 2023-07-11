@@ -1,4 +1,6 @@
 image: python:3.10.6-slim-bullseye
+variables:
+  GIT_CLEAN_FLAGS: -ffdx -e venv/
 
 stages:
 - build
@@ -9,7 +11,6 @@ venv:
   artifacts:
     paths:
     - venv/
-    untracked: true
     when: on_success
   interruptible: true
   script:
