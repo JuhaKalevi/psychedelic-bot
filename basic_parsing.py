@@ -35,6 +35,7 @@ async def fix_image_generation_prompt(message):
 async def generate_text_from_message(message, model='gpt-4'):
   print(f"generate_text_from_message: {message}")
   response = await openai_chat_completion([{'role':'user', 'content':message}], model)
+  print(f"response {message}")
   return response
 
 async def is_asking_for_channel_summary(message, channel):
