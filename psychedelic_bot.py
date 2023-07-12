@@ -20,7 +20,7 @@ async def context_manager(event):
       message = post['message']
       channel = mattermost_api.channel_from_post(post, bot)
       always_reply = basic.should_always_reply_on_channel(channel['purpose'])
-      if always_reply:
+      if always_reply or basic.bot_name in message:
         reply_to = post['root_id']
         return_signal = await consider_image_generation(message, file_ids, post)
         if not return_signal:
@@ -45,8 +45,8 @@ async def context_manager(event):
         mattermost_api.create_post({'channel_id':post['channel_id'], 'message':return_signal, 'file_ids':file_ids, 'root_id':reply_to}, bot)
 
 async def consider_image_generation(message, file_ids, post):
-  print('consider_image_generation')
   image_requested = await basic.is_asking_for_image_generation(message)
+  print(f"consider_image_generation")
   if image_requested:
     asking_for_multiple_images = await basic.is_asking_for_multiple_images(message)
     if asking_for_multiple_images:
