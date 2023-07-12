@@ -1,17 +1,19 @@
 import json
+import os
+import mattermostdriver
 import basic
 import multimedia
 import mattermost_api
 import openai_api
 import textgen_api
 
-async def context_manager(event, bot):
+async def context_manager(event):
   file_ids = []
   event = json.loads(event)
   return_signal = None
   if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != basic.bot_name:
     post = json.loads(event['data']['post'])
-    return_signal = await respond_to_magic_words(bot, post, file_ids)
+    return_signal = await respond_to_magic_words(post, file_ids)
     if return_signal:
       mattermost_api.create_post({'channel_id':post['channel_id'], 'message':return_signal, 'file_ids':file_ids, 'root_id':post['root_id']}, bot)
     else:
@@ -20,7 +22,7 @@ async def context_manager(event, bot):
       always_reply = basic.should_always_reply_on_channel(channel['purpose'])
       if always_reply:
         reply_to = post['root_id']
-        return_signal = await consider_image_generation(bot, message, file_ids, post)
+        return_signal = await consider_image_generation(message, file_ids, post)
         if not return_signal:
           summarize = await basic.is_asking_for_channel_summary(post, channel)
           if summarize:
@@ -42,7 +44,7 @@ async def context_manager(event, bot):
         print(f"{channel['display_name']}: create_post: {return_signal}")
         mattermost_api.create_post({'channel_id':post['channel_id'], 'message':return_signal, 'file_ids':file_ids, 'root_id':reply_to}, bot)
 
-async def consider_image_generation(bot, message, file_ids, post):
+async def consider_image_generation(message, file_ids, post):
   print('consider_image_generation')
   image_requested = await basic.is_asking_for_image_generation(message)
   if image_requested:
@@ -77,7 +79,7 @@ async def generate_text_from_context(context, channel, model='gpt-4'):
   openai_response = await openai_api.openai_chat_completion(system_message + context_messages, model)
   return openai_response
 
-async def respond_to_magic_words(bot, post, file_ids):
+async def respond_to_magic_words(post, file_ids):
   word = post['message'].lower()
   if word.startswith("caption"):
     print('caption')
@@ -103,3 +105,7 @@ async def respond_to_magic_words(bot, post, file_ids):
   else:
     return None
   return response
+
+bot = mattermostdriver.Driver({'url':os.environ['MATTERMOST_URL'], 'token':os.environ['MATTERMOST_TOKEN'],'scheme':'https', 'port':443})
+bot.login()
+bot.init_websocket(context_manager)

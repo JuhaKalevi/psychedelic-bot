@@ -70,8 +70,8 @@ async def upscale_image(bot, file_ids, post, scale):
     upscale_width = 1024
     upscale_height = 1024
   elif scale == 4:
-    upscale_width = 1024
-    upscale_height = 1024
+    upscale_width = 2048
+    upscale_height = 2048
   else:
     return "Invalid upscale scale"
   comment = ''
