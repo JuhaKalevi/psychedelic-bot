@@ -19,8 +19,8 @@ async def context_manager(event):
   message = post['message']
   if post['root_id']:
     reply_to = post['root_id']
-    summarize = await basic.is_asking_for_channel_summary(message)
   else:
+    summarize = await basic.is_asking_for_channel_summary(message)
     reply_to = post['id']
   always_reply = basic.should_always_reply(mattermost_api.channel_from_post(post, bot)['purpose'])
   if post['root_id'] == "" and (always_reply or basic.bot_name in message):
