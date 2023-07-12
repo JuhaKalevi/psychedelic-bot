@@ -39,6 +39,7 @@ async def generate_text_from_message(message, model='gpt-4'):
   return response
 
 async def is_asking_for_channel_summary(message, channel):
+  print('is_asking_for_channel_summary')
   if channel['purpose'] == f"{bot_name} use channel context":
     return True
   response = await generate_text_from_message(f'Is this a message where a summary of past interactions in this chat/discussion/channel is requested? Answer only True or False: {message}')
@@ -51,6 +52,7 @@ async def is_asking_for_code_analysis(message, channel):
   return response.startswith('True')
 
 async def is_asking_for_image_generation(message):
+  print('is_asking_for_image_generation')
   response = await generate_text_from_message(f"Is this a message where an image is probably requested? Answer only True or False: {message}")
   return response.startswith('True')
 
