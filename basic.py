@@ -65,6 +65,7 @@ async def generate_text_from_context(context, channel, model='gpt-4'):
     else:
       break
   context_messages.reverse()
+  print(f"generate_text_from_context: {system_message + context_messages}")
   openai_response = await openai_api.openai_chat_completion(system_message + context_messages, model)
   return openai_response
 
