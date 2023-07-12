@@ -38,8 +38,8 @@ async def context_manager(event):
         context = mattermost_api.thread_context(post, bot)
         if any(basic.bot_name in context_post['message'] for context_post in context['posts'].values()):
           return_signal = await basic.generate_text_from_context(context, channel)
-      if return_signal:
-        mattermost_api.create_post({'channel_id':post['channel_id'], 'message':return_signal, 'file_ids':file_ids, 'root_id':reply_to}, bot)
+        if return_signal:
+          mattermost_api.create_post({'channel_id':post['channel_id'], 'message':return_signal, 'file_ids':file_ids, 'root_id':reply_to}, bot)
 
 async def respond_to_magic_words(post, file_ids):
   word = post['message'].lower()

@@ -5,11 +5,9 @@ def _channel_display_name_from_post(post, bot):
 
 def channel_context(post, bot):
   context = bot.posts.get_posts_for_channel(post['channel_id'])
-  print(f"{_channel_display_name_from_post(post, bot)}: len(channel_context): {len(context)}")
   return context
 
 def channel_from_post(post, bot):
-  print(f"{_channel_display_name_from_post(post, bot)}: channel_from_post")
   return bot.channels.get_channel(post['channel_id'])
 
 def create_post(options, bot):
