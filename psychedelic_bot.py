@@ -18,6 +18,26 @@ openai.api_key = environ['OPENAI_API_KEY']
 webui_api = WebUIApi(host=environ['STABLE_DIFFUSION_WEBUI_HOST'], port=7860)
 webui_api.set_auth('psychedelic-bot', environ['STABLE_DIFFUSION_WEBUI_API_KEY'])
 
+async def respond_to_magic_words(post, file_ids):
+  word = post['message'].lower()
+  if word.startswith("caption"):
+    response = await captioner(file_ids)
+  elif word.startswith("pix2pix"):
+    response = await instruct_pix2pix(file_ids, post)
+  elif word.startswith("2x"):
+    response = await upscale_image_2x(file_ids, post)
+  elif word.startswith("4x"):
+    response = await upscale_image_4x(file_ids, post)
+  elif word.startswith("llm"):
+    response = await textgen_chat_completion(post['message'], {'internal': [], 'visible': []})
+  elif word.startswith("storyteller"):
+    response = await storyteller(post)
+  elif word.startswith("summary"):
+    response = await youtube_transcription(post['message'])
+  else:
+    return None
+  return response
+
 async def context_manager(event):
   file_ids = []
   event = loads(event)
@@ -33,7 +53,6 @@ async def context_manager(event):
       channel = channel_from_post(post, bot)
       always_reply = should_always_reply_on_channel(channel['purpose'])
       if always_reply:
-        print('always_reply')
         reply_to = post['root_id']
         signal = await consider_image_generation(message, file_ids, post)
         if not signal:
@@ -243,25 +262,5 @@ async def instruct_pix2pix(file_ids, post):
         if path.exists(temporary_file_path):
           remove(temporary_file_path)
   return comment
-
-async def respond_to_magic_words(post, file_ids):
-  lowercase_message = post['message'].lower()
-  if lowercase_message.startswith("caption"):
-    magic_response = await captioner(file_ids)
-  elif lowercase_message.startswith("pix2pix"):
-    magic_response = await instruct_pix2pix(file_ids, post)
-  elif lowercase_message.startswith("2x"):
-    magic_response = await upscale_image_2x(file_ids, post)
-  elif lowercase_message.startswith("4x"):
-    magic_response = await upscale_image_4x(file_ids, post)
-  elif lowercase_message.startswith("llm"):
-    magic_response = await textgen_chat_completion(post['message'], {'internal': [], 'visible': []})
-  elif lowercase_message.startswith("storyteller"):
-    magic_response = await storyteller(post)
-  elif lowercase_message.startswith("summary"):
-    magic_response = await youtube_transcription(post['message'])
-  else:
-    return None
-  return magic_response
 
 bot.init_websocket(context_manager)
