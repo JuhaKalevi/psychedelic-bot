@@ -12,7 +12,6 @@ def channel_from_post(post, bot):
   return bot.channels.get_channel(post['channel_id'])
 
 def create_post(options, bot):
-  print(f"create_post: {options}")
   try:
     bot.posts.create_post(options=options)
   except (ConnectionResetError, mattermostdriver.exceptions.InvalidOrMissingParameters, mattermostdriver.exceptions.ResourceNotFound) as err:
