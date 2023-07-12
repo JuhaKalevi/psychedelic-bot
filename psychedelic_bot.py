@@ -26,13 +26,11 @@ async def context_manager(event):
         if not return_signal:
           summarize = await basic.is_asking_for_channel_summary(message, channel)
           if summarize:
-            print('summarize')
             context = mattermost_api.channel_context(post, bot)
           else:
             context = mattermost_api.thread_context(post, bot)
           return_signal = await generate_text_from_context(context, channel)
       elif basic.bot_name in message:
-        print(f"{channel['display_name']}: bot_name in message")
         reply_to = post['root_id']
         context = await basic.generate_text_from_message(message)
       else:
@@ -41,12 +39,10 @@ async def context_manager(event):
         if any(basic.bot_name in context_post['message'] for context_post in context['posts'].values()):
           return_signal = await generate_text_from_context(context, channel)
       if return_signal:
-        print(f"{channel['display_name']}: create_post: {return_signal}")
         mattermost_api.create_post({'channel_id':post['channel_id'], 'message':return_signal, 'file_ids':file_ids, 'root_id':reply_to}, bot)
 
 async def consider_image_generation(message, file_ids, post):
   image_requested = await basic.is_asking_for_image_generation(message)
-  print(f"consider_image_generation")
   if image_requested:
     asking_for_multiple_images = await basic.is_asking_for_multiple_images(message)
     if asking_for_multiple_images:
@@ -57,7 +53,6 @@ async def consider_image_generation(message, file_ids, post):
   return ''
 
 async def generate_text_from_context(context, channel, model='gpt-4'):
-  print(f"{channel['display_name']}: generate_text_from_context")
   if 'order' in context:
     context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
   system_message = await basic.choose_system_message(context['posts'][context['order'][0]], channel)
@@ -82,25 +77,18 @@ async def generate_text_from_context(context, channel, model='gpt-4'):
 async def respond_to_magic_words(post, file_ids):
   word = post['message'].lower()
   if word.startswith("caption"):
-    print('caption')
     response = await multimedia.captioner(bot, file_ids)
   elif word.startswith("pix2pix"):
-    print('pix2pix')
     response = await multimedia.instruct_pix2pix(bot, file_ids, post)
   elif word.startswith("2x"):
-    print('2x')
     response = await multimedia.upscale_image(bot, file_ids, post, 2)
   elif word.startswith("4x"):
-    print('4x')
     response = await multimedia.upscale_image(bot, file_ids, post, 4)
   elif word.startswith("llm"):
-    print('llm')
     response = await textgen_api.textgen_chat_completion(post['message'], {'internal': [], 'visible': []})
   elif word.startswith("storyteller"):
-    print('storyteller')
     response = await multimedia.storyteller(bot, file_ids)
   elif word.startswith("summary"):
-    print('summary')
     response = await multimedia.youtube_transcription(post['message'])
   else:
     return None
