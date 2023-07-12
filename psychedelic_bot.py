@@ -21,18 +21,25 @@ webui_api.set_auth('psychedelic-bot', environ['STABLE_DIFFUSION_WEBUI_API_KEY'])
 async def respond_to_magic_words(post, file_ids):
   word = post['message'].lower()
   if word.startswith("caption"):
+    print('caption')
     response = await captioner(file_ids)
   elif word.startswith("pix2pix"):
+    print('pix2pix')
     response = await instruct_pix2pix(file_ids, post)
   elif word.startswith("2x"):
+    print('2x')
     response = await upscale_image_2x(file_ids, post)
   elif word.startswith("4x"):
+    print('4x')
     response = await upscale_image_4x(file_ids, post)
   elif word.startswith("llm"):
+    print('llm')
     response = await textgen_chat_completion(post['message'], {'internal': [], 'visible': []})
   elif word.startswith("storyteller"):
+    print('storyteller')
     response = await storyteller(post)
   elif word.startswith("summary"):
+    print('summary')
     response = await youtube_transcription(post['message'])
   else:
     return None
@@ -48,7 +55,6 @@ async def context_manager(event):
     if return_signal:
       create_post({'channel_id':post['channel_id'], 'message':return_signal, 'file_ids':file_ids, 'root_id':post['root_id']}, bot)
     else:
-      print('no magic words')
       message = post['message']
       channel = channel_from_post(post, bot)
       always_reply = should_always_reply_on_channel(channel['purpose'])
