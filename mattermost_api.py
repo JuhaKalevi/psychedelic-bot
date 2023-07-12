@@ -4,11 +4,11 @@ def _channel_display_name_from_post(post, bot):
   return bot.channels.get_channel(post['channel_id'])['display_name']
 
 def channel_context(post, bot):
-  print(f"{_channel_display_name_from_post(post)}: len(channel_context): {len(channel_context)}")
+  print(f"{_channel_display_name_from_post(post, bot)}: len(channel_context): {len(channel_context)}")
   return bot.posts.get_posts_for_channel(post['channel_id'])
 
 def channel_from_post(post, bot):
-  print(f"{_channel_display_name_from_post(post)}: channel_from_post")
+  print(f"{_channel_display_name_from_post(post, bot)}: channel_from_post")
   return bot.channels.get_channel(post['channel_id'])
 
 def create_post(options, bot):
@@ -22,7 +22,7 @@ def get_mattermost_file(file_id, bot):
   return bot.files.get_file(file_id=file_id)
 
 def thread_context(post, bot):
-  print(f"{_channel_display_name_from_post(post)}: thread_context'")
+  print(f"{_channel_display_name_from_post(post, bot)}: thread_context'")
   return bot.posts.get_thread(post['id'])
 
 def upload_mattermost_file(channel_id, files, bot):

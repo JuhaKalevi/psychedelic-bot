@@ -57,7 +57,7 @@ async def context_manager(event):
         create_post({'channel_id':post['channel_id'], 'message':signal, 'file_ids':file_ids, 'root_id':reply_to}, bot)
 
 async def generate_text_from_context(context, channel, model='gpt-4'):
-  print('generate_text_from_context') 
+  print(f"{channel['display_name']}: generate_text_from_context")
   if 'order' in context:
     context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
   system_message = await choose_system_message(context['posts'][context['order'][0]], channel)
