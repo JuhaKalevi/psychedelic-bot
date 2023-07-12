@@ -23,6 +23,20 @@ async def generate_story_from_captions(message, model='gpt-4'):
   story = await openai_api.openai_chat_completion([{'role':'user', 'content':(f"Make a consistent story based on these image captions: {message}")}], model)
   return story
 
+async def generate_summary_from_transcription(message, model='gpt-4'):
+  response = await openai_api.openai_chat_completion([
+    {
+      'role': 'user',
+      'content': (f"Summarize in appropriate detail, adjusting the summary length"
+        f" according to the transcription's length, the YouTube-video transcription below."
+        f" Also make a guess on how many different characters' speech is included in the transcription."
+        f" Also analyze the style of this video (comedy, drama, instructional, educational, etc.)."
+        f" IGNORE all advertisement(s), sponsorship(s), discount(s), promotions(s),"
+        f" all War Thunder/Athletic Green etc. talk completely. Also give scoring 0-10 about the video for each of these three categories: originality, difficulty, humor, boringness, creativity, artful, . Transcription: {message}")
+    }
+], model)
+  return response
+
 async def count_tokens(message):
   token_count = len(tiktoken.get_encoding('cl100k_base').encode(json.dumps(message)))
   print(f"count_tokens: {token_count}")
@@ -31,6 +45,28 @@ async def count_tokens(message):
 async def fix_image_generation_prompt(message):
   fixed_prompt = await generate_text_from_message(f"convert this to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features and you don't have to use full sentences, just a few keywords, separating these aspects by commas. Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally: {message}")
   return fixed_prompt
+
+async def generate_text_from_context(context, channel, model='gpt-4'):
+  if 'order' in context:
+    context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
+  system_message = await choose_system_message(context['posts'][context['order'][0]], channel)
+  context_messages = []
+  context_tokens = await count_tokens(context)
+  for post_id in context['order']:
+    if 'from_bot' in context['posts'][post_id]['props']:
+      role = 'assistant'
+    else:
+      role = 'user'
+    message = {'role': role, 'content': context['posts'][post_id]['message']}
+    message_tokens = await count_tokens(message)
+    if context_tokens + message_tokens < 7777:
+      context_messages.append(message)
+      context_tokens += message_tokens
+    else:
+      break
+  context_messages.reverse()
+  openai_response = await openai_api.openai_chat_completion(system_message + context_messages, model)
+  return openai_response
 
 async def generate_text_from_message(message, model='gpt-4'):
   print(f"generate_text_from_message: {message}")

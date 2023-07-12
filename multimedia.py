@@ -4,9 +4,8 @@ from os import environ, path, remove
 import re
 from webuiapi import WebUIApi
 import PIL
-from basic import fix_image_generation_prompt,generate_story_from_captions,is_mainly_english
-from mattermost_api import get_mattermost_file,upload_mattermost_file
-from openai_api import generate_summary_from_transcription
+import basic
+import mattermost_api
 
 webui_api = WebUIApi(host=environ['STABLE_DIFFUSION_WEBUI_HOST'], port=7860)
 webui_api.set_auth('psychedelic-bot', environ['STABLE_DIFFUSION_WEBUI_API_KEY'])
@@ -18,7 +17,7 @@ async def captioner(bot, file_ids):
   from httpx import AsyncClient
   async with AsyncClient() as client:
     for post_file_id in file_ids:
-      file_response = get_mattermost_file(post_file_id, bot)
+      file_response = mattermost_api.get_mattermost_file(post_file_id, bot)
       try:
         if file_response.status_code == 200:
           file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
@@ -43,16 +42,29 @@ async def captioner(bot, file_ids):
         continue
   return '\n'.join(captions)
 
+async def consider_image_generation(bot, message, file_ids, post):
+  image_requested = await basic.is_asking_for_image_generation(message)
+  print(f"image_requested: {image_requested}")
+  if image_requested:
+    asking_for_multiple_images = await basic.is_asking_for_multiple_images(message)
+    print(f"asking_for_multiple_images: {asking_for_multiple_images}")
+    if asking_for_multiple_images:
+      image_generation_comment = await generate_images(bot, file_ids, post, 8)
+    else:
+      image_generation_comment = await generate_images(bot, file_ids, post, 1)
+    return image_generation_comment
+  return ''
+
 async def storyteller(bot, file_ids):
   captions = await captioner(bot, file_ids)
-  story = await generate_story_from_captions(captions)
+  story = await basic.generate_story_from_captions(captions)
   return story
 
 async def generate_images(bot, file_ids, post, count):
   comment = ''
-  mainly_english = await is_mainly_english(post['message'].encode('utf-8'))
+  mainly_english = await basic.is_mainly_english(post['message'].encode('utf-8'))
   if not mainly_english:
-    comment = post['message'] = await fix_image_generation_prompt(post['message'])
+    comment = post['message'] = await basic.fix_image_generation_prompt(post['message'])
   options = webui_api.get_options()
   options = {}
   options['sd_model_checkpoint'] = 'realisticVisionV30_v30VAE.safetensors [c52892e92a]'
@@ -62,7 +74,7 @@ async def generate_images(bot, file_ids, post, count):
   for image in result.images:
     image.save("result.png")
     with open('result.png', 'rb') as image_file:
-      file_ids.append(upload_mattermost_file(post['channel_id'], {'files':('result.png', image_file)}, bot))
+      file_ids.append(mattermost_api.upload_mattermost_file(post['channel_id'], {'files':('result.png', image_file)}, bot))
   return comment
 
 async def upscale_image(bot, file_ids, post, scale):
@@ -76,7 +88,7 @@ async def upscale_image(bot, file_ids, post, scale):
     return "Invalid upscale scale"
   comment = ''
   for post_file_id in post['file_ids']:
-    file_response = get_mattermost_file(post_file_id, bot)
+    file_response = mattermost_api.get_mattermost_file(post_file_id, bot)
     if file_response.status_code == 200:
       file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
       post_file_path = f'{post_file_id}.{file_type}'
@@ -88,7 +100,7 @@ async def upscale_image(bot, file_ids, post, scale):
       upscaled_image_path = f"upscaled_{post_file_id}.png"
       result.image.save(upscaled_image_path)
       async with open(upscaled_image_path, 'rb') as image_file:
-        file_id = upload_mattermost_file(post['channel_id'], {'files':(upscaled_image_path, image_file)}, bot)
+        file_id = mattermost_api.upload_mattermost_file(post['channel_id'], {'files':(upscaled_image_path, image_file)}, bot)
       file_ids.append(file_id)
       comment += "Image upscaled successfully"
     except RuntimeError as err:
@@ -109,13 +121,13 @@ async def youtube_transcription(user_input):
     prediction = gradio.predict(user_input, fn_index=1)
     if 'error' in prediction:
       return f"ERROR gradio.predict(): {prediction['error']}"
-    ytsummary = await generate_summary_from_transcription(prediction)
+    ytsummary = await basic.generate_summary_from_transcription(prediction)
     return ytsummary
 
 async def instruct_pix2pix(bot, file_ids, post):
   comment = ''
   for input_image_id in post['file_ids']:
-    file_response = get_mattermost_file(input_image_id, bot)
+    file_response = mattermost_api.get_mattermost_file(input_image_id, bot)
     if file_response.status_code == 200:
       file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
       post_file_path = f'{input_image_id}.{file_type}'
@@ -134,7 +146,7 @@ async def instruct_pix2pix(bot, file_ids, post):
       processed_image_path = f"processed_{input_image_id}.png"
       result.image.save(processed_image_path)
       async with open(processed_image_path, 'rb') as image_file:
-        file_id = upload_mattermost_file(post['channel_id'], {'files': (processed_image_path, image_file)}, bot)
+        file_id = mattermost_api.upload_mattermost_file(post['channel_id'], {'files': (processed_image_path, image_file)}, bot)
       file_ids.append(file_id)
       comment += "Image processed successfully"
     except RuntimeError as err:
