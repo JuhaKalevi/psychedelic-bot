@@ -60,7 +60,7 @@ async def storyteller(bot, file_ids):
 
 async def generate_images(bot, file_ids, post, count):
   comment = ''
-  mainly_english = await basic.is_mainly_english(post['message'].encode('utf-8'))
+  mainly_english = basic.is_mainly_english(post['message'].encode('utf-8'))
   if not mainly_english:
     comment = post['message'] = await basic.fix_image_generation_prompt(post['message'])
   options = webui_api.get_options()
