@@ -24,7 +24,7 @@ async def context_manager(event):
         reply_to = post['root_id']
         return_signal = await consider_image_generation(message, file_ids, post)
         if not return_signal:
-          summarize = await basic.is_asking_for_channel_summary(post, channel)
+          summarize = await basic.is_asking_for_channel_summary(message, channel)
           if summarize:
             print('summarize')
             context = mattermost_api.channel_context(post, bot)
