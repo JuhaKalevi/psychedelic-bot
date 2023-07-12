@@ -16,7 +16,7 @@ async def choose_system_message(post, channel):
       code_snippets.append(f'--- BEGIN {file_path} ---\n{code}\n')
     default_system_message = [{'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+'```'.join(code_snippets)}]
   else:
-    default_system_message = [{'role':'system', 'content':'You are an assistant with no specific role determined right now.'}]
+    default_system_message = []
   return default_system_message
 
 async def generate_story_from_captions(message, model='gpt-4'):
