@@ -41,12 +41,12 @@ async def respond_to_magic_words(post, file_ids):
 async def context_manager(event):
   file_ids = []
   event = loads(event)
-  signal = None
+  return_signal = None
   if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != bot_name:
     post = loads(event['data']['post'])
-    signal = await respond_to_magic_words(post, file_ids)
-    if signal:
-      create_post({'channel_id':post['channel_id'], 'message':signal, 'file_ids':file_ids, 'root_id':post['root_id']}, bot)
+    return_signal = await respond_to_magic_words(post, file_ids)
+    if return_signal:
+      create_post({'channel_id':post['channel_id'], 'message':return_signal, 'file_ids':file_ids, 'root_id':post['root_id']}, bot)
     else:
       print('no magic words')
       message = post['message']
@@ -54,26 +54,27 @@ async def context_manager(event):
       always_reply = should_always_reply_on_channel(channel['purpose'])
       if always_reply:
         reply_to = post['root_id']
-        signal = await consider_image_generation(message, file_ids, post)
-        if not signal:
+        return_signal = await consider_image_generation(message, file_ids, post)
+        if not return_signal:
           summarize = await is_asking_for_channel_summary(post, channel)
           if summarize:
             print('summarize')
             context = channel_context(post, bot)
           else:
             context = thread_context(post, bot)
-          signal = await generate_text_from_context(context, channel)
+          return_signal = await generate_text_from_context(context, channel)
       elif bot_name in message:
-        print('bot_name in message')
+        print(f"{channel['display_name']}: bot_name in message")
         reply_to = post['root_id']
         context = await generate_text_from_message(message)
       else:
         reply_to = post['root_id']
         context = thread_context(post, bot)
         if any(bot_name in context_post['message'] for context_post in context['posts'].values()):
-          signal = await generate_text_from_context(context, channel)
-      if signal:
-        create_post({'channel_id':post['channel_id'], 'message':signal, 'file_ids':file_ids, 'root_id':reply_to}, bot)
+          return_signal = await generate_text_from_context(context, channel)
+      if return_signal:
+        print(f"{channel['display_name']}: create_post: {return_signal}")
+        create_post({'channel_id':post['channel_id'], 'message':return_signal, 'file_ids':file_ids, 'root_id':reply_to}, bot)
 
 async def generate_text_from_context(context, channel, model='gpt-4'):
   print(f"{channel['display_name']}: generate_text_from_context")
