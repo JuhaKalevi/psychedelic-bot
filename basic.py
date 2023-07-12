@@ -39,7 +39,6 @@ async def generate_summary_from_transcription(message, model='gpt-4'):
 
 async def count_tokens(message):
   token_count = len(tiktoken.get_encoding('cl100k_base').encode(json.dumps(message)))
-  print(f"count_tokens: {token_count}")
   return token_count
 
 async def fix_image_generation_prompt(message):
@@ -59,6 +58,7 @@ async def generate_text_from_context(context, channel, model='gpt-4'):
       role = 'user'
     message = {'role': role, 'content': context['posts'][post_id]['message']}
     message_tokens = await count_tokens(message)
+    print (f"generate_text_from_context: {context_tokens}")
     if context_tokens + message_tokens < 7777:
       context_messages.append(message)
       context_tokens += message_tokens
