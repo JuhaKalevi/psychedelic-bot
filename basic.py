@@ -37,7 +37,7 @@ async def generate_summary_from_transcription(message, model='gpt-4'):
 ], model)
   return response
 
-def count_tokens(message):
+async def count_tokens(message):
   token_count = len(tiktoken.get_encoding('cl100k_base').encode(json.dumps(message)))
   return token_count
 
@@ -50,14 +50,14 @@ async def generate_text_from_context(context, model='gpt-4'):
     context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
   system_message = await choose_system_message(context['posts'][context['order'][0]])
   context_messages = []
-  context_tokens = count_tokens(system_message)
+  context_tokens = await count_tokens(system_message)
   for post_id in context['order']:
     if 'from_bot' in context['posts'][post_id]['props']:
       role = 'assistant'
     else:
       role = 'user'
     message = {'role':role, 'content':context['posts'][post_id]['message']}
-    message_tokens = count_tokens(message)
+    message_tokens = await count_tokens(message)
     print (f"generate_text_from_context: {context_tokens}")
     if context_tokens + message_tokens < 7777:
       context_messages.append(message)
