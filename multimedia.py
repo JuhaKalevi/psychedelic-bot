@@ -44,10 +44,8 @@ async def captioner(bot, file_ids):
 
 async def consider_image_generation(bot, message, file_ids, post):
   image_requested = await basic.is_asking_for_image_generation(message)
-  print(f"image_requested: {image_requested}")
   if image_requested:
     asking_for_multiple_images = await basic.is_asking_for_multiple_images(message)
-    print(f"asking_for_multiple_images: {asking_for_multiple_images}")
     if asking_for_multiple_images:
       image_generation_comment = await generate_images(bot, file_ids, post, 8)
     else:
