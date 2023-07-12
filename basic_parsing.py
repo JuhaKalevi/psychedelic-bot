@@ -28,6 +28,7 @@ async def generate_story_from_captions(message, model='gpt-4'):
   return story
 
 async def count_tokens(message):
+  print ('count_tokens')
   return len(tiktoken.get_encoding('cl100k_base').encode(json.dumps(message)))
 
 async def fix_image_generation_prompt(message):
@@ -65,4 +66,5 @@ def is_mainly_english(text):
   return response
 
 def should_always_reply_on_channel(channel_purpose):
+  print('should_always_reply_on_channel')
   return f"{bot_name} always reply" in channel_purpose
