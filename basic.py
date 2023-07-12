@@ -3,7 +3,7 @@ import json
 import chardet
 import langdetect
 import tiktoken
-from openai_api import openai_chat_completion
+import openai_api
 
 bot_name = os.environ['MATTERMOST_BOT_NAME']
 
@@ -20,7 +20,7 @@ async def choose_system_message(post, channel):
   return default_system_message
 
 async def generate_story_from_captions(message, model='gpt-4'):
-  story = await openai_chat_completion([{'role':'user', 'content':(f"Make a consistent story based on these image captions: {message}")}], model)
+  story = await openai_api.openai_chat_completion([{'role':'user', 'content':(f"Make a consistent story based on these image captions: {message}")}], model)
   return story
 
 async def count_tokens(message):
@@ -34,7 +34,7 @@ async def fix_image_generation_prompt(message):
 
 async def generate_text_from_message(message, model='gpt-4'):
   print(f"generate_text_from_message: {message}")
-  response = await openai_chat_completion([{'role':'user', 'content':message}], model)
+  response = await openai_api.openai_chat_completion([{'role':'user', 'content':message}], model)
   print(f"response {response}")
   return response
 

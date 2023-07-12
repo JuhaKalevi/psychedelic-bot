@@ -1,4 +1,7 @@
+import os
 import openai
+
+openai.api_key = os.environ['OPENAI_API_KEY']
 
 async def generate_summary_from_transcription(message, model='gpt-4'):
   response = await openai_chat_completion([
