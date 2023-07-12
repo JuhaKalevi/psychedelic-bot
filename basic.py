@@ -37,7 +37,7 @@ async def generate_summary_from_transcription(message, model='gpt-4'):
 ], model)
   return response
 
-async def count_tokens(message):
+def count_tokens(message):
   token_count = len(tiktoken.get_encoding('cl100k_base').encode(json.dumps(message)))
   return token_count
 
