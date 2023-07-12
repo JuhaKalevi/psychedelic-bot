@@ -6,13 +6,9 @@ import tiktoken
 from openai_api import openai_chat_completion
 
 bot_name = os.environ['MATTERMOST_BOT_NAME']
-CODE_ANALYSIS_CHANNELS = [
-  'GitLab',
-  'Testing'
-]
 
 async def choose_system_message(post, channel):
-  if channel['display_name'] in CODE_ANALYSIS_CHANNELS or await is_asking_for_code_analysis(post['message'], channel):
+  if await is_asking_for_code_analysis(post['message'], channel):
     code_snippets = []
     for file_path in [x for x in os.listdir() if x.endswith('.py')]:
       with open(file_path, 'r', encoding='utf-8') as file:
@@ -36,18 +32,20 @@ async def fix_image_generation_prompt(message):
   return fixed_prompt
 
 async def generate_text_from_message(message, model='gpt-4'):
+  print(f"generate_text_from_message: {message}")
   response = await openai_chat_completion([{'role':'user', 'content':message}], model)
   return response
 
 async def is_asking_for_channel_summary(message, channel):
-  print('is_asking_for_channel_summary')
+  print(f"{channel['name']}: is_asking_for_channel_summary")
   if channel['purpose'] == f"{bot_name} use channel context":
     return True
   response = await generate_text_from_message(f'Is this a message where a summary of past interactions in this chat/discussion/channel is requested? Answer only True or False: {message}')
   return response.startswith('True')
 
 async def is_asking_for_code_analysis(message, channel):
-  if channel['purpose'] == f"{bot_name} analyze your code":
+  print(f"{channel['name']}: is_asking_for_code_analysis")
+  if"{bot_name} analyze your code" in channel['purpose']:
     return True
   response = await generate_text_from_message(f"Is this a message where knowledge or analysis of your code is requested? It does not matter whether you know about the files or not yet, you have a function that we will use later on if needed. Answer only True or False: {message}")
   return response.startswith('True')
