@@ -50,7 +50,7 @@ async def generate_text_from_context(context, channel, model='gpt-4'):
     context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
   system_message = await choose_system_message(context['posts'][context['order'][0]], channel)
   context_messages = []
-  context_tokens = await count_tokens(context)
+  context_tokens = await count_tokens(system_message)
   for post_id in context['order']:
     if 'from_bot' in context['posts'][post_id]['props']:
       role = 'assistant'
