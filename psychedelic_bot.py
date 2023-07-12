@@ -32,6 +32,7 @@ async def context_manager(event):
           else:
             context = mattermost_api.thread_context(post, bot)
           return_signal = await basic.generate_text_from_context(context, channel)
+          mattermost_api.create_post({'channel_id':post['channel_id'], 'message':return_signal, 'file_ids':file_ids, 'root_id':reply_to}, bot)
         context = await basic.generate_text_from_message(message)
       else:
         reply_to = post['root_id']
