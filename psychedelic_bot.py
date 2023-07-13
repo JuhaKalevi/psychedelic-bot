@@ -25,7 +25,7 @@ async def context_manager(event):
       return
     image_generation = await multimedia.consider_image_generation(bot, message, file_ids, post)
     print("Debug: image_generation is: ", image_generation)
-    if image_generation:
+    if image_generation is not None:
       mattermost_api.create_post({'channel_id':post['channel_id'], 'message':image_generation, 'file_ids':file_ids, 'root_id':reply_to}, bot)
       return
     summarize = await basic.is_asking_for_channel_summary(message)
