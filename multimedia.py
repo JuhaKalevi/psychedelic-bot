@@ -15,6 +15,7 @@ async def captioner(post, bot):
   import httpx
   import asyncio
   import aiofiles
+  import os
   captions = []
   async with httpx.AsyncClient() as client:
     for post_file_id in post['file_ids']:
