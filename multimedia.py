@@ -129,7 +129,7 @@ async def instruct_pix2pix(bot, file_ids, post):
     if file_response.status_code == 200:
       file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
       post_file_path = f'{input_image_id}.{file_type}'
-      async with open(post_file_path, 'wb') as new_image:
+      with open(post_file_path, 'wb') as new_image:
         new_image.write(file_response.content)
     try:
       post_file_image = PIL.Image.open(post_file_path)
@@ -143,7 +143,7 @@ async def instruct_pix2pix(bot, file_ids, post):
         raise RuntimeError("API returned an invalid response")
       processed_image_path = f"processed_{input_image_id}.png"
       result.image.save(processed_image_path)
-      async with open(processed_image_path, 'rb') as image_file:
+      with open(processed_image_path, 'rb') as image_file:
         file_id = mattermost_api.upload_mattermost_file(post['channel_id'], {'files': (processed_image_path, image_file)}, bot)
       file_ids.append(file_id)
       comment += "Image processed successfully"
