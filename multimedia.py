@@ -149,7 +149,7 @@ async def instruct_pix2pix(bot, file_ids, post):
       print(f"DEBUG: img2img result={result}")
       if not result:
         raise RuntimeError("API returned an invalid response")
-      processed_image_path = f"processed_{input_image_id}.png"
+      processed_image_path = f"processed_{post_file_id}.png"
       result.image.save(processed_image_path)
       print(f"DEBUG: Saved result to path={processed_image_path}")
       with open(processed_image_path, 'rb') as image_file:
