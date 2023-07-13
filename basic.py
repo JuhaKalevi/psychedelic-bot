@@ -3,6 +3,7 @@ import json
 import chardet
 import langdetect
 import tiktoken
+import mattermost_api
 import openai_api
 
 bot_name = os.environ['MATTERMOST_BOT_NAME']
@@ -52,7 +53,7 @@ async def generate_text_from_context(context, model='gpt-4'):
   context_messages = []
   context_tokens = await count_tokens(system_message)
   for post_id in context['order']:
-    if 'from_bot' in context['posts'][post_id]['props']:
+    if mattermost_api.post_is_from_bot(context['posts'][post_id]):
       role = 'assistant'
     else:
       role = 'user'
