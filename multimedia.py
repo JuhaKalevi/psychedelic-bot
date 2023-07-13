@@ -123,30 +123,41 @@ async def youtube_transcription(user_input):
     return ytsummary
 
 async def instruct_pix2pix(bot, file_ids, post):
+  print(f"DEBUG: Starting function with bot={bot}, file_ids={file_ids}, post={post}")
   comment = ''
-  for input_image_id in post['file_ids']:
-    file_response = mattermost_api.get_mattermost_file(input_image_id, bot)
+  for post_file_id in post['file_ids']:
+    print(f"DEBUG: Processing file_id={post_file_id}")
+    file_response = mattermost_api.get_mattermost_file(post_file_id, bot)
     if file_response.status_code == 200:
       file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
-      post_file_path = f'{input_image_id}.{file_type}'
+      post_file_path = f'{post_file_id}.{file_type}'
+      print(f"DEBUG: post_file_path={post_file_path}, file_type={file_type}")
       with open(post_file_path, 'wb') as new_image:
         new_image.write(file_response.content)
     try:
       post_file_image = PIL.Image.open(post_file_path)
       options = webui_api.get_options()
+      print(f"DEBUG: Current options={options}")
       options = {}
       options['sd_model_checkpoint'] = 'instruct-pix2pix-00-22000.safetensors [fbc31a67aa]'
       options['sd_vae'] = "None"
+      print(f"DEBUG: Set new options={options}")
       webui_api.set_options(options)
+      prompt = post['message']
+      print(f"DEBUG: Prompt for img2img={prompt}")
       result = webui_api.img2img(images=[post_file_image], prompt=post['message'], steps=150, seed=-1, cfg_scale=7.5, denoising_strength=1.5)
+      print(f"DEBUG: img2img result={result}")
       if not result:
         raise RuntimeError("API returned an invalid response")
       processed_image_path = f"processed_{input_image_id}.png"
       result.image.save(processed_image_path)
+      print(f"DEBUG: Saved result to path={processed_image_path}")
       with open(processed_image_path, 'rb') as image_file:
         file_id = mattermost_api.upload_mattermost_file(post['channel_id'], {'files': (processed_image_path, image_file)}, bot)
+      print(f"DEBUG: Uploaded file, got file_id={file_id}")
       file_ids.append(file_id)
       comment += "Image processed successfully"
+      print(f"DEBUG: Success, comment={comment}")
     except RuntimeError as err:
       comment += f"Error occurred while processing image: {str(err)}"
     finally:
