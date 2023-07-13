@@ -45,6 +45,7 @@ async def respond_to_magic_words(post, file_ids):
   if word.startswith("caption"):
     response = await multimedia.captioner(bot, file_ids)
   elif word.startswith("pix2pix"):
+    print("HAHAA! Gonna do pix2pix now! Got these file_ids:", file_ids, "and this post: ", post)
     response = await multimedia.instruct_pix2pix(file_ids, post)
   elif word.startswith("2x"):
     response = await multimedia.upscale_image(bot, file_ids, post, 2)
