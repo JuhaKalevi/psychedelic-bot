@@ -1,4 +1,9 @@
 services:
+  main:
+    build: .
+    env_file: main.env
+    restart: always
+    stop_grace_period: 1s
   gpt-3.5-turbo-16k:
     build: .
     env_file: gpt-3.5-turbo-16k.env
