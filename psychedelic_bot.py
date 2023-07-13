@@ -24,6 +24,7 @@ async def context_manager(event):
       mattermost_api.create_post({'channel_id':post['channel_id'], 'message':magic_words_response, 'file_ids':file_ids, 'root_id':post['root_id']}, bot)
       return
     image_generation = await multimedia.consider_image_generation(bot, message, file_ids, post)
+    print("Debug: image_generation is: ", image_generation)
     if image_generation:
       mattermost_api.create_post({'channel_id':post['channel_id'], 'message':image_generation, 'file_ids':file_ids, 'root_id':reply_to}, bot)
       return
