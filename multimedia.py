@@ -10,18 +10,18 @@ import mattermost_api
 webui_api = WebUIApi(host=environ['STABLE_DIFFUSION_WEBUI_HOST'], port=7861)
 webui_api.set_auth('psychedelic-bot', environ['STABLE_DIFFUSION_WEBUI_API_KEY'])
 
-async def captioner(bot, file_ids, post):
-  print(f"DEBUG: Starting function with bot={bot}, file_ids={file_ids}")
-  from asyncio import sleep
+async def captioner(post):
+  print("DEBUG: running captioner function")
+  import httpx
+  import asyncio
   import aiofiles
   captions = []
-  from httpx import AsyncClient
-  async with AsyncClient() as client:
-    for post_file_id in file_ids:
-      file_response = mattermost_api.get_mattermost_file(post_file_id, bot)
+  async with httpx.AsyncClient() as client:
+    for post_file_id in post['file_ids']:
+      file_response = mattermost.files.get_file(file_id=post_file_id)
       try:
         if file_response.status_code == 200:
-          file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
+          file_type = os.path.splitext(file_response.headers["Content-Disposition"])[1][1:]
           file_path_in_content = re.findall('filename="(.+)"', file_response.headers["Content-Disposition"])[0]
           post_file_path = f'{post_file_id}.{file_type}'
           async with aiofiles.open(post_file_path, 'wb') as post_file:
@@ -29,21 +29,34 @@ async def captioner(bot, file_ids, post):
           with open(post_file_path, 'rb') as perkele:
             img_byte = perkele.read()
           source_image_base64 = base64.b64encode(img_byte).decode("utf-8")
-          data = {'forms':[{'name':'caption','payload':{}}], 'source_image':source_image_base64, 'slow_workers':True}
-          url = 'https://stablehorde.net/api/v2/interrogate/async'
-          print(f"DEBUG: Sending request to {url} with data={data}")
+          data = {
+            "forms": [
+              {
+                "name": "caption",
+                "payload": {} # Additional form payload data should go here, based on spec
+              }
+            ],
+            "source_image": source_image_base64, # Here is the base64 image
+            "slow_workers": True
+          }
+          url = "https://stablehorde.net/api/v2/interrogate/async"
           headers = {"Content-Type": "application/json","apikey": "a8kMOjo-sgqlThYpupXS7g"}
           response = await client.post(url, headers=headers, data=dumps(data))
           response_content = response.json()
-          await sleep(15) # WHY IS THIS NECESSARY?!
+
+          await asyncio.sleep(15)
+
           caption_res = await client.get('https://stablehorde.net/api/v2/interrogate/status/' + response_content['id'], headers=headers, timeout=420)
-          caption = caption_res.json()['forms'][0]['result']['caption']
-          captions.append(f'{file_path_in_content}: {caption}')
+          json_response = caption_res.json()
+
+          caption=json_response['forms'][0]['result']['caption']
+          captions.append(f"{file_path_in_content}: {caption}")
       except (RuntimeError, KeyError, IndexError) as err:
-        print("Runtimerror: ", err)
-        captions.append(f'Error occurred while generating captions for file {post_file_id}: {str(err)}')
+        captions.append(f"Error occurred while generating captions for file {post_file_id}: {str(err)}")
         continue
+
   return '\n'.join(captions)
+
 
 async def consider_image_generation(bot, message, file_ids, post):
   image_requested = await basic.is_asking_for_image_generation(message)
