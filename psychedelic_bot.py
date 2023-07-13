@@ -7,19 +7,19 @@ import mattermost_api
 import textgen_api
 
 async def context_manager(event):
-  file_ids = []
   event = json.loads(event)
   if not ('event' in event and event['event'] == 'posted' and event['data']['sender_name'] != basic.bot_name):
     return
   post = json.loads(event['data']['post'])
   if mattermost_api.post_is_from_bot(post):
     return
-  message = post['message']
   if post['root_id']:
     reply_to = post['root_id']
   else:
     reply_to = post['id']
   always_reply = basic.should_always_reply(mattermost_api.channel_from_post(post, bot)['purpose'])
+  file_ids = []
+  message = post['message']
   if post['root_id'] == "" and (always_reply or basic.bot_name_in_message(message)):
     magic_words_response = await respond_to_magic_words(post, file_ids)
     if magic_words_response:
