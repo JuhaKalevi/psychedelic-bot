@@ -31,6 +31,7 @@ async def captioner(bot, file_ids):
           source_image_base64 = base64.b64encode(img_byte).decode("utf-8")
           data = {'forms':[{'name':'caption','payload':{}}], 'source_image':source_image_base64, 'slow_workers':True}
           url = 'https://stablehorde.net/api/v2/interrogate/async'
+          print(f"DEBUG: Sending request to {url} with data={data}")
           headers = {"Content-Type": "application/json","apikey": "a8kMOjo-sgqlThYpupXS7g"}
           response = await client.post(url, headers=headers, data=dumps(data))
           response_content = response.json()
@@ -39,6 +40,7 @@ async def captioner(bot, file_ids):
           caption = caption_res.json()['forms'][0]['result']['caption']
           captions.append(f'{file_path_in_content}: {caption}')
       except (RuntimeError, KeyError, IndexError) as err:
+        print("Runtimerror: ", err)
         captions.append(f'Error occurred while generating captions for file {post_file_id}: {str(err)}')
         continue
   return '\n'.join(captions)
