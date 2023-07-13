@@ -20,7 +20,7 @@ async def context_manager(event):
   else:
     reply_to = post['id']
   always_reply = basic.should_always_reply(mattermost_api.channel_from_post(post, bot)['purpose'])
-  if post['root_id'] == "" and (always_reply or basic.bot_name in message):
+  if post['root_id'] == "" and (always_reply or basic.bot_name_in_message(message)):
     magic_words_response = await respond_to_magic_words(post, file_ids)
     if magic_words_response:
       mattermost_api.create_post({'channel_id':post['channel_id'], 'message':magic_words_response, 'file_ids':file_ids, 'root_id':post['root_id']}, bot)
@@ -39,7 +39,7 @@ async def context_manager(event):
     mattermost_api.create_post({'channel_id':post['channel_id'], 'message':response, 'file_ids':file_ids, 'root_id':reply_to}, bot)
   else:
     context = mattermost_api.thread_context(post, bot)
-    if any(basic.bot_name in post['message'] for post in context['posts'].values()):
+    if any(basic.bot_name_in_message(post['message']) for post in context['posts'].values()):
       response = await basic.generate_text_from_context(context)
       mattermost_api.create_post({'channel_id':post['channel_id'], 'message':response, 'file_ids':file_ids, 'root_id':reply_to}, bot)
 
