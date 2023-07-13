@@ -90,14 +90,14 @@ async def upscale_image(bot, file_ids, post, scale):
     if file_response.status_code == 200:
       file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
       post_file_path = f'{post_file_id}.{file_type}'
-      async with open(post_file_path, 'wb') as post_file:
+      with open(post_file_path, 'wb') as post_file:
         post_file.write(file_response.content)
     try:
       post_file_image = PIL.Image.open(post_file_path)
       result = webui_api.extra_single_image(post_file_image, upscaling_resize=scale, upscaling_resize_w=upscale_width, upscaling_resize_h=upscale_height, upscaler_1="LDSR")
       upscaled_image_path = f"upscaled_{post_file_id}.png"
       result.image.save(upscaled_image_path)
-      async with open(upscaled_image_path, 'rb') as image_file:
+      with open(upscaled_image_path, 'rb') as image_file:
         file_id = mattermost_api.upload_mattermost_file(post['channel_id'], {'files':(upscaled_image_path, image_file)}, bot)
       file_ids.append(file_id)
       comment += "Image upscaled successfully"
