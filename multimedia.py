@@ -70,8 +70,8 @@ async def consider_image_generation(bot, message, file_ids, post):
     return image_generation_comment
   return None
 
-async def storyteller(bot, file_ids):
-  captions = await captioner(bot, file_ids)
+async def storyteller(post):
+  captions = await captioner(post)
   story = await basic.generate_story_from_captions(captions)
   return story
 
