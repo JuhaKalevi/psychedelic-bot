@@ -11,6 +11,7 @@ webui_api = WebUIApi(host=environ['STABLE_DIFFUSION_WEBUI_HOST'], port=7861)
 webui_api.set_auth('psychedelic-bot', environ['STABLE_DIFFUSION_WEBUI_API_KEY'])
 
 async def captioner(bot, file_ids):
+  print(f"DEBUG: Starting function with bot={bot}, file_ids={file_ids}")
   from asyncio import sleep
   import aiofiles
   captions = []
