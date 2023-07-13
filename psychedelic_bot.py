@@ -43,6 +43,7 @@ async def context_manager(event):
 async def respond_to_magic_words(post, file_ids):
   word = post['message'].lower()
   if word.startswith("caption"):
+    print("DEBUG: user msg startas with: caption! Got these file_ids:", file_ids, "and this post: ", post)
     response = await multimedia.captioner(bot, file_ids)
   elif word.startswith("pix2pix"):
     print("HAHAA! Gonna do pix2pix now! Got these file_ids:", file_ids, "and this post: ", post)
