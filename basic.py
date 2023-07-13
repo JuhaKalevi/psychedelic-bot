@@ -9,7 +9,7 @@ import openai_api
 bot_name = os.environ['MATTERMOST_BOT_NAME']
 
 def bot_name_in_message(message):
-  return (bot_name == '@chatbot' and '@chatgpt' in message) or bot_name in message
+  return ((bot_name == '@chatbot' and '@chatgpt' in message) or bot_name in message)
 
 async def choose_system_message(post):
   if await is_asking_for_code_analysis(post['message']):
