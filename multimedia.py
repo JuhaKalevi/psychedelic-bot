@@ -125,7 +125,7 @@ async def youtube_transcription(user_input):
 async def instruct_pix2pix(file_ids, post):
   comment = ''
   for post_file_id in post['file_ids']:
-    file_response = mm.files.get_file(file_id=post_file_id)
+    file_response = mattermost_api.get_mattermost_file(input_image_id, bot)
     if file_response.status_code == 200:
       file_type = os.path.splitext(file_response.headers["Content-Disposition"])[1][1:]
       post_file_path = f'{post_file_id}.{file_type}'
