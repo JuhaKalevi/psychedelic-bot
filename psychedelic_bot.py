@@ -56,7 +56,7 @@ async def respond_to_magic_words(post, file_ids):
     response = await textgen_api.textgen_chat_completion(post['message'], {'internal': [], 'visible': []})
   elif word.startswith("storyteller"):
     print("DEBUG: user msg starts with: storyteller! Got this post: ", post)
-    response = await multimedia.storyteller(post)
+    response = await multimedia.storyteller(post, bot)
   elif word.startswith("summary"):
     response = await multimedia.youtube_transcription(post['message'])
   else:
