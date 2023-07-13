@@ -1,28 +1,21 @@
+image: debian:bookworm-slim
+
 stages:
-- test
-- deploy
-test:
-  image: python:3.9
-  interruptible: true
-  script:
-  - cd /builds/ai/bots/psychedelic-bot
-  - pip install openai mattermostdriver pylint
-  - pylint app.py
+  - deploy
+
 deploy:
-  before_script:
-  - 'command -v ssh-agent >/dev/null || (apt-get update -y && apt-get install openssh-client -y)'
-  - eval $(ssh-agent -s)
-  - chmod 400 "$SSH_DEPLOY_KEY"
-  - ssh-add "$SSH_DEPLOY_KEY"
-  - mkdir -pm 700 ~/.ssh
   environment:
     name: $CI_COMMIT_BRANCH
   interruptible: true
-  needs:
-  - test
-  script:
-  - ssh -oStrictHostKeyChecking=no psychedelic-bot@ai.psychedelic.fi $OPENAI_MODEL_NAME
   rules:
-  - if: $CI_COMMIT_TAG
-    when: never
-  - when: always
+    - if: $CI_COMMIT_TAG
+      when: never
+    - when: on_success
+  script:
+    - apt-get update
+    - apt-get install -y openssh-client
+    - eval $(ssh-agent -s)
+    - chmod 400 "$SSH_DEPLOY_KEY"
+    - ssh-add "$SSH_DEPLOY_KEY"
+    - ssh -oStrictHostKeyChecking=no psychedelic-bot@ai.psychedelic.fi $CI_COMMIT_BRANCH
+  stage: deploy
