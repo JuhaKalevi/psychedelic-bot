@@ -12,7 +12,7 @@ async def context_manager(event):
   if not ('event' in event and event['event'] == 'posted' and event['data']['sender_name'] != basic.bot_name):
     return
   post = json.loads(event['data']['post'])
-  if mattermost_api.post_is_from_bot(post, bot):
+  if mattermost_api.post_is_from_bot(post):
     return
   message = post['message']
   if post['root_id']:

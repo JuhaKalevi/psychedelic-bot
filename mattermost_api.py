@@ -16,7 +16,7 @@ def create_post(options, bot):
 def get_mattermost_file(file_id, bot):
   return bot.files.get_file(file_id=file_id)
 
-def post_is_from_bot(post, bot):
+def post_is_from_bot(post):
   return 'from_bot' in post['props']
 
 def thread_context(post, bot):

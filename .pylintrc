@@ -1,11 +1,9 @@
 [MASTER]
 disable=
-
     C0415, # import-outside-toplevel
     C0114, # missing-module-docstring
     C0116, # missing-function-docstring
     R0914, # too-many-locals
-max-branches=14
 [FORMAT]
 indent-string='  '
 indent-after-paren=2
