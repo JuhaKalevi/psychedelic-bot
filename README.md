@@ -21,7 +21,7 @@ The following commands are available for users in the `psychedelic_bot.py`:
 - "2x": Upscales an image by 2 times. Example: `2x`. Requires an image file to be attached. Example: `2x`.
 - "4x": Upscales an image by 4 times. Example: `4x`. Requires an image file to be attached. Example: `4x`.
 - "llm": Generates a text chat completion from a local LLM model. Example: `llm Are you sentient?`.
-- "storyteller": Generates a story based on the input. Example: `storyteller Once upon a time`. Requires an image file to be attached.
+- "storyteller": Generates a story attached image(s). Example: `storyteller`. Requires an image file to be attached.
 - "summary": Generates a summary of a YouTube video. Example: `summary https://www.youtube.com/watch?v=dQw4w9WgXcQ`.
 
 ## Authors
