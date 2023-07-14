@@ -30,3 +30,5 @@ The following commands are available for users in the `psychedelic_bot.py`:
 
 ## License
 This project is licensed under the MIT License.
+
+![image info](images/bot.png)
