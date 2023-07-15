@@ -7,7 +7,7 @@ import PIL
 import basic
 import mattermost_api
 
-webui_api = WebUIApi(host=environ['STABLE_DIFFUSION_WEBUI_HOST'], port=7861)
+webui_api = WebUIApi(host=environ['STABLE_DIFFUSION_WEBUI_HOST'], port=environ['STABLE_DIFFUSION_WEBUI_PORT'])
 webui_api.set_auth('psychedelic-bot', environ['STABLE_DIFFUSION_WEBUI_API_KEY'])
 
 async def captioner(post, bot):
