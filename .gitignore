@@ -1,3 +1,6 @@
+.bashrc
+.docker
 *.env
+.profile
 .ssh
 venv
