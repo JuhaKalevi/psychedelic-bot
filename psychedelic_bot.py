@@ -20,7 +20,7 @@ async def context_manager(event):
     reply_to = post['root_id']
   else:
     reply_to = post['id']
-  always_reply = basic.should_always_reply(mattermost_api.channel_from_post(post, bot)['purpose'])
+  always_reply = await basic.should_always_reply(mattermost_api.channel_from_post(post, bot)['purpose'])
   file_ids = []
   message = post['message']
   if post['root_id'] == "" and (always_reply or basic.bot_name_in_message(message)):
