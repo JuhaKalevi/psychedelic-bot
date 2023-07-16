@@ -2,6 +2,7 @@
 .cache
 .docker
 *.env
+.gitconfig
 .profile
 .ssh
 venv
