@@ -5,8 +5,7 @@ async def channel_context(bot, post):
   return context
 
 async def channel_from_post(bot, post):
-  channel = await bot.channels.get_channel(post['channel_id'])
-  return channel
+  return await bot.channels.get_channel(post['channel_id'])
 
 async def create_post(bot, options):
   try:
