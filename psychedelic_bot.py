@@ -36,13 +36,13 @@ async def context_manager(event):
       return
     summarize = await basic.is_asking_for_channel_summary(message)
     if summarize:
-      context = mattermost_api.channel_context(bot, post)
+      context = await mattermost_api.channel_context(bot, post)
     else:
       context = {'order':[post['id']], 'posts':{post['id']: post}}
     response = await basic.generate_text_from_context(context)
     mattermost_api.create_post(bot, {'channel_id':post['channel_id'], 'message':response, 'file_ids':file_ids, 'root_id':reply_to})
   else:
-    context = mattermost_api.thread_context(bot, post)
+    context = await mattermost_api.thread_context(bot, post)
     if any(basic.bot_name_in_message(post['message']) for post in context['posts'].values()):
       response = await basic.generate_text_from_context(context)
       mattermost_api.create_post(bot, {'channel_id':post['channel_id'], 'message':response, 'file_ids':file_ids, 'root_id':reply_to})
