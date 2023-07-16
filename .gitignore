@@ -1,4 +1,5 @@
 .bashrc
+.cache
 .docker
 *.env
 .profile
