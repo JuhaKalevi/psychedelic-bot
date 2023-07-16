@@ -1,27 +1,30 @@
 import mattermostdriver.exceptions
 
-def channel_context(post, bot):
-  context = bot.posts.get_posts_for_channel(post['channel_id'])
+async def channel_context(bot, post):
+  context = await bot.posts.get_posts_for_channel(post['channel_id'])
   return context
 
-async def channel_from_post(post, bot):
-  return await bot.channels.get_channel(post['channel_id'])
+async def channel_from_post(bot, post):
+  channel = await bot.channels.get_channel(post['channel_id'])
+  return channel
 
-def create_post(options, bot):
+def create_post(bot, options):
   try:
     bot.posts.create_post(options=options)
   except (ConnectionResetError, mattermostdriver.exceptions.InvalidOrMissingParameters, mattermostdriver.exceptions.ResourceNotFound) as err:
     print(f'ERROR mattermost.posts.create_post(): {err}')
 
-def get_mattermost_file(file_id, bot):
-  return bot.files.get_file(file_id=file_id)
+async def get_mattermost_file(bot, file_id):
+  file = await bot.files.get_file(file_id=file_id)
+  return file
 
 def post_is_from_bot(post):
   return 'from_bot' in post['props']
 
-def thread_context(post, bot):
-  return bot.posts.get_thread(post['id'])
+async def thread_context(bot, post):
+  context = bot.posts.get_thread(post['id'])
+  return context
 
-def upload_mattermost_file(channel_id, files, bot):
+def upload_mattermost_file(bot, channel_id, files):
   print('upload_mattermost_file')
   return bot.files.upload_file(channel_id, files=files)['file_infos'][0]['id']

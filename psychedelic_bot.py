@@ -20,31 +20,32 @@ async def context_manager(event):
     reply_to = post['root_id']
   else:
     reply_to = post['id']
-  always_reply = await basic.should_always_reply(mattermost_api.channel_from_post(post, bot)['purpose'])
+  channel_from_post = await mattermost_api.channel_from_post(bot, post)
+  always_reply = await basic.should_always_reply(channel_from_post['purpose'])
   file_ids = []
   message = post['message']
   if post['root_id'] == "" and (always_reply or basic.bot_name_in_message(message)):
     magic_words_response = await respond_to_magic_words(post, file_ids)
     if magic_words_response:
-      mattermost_api.create_post({'channel_id':post['channel_id'], 'message':magic_words_response, 'file_ids':file_ids, 'root_id':post['root_id']}, bot)
+      mattermost_api.create_post(bot, {'channel_id':post['channel_id'], 'message':magic_words_response, 'file_ids':file_ids, 'root_id':post['root_id']})
       return
     image_generation = await multimedia.consider_image_generation(bot, message, file_ids, post)
     print("Debug: image_generation is: ", image_generation)
     if image_generation is not None:
-      mattermost_api.create_post({'channel_id':post['channel_id'], 'message':image_generation, 'file_ids':file_ids, 'root_id':reply_to}, bot)
+      mattermost_api.create_post(bot, {'channel_id':post['channel_id'], 'message':image_generation, 'file_ids':file_ids, 'root_id':reply_to})
       return
     summarize = await basic.is_asking_for_channel_summary(message)
     if summarize:
-      context = mattermost_api.channel_context(post, bot)
+      context = mattermost_api.channel_context(bot, post)
     else:
       context = {'order':[post['id']], 'posts':{post['id']: post}}
     response = await basic.generate_text_from_context(context)
-    mattermost_api.create_post({'channel_id':post['channel_id'], 'message':response, 'file_ids':file_ids, 'root_id':reply_to}, bot)
+    mattermost_api.create_post(bot, {'channel_id':post['channel_id'], 'message':response, 'file_ids':file_ids, 'root_id':reply_to})
   else:
-    context = mattermost_api.thread_context(post, bot)
+    context = mattermost_api.thread_context(bot, post)
     if any(basic.bot_name_in_message(post['message']) for post in context['posts'].values()):
       response = await basic.generate_text_from_context(context)
-      mattermost_api.create_post({'channel_id':post['channel_id'], 'message':response, 'file_ids':file_ids, 'root_id':reply_to}, bot)
+      mattermost_api.create_post(bot, {'channel_id':post['channel_id'], 'message':response, 'file_ids':file_ids, 'root_id':reply_to})
 
 async def respond_to_magic_words(post, file_ids):
   word = post['message'].lower()
