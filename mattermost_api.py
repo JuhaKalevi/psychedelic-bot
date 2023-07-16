@@ -1,8 +1,7 @@
 import mattermostdriver.exceptions
 
 async def channel_context(bot, post):
-  context = await bot.posts.get_posts_for_channel(post['channel_id'])
-  return context
+  return await bot.posts.get_posts_for_channel(post['channel_id'])
 
 async def channel_from_post(bot, post):
   return await bot.channels.get_channel(post['channel_id'])
@@ -14,15 +13,13 @@ async def create_post(bot, options):
     print(f'ERROR mattermost.posts.create_post(): {err}')
 
 async def get_mattermost_file(bot, file_id):
-  file = await bot.files.get_file(file_id=file_id)
-  return file
+  return await bot.files.get_file(file_id=file_id)
 
 def post_is_from_bot(post):
   return 'from_bot' in post['props']
 
 async def thread_context(bot, post):
-  context = await bot.posts.get_thread(post['id'])
-  return context
+  return await bot.posts.get_thread(post['id'])
 
 def upload_mattermost_file(bot, channel_id, files):
   print('upload_mattermost_file')
