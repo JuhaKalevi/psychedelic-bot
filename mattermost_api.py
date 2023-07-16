@@ -1,4 +1,3 @@
-import asyncio
 import mattermostdriver.exceptions
 
 def channel_context(post, bot):
