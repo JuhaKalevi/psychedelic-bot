@@ -1,3 +1,4 @@
+import asyncio
 import json
 import os
 import mattermostdriver
@@ -66,6 +67,9 @@ async def respond_to_magic_words(post, file_ids):
     return None
   return response
 
-bot = mattermostdriver.Driver({'url':os.environ['MATTERMOST_URL'], 'token':os.environ['MATTERMOST_TOKEN'],'scheme':'https', 'port':443})
-bot.login()
-bot.init_websocket(context_manager)
+async def main():
+  bot = mattermostdriver.Driver({'url':os.environ['MATTERMOST_URL'], 'token':os.environ['MATTERMOST_TOKEN'],'scheme':'https', 'port':443})
+  await asyncio.get_event_loop().run_in_executor(None, bot.login)
+  await asyncio.get_event_loop().run_in_executor(None, bot.init_websocket, context_manager)
+
+asyncio.run(main())
