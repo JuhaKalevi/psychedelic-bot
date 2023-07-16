@@ -4,8 +4,8 @@ def channel_context(post, bot):
   context = bot.posts.get_posts_for_channel(post['channel_id'])
   return context
 
-def channel_from_post(post, bot):
-  return bot.channels.get_channel(post['channel_id'])
+async def channel_from_post(post, bot):
+  return await bot.channels.get_channel(post['channel_id'])
 
 def create_post(options, bot):
   try:

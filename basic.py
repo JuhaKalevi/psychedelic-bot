@@ -92,9 +92,7 @@ async def is_asking_for_multiple_images(message):
   return response.startswith('True')
 
 def is_mainly_english(text):
-  response = langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
-  return response
+  return langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
 
 def should_always_reply(channel_purpose):
-  should_reply = f"{bot_name} always reply" in channel_purpose
-  return should_reply
+  return f"{bot_name} always reply" in channel_purpose

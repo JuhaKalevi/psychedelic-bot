@@ -2,7 +2,6 @@ aiofiles
 chardet
 gradio_client
 langdetect
-mattermostdriver
 openai
 pylint
 tiktoken
