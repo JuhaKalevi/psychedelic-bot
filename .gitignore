@@ -4,5 +4,7 @@
 *.env
 .gitconfig
 .profile
+__pycache__
+python-mattermost-driver
 .ssh
 venv
