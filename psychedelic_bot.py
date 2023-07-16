@@ -10,6 +10,7 @@ import textgen_api
 bot = mattermostdriver.AsyncDriver({'url':os.environ['MATTERMOST_URL'], 'token':os.environ['MATTERMOST_TOKEN'],'scheme':'https', 'port':443})
 
 async def context_manager(event):
+  print('new event')
   event = json.loads(event)
   if not ('event' in event and event['event'] == 'posted' and event['data']['sender_name'] != basic.bot_name):
     return
