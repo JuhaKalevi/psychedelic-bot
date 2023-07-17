@@ -23,7 +23,7 @@ async def thread_context(bot, post):
 
 async def update_post(bot, post_id, options):
   try:
-    return await bot.posts.update_post(post_id=post_id, options=options)
+    return await bot.posts.update_post(post_id, options=options)
   except (ConnectionResetError, mattermostdriver.exceptions.InvalidOrMissingParameters, mattermostdriver.exceptions.ResourceNotFound) as err:
     print(f'ERROR mattermost.posts.update_post(): {err}')
 
