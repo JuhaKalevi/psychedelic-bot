@@ -3,6 +3,7 @@ disable=
     C0415, # import-outside-toplevel
     C0114, # missing-module-docstring
     C0116, # missing-function-docstring
+    R0912, # too-many-branches
     R0914, # too-many-locals
     R1713, # consider-using-join
 [FORMAT]
