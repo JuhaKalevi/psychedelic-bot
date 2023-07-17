@@ -46,6 +46,7 @@ async def from_context(context, model='gpt-4'):
   return await openai_api.openai_chat_completion(system_message + context_messages, model)
 
 async def from_message(message, model='gpt-4'):
+  response = ''
   async for content in openai_api.openai_chat_completion([{'role':'user', 'content':message}], model):
     response += content
   return response
