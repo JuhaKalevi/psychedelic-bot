@@ -8,7 +8,7 @@ async def channel_from_post(bot, post):
 
 async def create_post(bot, options):
   try:
-    await bot.posts.create_post(options=options)
+    return await bot.posts.create_post(options=options)
   except (ConnectionResetError, mattermostdriver.exceptions.InvalidOrMissingParameters, mattermostdriver.exceptions.ResourceNotFound) as err:
     print(f'ERROR mattermost.posts.create_post(): {err}')
 
