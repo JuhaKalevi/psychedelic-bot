@@ -32,8 +32,7 @@ async def context_manager(event):
       return
     image_generation_response = await multimedia.consider_image_generation(bot, message, file_ids, post)
     if image_generation_response is not None:
-      await mattermost_api.create_post(bot, {'channel_id':post['channel_id'], 'message':image_generation_response, 'file_ids':file_ids, 'root_id':reply_to})
-      return
+      return await mattermost_api.create_post(bot, {'channel_id':post['channel_id'], 'message':image_generation_response, 'file_ids':file_ids, 'root_id':reply_to})
     if await basic.is_asking_for_channel_summary(message):
       context = await mattermost_api.channel_context(bot, post)
     else:
@@ -45,7 +44,7 @@ async def context_manager(event):
     for post in context['posts'].values():
       if await basic.bot_name_in_message(post['message']):
         response = await basic.generate_text_from_context(context)
-        await mattermost_api.create_post(bot, {'channel_id':post['channel_id'], 'message':response, 'file_ids':file_ids, 'root_id':reply_to})
+        return await mattermost_api.create_post(bot, {'channel_id':post['channel_id'], 'message':response, 'file_ids':file_ids, 'root_id':reply_to})
 
 async def respond_to_magic_words(post, file_ids):
   word = post['message'].lower()
