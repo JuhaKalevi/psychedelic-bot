@@ -61,15 +61,15 @@ async def captioner(post, bot):
 
 
 async def consider_image_generation(bot, message, file_ids, post):
-  image_requested = await generate_text.is_asking_for_image_generation(message)
-  if image_requested:
-    asking_for_multiple_images = await generate_text.is_asking_for_multiple_images(message)
-    if asking_for_multiple_images:
-      image_generation_comment = await generate_images(bot, file_ids, post, 8)
-    else:
-      image_generation_comment = await generate_images(bot, file_ids, post, 1)
-    return image_generation_comment
-  return None
+  async for asking_for_image_generation in generate_text.is_asking_for_image_generation(message):
+    if asking_for_image_generation:
+      async for asking_for_multiple_images in generate_text.is_asking_for_multiple_images(message):
+        if asking_for_multiple_images:
+          image_generation_comment = await generate_images(bot, file_ids, post, 8)
+        else:
+          image_generation_comment = await generate_images(bot, file_ids, post, 1)
+        yield image_generation_comment
+    yield None
 
 async def storyteller(post, bot):
   captions = await captioner(post, bot)
