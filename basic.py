@@ -71,7 +71,8 @@ async def generate_text_from_context(context, model='gpt-4'):
 
 async def generate_text_from_message(message, model='gpt-4'):
   async for content in openai_api.openai_chat_completion([{'role':'user', 'content':message}], model):
-    print(content)
+    response += content
+  return response
 
 async def is_asking_for_channel_summary(message):
   response = await generate_text_from_message(f'Is this a message where a summary of past interactions in this chat/discussion/channel is requested? Answer only True or False: {message}')
