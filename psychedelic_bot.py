@@ -41,9 +41,13 @@ async def context_manager(event):
       context = await mattermost_api.channel_context(bot, post)
     else:
       context = {'order':[post['id']], 'posts':{post['id']: post}}
+    reply_post = None
     async for response in generate_text.from_context(context):
-      post_id = await mattermost_api.create_post(bot, {'channel_id':post['channel_id'], 'message':response, 'file_ids':file_ids, 'root_id':reply_to})
-      print(post_id)
+      print(post['id'])
+      if not reply_post:
+        reply_post = await mattermost_api.create_post(bot, {'channel_id':post['channel_id'], 'message':response, 'file_ids':file_ids, 'root_id':reply_to})
+      else:
+        print(f'should edit {response}')
   else:
     context = await mattermost_api.thread_context(bot, post)
     for post in context['posts'].values():
