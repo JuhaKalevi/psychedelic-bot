@@ -20,8 +20,8 @@ async def count_tokens(message):
   return token_count
 
 async def fix_image_generation_prompt(message):
-  fixed_prompt = await from_message(f"convert this to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features and you don't have to use full sentences, just a few keywords, separating these aspects by commas. Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally: {message}")
-  return fixed_prompt
+  async for response in from_message(f"convert this to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features and you don't have to use full sentences, just a few keywords, separating these aspects by commas. Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally: {message}"):
+    yield response
 
 async def from_context(context, model='gpt-4'):
   if 'order' in context:
@@ -51,16 +51,16 @@ async def from_message(message, model='gpt-4'):
 
 async def is_asking_for_channel_summary(message):
   async for response in from_message(f'Is this a message where a summary of past interactions in this chat/discussion/channel is requested? Answer only True or False: {message}'):
-    return response.startswith('True')
+    yield response.startswith('True')
 
 async def is_asking_for_code_analysis(message):
   async for response in from_message(f"Is this a message where knowledge or analysis of your code is requested? It does not matter whether you know about the files or not yet, you have a function that we will use later on if needed. Answer only True or False: {message}"):
-    return response.startswith('True')
+    yield response.startswith('True')
 
 async def is_asking_for_image_generation(message):
   async for response in from_message(f"Is this a message where an image is probably requested? Answer only True or False: {message}"):
-    return response.startswith('True')
+    yield response.startswith('True')
 
 async def is_asking_for_multiple_images(message):
   async for response in from_message(f"Is this a message where multiple images are requested? Answer only True or False: {message}"):
-    return response.startswith('True')
+    yield response.startswith('True')
