@@ -24,8 +24,7 @@ async def choose_system_message(post):
   return default_system_message
 
 async def generate_story_from_captions(message, model='gpt-4'):
-  story = await openai_api.openai_chat_completion([{'role':'user', 'content':(f"Make a consistent story based on these image captions: {message}")}], model)
-  return story
+  return await openai_api.openai_chat_completion([{'role':'user', 'content':(f"Make a consistent story based on these image captions: {message}")}], model)
 
 async def generate_summary_from_transcription(message, model='gpt-4'):
   response = await openai_api.openai_chat_completion([
@@ -72,8 +71,7 @@ async def generate_text_from_context(context, model='gpt-4'):
   return openai_response
 
 async def generate_text_from_message(message, model='gpt-4'):
-  response = await openai_api.openai_chat_completion([{'role':'user', 'content':message}], model)
-  return response
+  return await openai_api.openai_chat_completion([{'role':'user', 'content':message}], model)
 
 async def is_asking_for_channel_summary(message):
   response = await generate_text_from_message(f'Is this a message where a summary of past interactions in this chat/discussion/channel is requested? Answer only True or False: {message}')
