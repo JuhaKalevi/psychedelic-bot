@@ -9,6 +9,7 @@ async def openai_chat_completion(messages, model='gpt-4'):
     async for chunk in await openai.ChatCompletion.acreate(model=model, messages=messages, stream=True):
       content = chunk["choices"][0].get("delta", {}).get("content")
       if content:
+        print(content)
         yield content
   except (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.ServiceUnavailableError, openai.error.Timeout) as err:
     yield f"OpenAI API Error: {err}"
