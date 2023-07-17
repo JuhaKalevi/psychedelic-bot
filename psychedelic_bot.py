@@ -47,6 +47,7 @@ async def context_manager(event):
       if not reply_post:
         reply_post = await mattermost_api.create_post(bot, {'channel_id':post['channel_id'], 'message':response, 'file_ids':file_ids, 'root_id':reply_to})
         reply_post_id = reply_post['id']
+        print(reply_post_id)
       else:
         await mattermost_api.update_post(bot, reply_post_id, {'channel_id':post['channel_id'], 'message':response, 'file_ids':file_ids, 'root_id':reply_to})
   else:
