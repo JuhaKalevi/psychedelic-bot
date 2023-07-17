@@ -21,9 +21,9 @@ async def post_is_from_bot(post):
 async def thread_context(bot, post):
   return await bot.posts.get_thread(post['id'])
 
-async def update_post(bot, post_id, options):
+async def patch_post(bot, post_id, options):
   try:
-    return await bot.posts.update_post(post_id, options=options)
+    return await bot.posts.patch_post(post_id, options=options)
   except (ConnectionResetError, mattermostdriver.exceptions.InvalidOrMissingParameters, mattermostdriver.exceptions.ResourceNotFound) as err:
     print(f'ERROR mattermost.posts.update_post(): {err}')
 
