@@ -55,7 +55,7 @@ async def generate_text_from_context(context, model='gpt-4'):
   context_messages = []
   context_tokens = await count_tokens(system_message)
   for post_id in context['order']:
-    if mattermost_api.post_is_from_bot(context['posts'][post_id]):
+    if await mattermost_api.post_is_from_bot(context['posts'][post_id]):
       role = 'assistant'
     else:
       role = 'user'
@@ -67,8 +67,7 @@ async def generate_text_from_context(context, model='gpt-4'):
     else:
       break
   context_messages.reverse()
-  openai_response = await openai_api.openai_chat_completion(system_message + context_messages, model)
-  return openai_response
+  return await openai_api.openai_chat_completion(system_message + context_messages, model)
 
 async def generate_text_from_message(message, model='gpt-4'):
   return await openai_api.openai_chat_completion([{'role':'user', 'content':message}], model)
