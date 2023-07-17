@@ -72,12 +72,11 @@ async def consider_image_generation(bot, message, file_ids, post):
 
 async def storyteller(post, bot):
   captions = await captioner(post, bot)
-  story = await basic.generate_story_from_captions(captions)
-  return story
+  return await basic.generate_story_from_captions(captions)
 
 async def generate_images(bot, file_ids, post, count):
   comment = ''
-  mainly_english = basic.is_mainly_english(post['message'].encode('utf-8'))
+  mainly_english = await basic.is_mainly_english(post['message'].encode('utf-8'))
   if not mainly_english:
     comment = post['message'] = await basic.fix_image_generation_prompt(post['message'])
   options = webui_api.get_options()
@@ -89,7 +88,8 @@ async def generate_images(bot, file_ids, post, count):
   for image in result.images:
     image.save("result.png")
     with open('result.png', 'rb') as image_file:
-      file_ids.append(mattermost_api.upload_mattermost_file(bot, post['channel_id'], {'files':('result.png', image_file)}))
+      uploaded_file_id = await mattermost_api.upload_mattermost_file(bot, post['channel_id'], {'files':('result.png', image_file)})
+      file_ids.append(uploaded_file_id)
   return comment
 
 async def upscale_image(bot, file_ids, post, scale):
@@ -103,7 +103,7 @@ async def upscale_image(bot, file_ids, post, scale):
     return "Invalid upscale scale"
   comment = ''
   for post_file_id in post['file_ids']:
-    file_response = mattermost_api.get_mattermost_file(bot, post_file_id)
+    file_response = await mattermost_api.get_mattermost_file(bot, post_file_id)
     if file_response.status_code == 200:
       file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
       post_file_path = f'{post_file_id}.{file_type}'
@@ -115,7 +115,7 @@ async def upscale_image(bot, file_ids, post, scale):
       upscaled_image_path = f"upscaled_{post_file_id}.png"
       result.image.save(upscaled_image_path)
       with open(upscaled_image_path, 'rb') as image_file:
-        file_id = mattermost_api.upload_mattermost_file(bot, post['channel_id'], {'files':(upscaled_image_path, image_file)})
+        file_id = await mattermost_api.upload_mattermost_file(bot, post['channel_id'], {'files':(upscaled_image_path, image_file)})
       file_ids.append(file_id)
       comment += "Image upscaled successfully"
     except RuntimeError as err:
@@ -144,7 +144,7 @@ async def instruct_pix2pix(bot, file_ids, post):
   comment = ''
   for post_file_id in post['file_ids']:
     print(f"DEBUG: Processing file_id={post_file_id}")
-    file_response = mattermost_api.get_mattermost_file(bot, post_file_id)
+    file_response = await mattermost_api.get_mattermost_file(bot, post_file_id)
     if file_response.status_code == 200:
       file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
       post_file_path = f'{post_file_id}.{file_type}'
@@ -170,7 +170,7 @@ async def instruct_pix2pix(bot, file_ids, post):
       result.image.save(processed_image_path)
       print(f"DEBUG: Saved result to path={processed_image_path}")
       with open(processed_image_path, 'rb') as image_file:
-        file_id = mattermost_api.upload_mattermost_file(bot, post['channel_id'], {'files': (processed_image_path, image_file)})
+        file_id = await mattermost_api.upload_mattermost_file(bot, post['channel_id'], {'files': (processed_image_path, image_file)})
       print(f"DEBUG: Uploaded file, got file_id={file_id}")
       file_ids.append(file_id)
       comment += "Image processed successfully"

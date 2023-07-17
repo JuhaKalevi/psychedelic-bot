@@ -15,12 +15,12 @@ async def create_post(bot, options):
 async def get_mattermost_file(bot, file_id):
   return await bot.files.get_file(file_id=file_id)
 
-def post_is_from_bot(post):
+async def post_is_from_bot(post):
   return 'from_bot' in post['props']
 
 async def thread_context(bot, post):
   return await bot.posts.get_thread(post['id'])
 
-def upload_mattermost_file(bot, channel_id, files):
+async def upload_mattermost_file(bot, channel_id, files):
   print('upload_mattermost_file')
-  return bot.files.upload_file(channel_id, files=files)['file_infos'][0]['id']
+  return await bot.files.upload_file(channel_id, files=files)['file_infos'][0]['id']

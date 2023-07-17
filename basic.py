@@ -8,7 +8,7 @@ import openai_api
 
 bot_name = os.environ['MATTERMOST_BOT_NAME']
 
-def bot_name_in_message(message):
+async def bot_name_in_message(message):
   return bot_name in message or bot_name == '@chatbot' and '@chatgpt' in message
 
 async def choose_system_message(post):
@@ -91,8 +91,8 @@ async def is_asking_for_multiple_images(message):
   response = await generate_text_from_message(f"Is this a message where multiple images are requested? Answer only True or False: {message}")
   return response.startswith('True')
 
-def is_mainly_english(text):
+async def is_mainly_english(text):
   return langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
 
-def should_always_reply(channel_purpose):
+async def should_always_reply(channel_purpose):
   return f"{bot_name} always reply" in channel_purpose
