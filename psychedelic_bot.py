@@ -42,7 +42,8 @@ async def context_manager(event):
     else:
       context = {'order':[post['id']], 'posts':{post['id']: post}}
     async for response in generate_text.from_context(context):
-      await mattermost_api.create_post(bot, {'channel_id':post['channel_id'], 'message':response, 'file_ids':file_ids, 'root_id':reply_to})
+      post_id = await mattermost_api.create_post(bot, {'channel_id':post['channel_id'], 'message':response, 'file_ids':file_ids, 'root_id':reply_to})
+      print(post_id)
   else:
     context = await mattermost_api.thread_context(bot, post)
     for post in context['posts'].values():
