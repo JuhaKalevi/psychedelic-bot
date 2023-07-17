@@ -34,13 +34,15 @@ async def context_manager(event):
     if magic_words_response is not None:
       await mattermost_api.create_or_update_post(bot, {'channel_id':post['channel_id'], 'message':magic_words_response, 'file_ids':file_ids, 'root_id':post['root_id']})
       return
-    image_generation_response = await multimedia.consider_image_generation(bot, message, file_ids, post)
-    if image_generation_response is not None:
-      return await mattermost_api.create_or_update_post(bot, {'channel_id':post['channel_id'], 'message':image_generation_response, 'file_ids':file_ids, 'root_id':reply_to})
-    if await generate_text.is_asking_for_channel_summary(message):
-      context = await bot.posts.get_posts_for_channel(post['channel_id'])
-    else:
-      context = {'order':[post['id']], 'posts':{post['id']: post}}
+    async for asking_for_image_generation in multimedia.consider_image_generation(bot, message, file_ids, post):
+      if asking_for_image_generation:
+        return await mattermost_api.create_or_update_post(bot, {'channel_id':post['channel_id'], 'message':asking_for_image_generation, 'file_ids':file_ids, 'root_id':reply_to})
+    async for asking_for_channel_summary in generate_text.is_asking_for_channel_summary(message):
+      if asking_for_channel_summary:
+        context = await bot.posts.get_posts_for_channel(post['channel_id'])
+      else:
+        context = {'order':[post['id']], 'posts':{post['id']: post}}
+      break
     reply_id = None
     stream_chunks = []
     async for chunk in generate_text.from_context(context):
