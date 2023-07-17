@@ -5,6 +5,7 @@ import re
 from webuiapi import WebUIApi
 import PIL
 import basic
+import generate_text
 import mattermost_api
 
 webui_api = WebUIApi(host=environ['STABLE_DIFFUSION_WEBUI_HOST'], port=environ['STABLE_DIFFUSION_WEBUI_PORT'])
@@ -60,9 +61,9 @@ async def captioner(post, bot):
 
 
 async def consider_image_generation(bot, message, file_ids, post):
-  image_requested = await basic.is_asking_for_image_generation(message)
+  image_requested = await generate_text.is_asking_for_image_generation(message)
   if image_requested:
-    asking_for_multiple_images = await basic.is_asking_for_multiple_images(message)
+    asking_for_multiple_images = await generate_text.is_asking_for_multiple_images(message)
     if asking_for_multiple_images:
       image_generation_comment = await generate_images(bot, file_ids, post, 8)
     else:
@@ -78,7 +79,7 @@ async def generate_images(bot, file_ids, post, count):
   comment = ''
   mainly_english = await basic.is_mainly_english(post['message'].encode('utf-8'))
   if not mainly_english:
-    comment = post['message'] = await basic.fix_image_generation_prompt(post['message'])
+    comment = post['message'] = await generate_text.fix_image_generation_prompt(post['message'])
   options = webui_api.get_options()
   options = {}
   options['sd_model_checkpoint'] = 'realisticVisionV30_v30VAE.safetensors [c52892e92a]'
