@@ -44,7 +44,7 @@ async def from_context(context, model='gpt-4'):
       break
   context_messages.reverse()
   response = ''
-  async for content in openai_api.openai_chat_completion(system_message + context_messages, model)
+  async for content in openai_api.openai_chat_completion(system_message + context_messages, model):
     response += content
   return response
 
