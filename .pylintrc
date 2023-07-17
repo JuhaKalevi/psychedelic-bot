@@ -5,7 +5,6 @@ disable=
     C0116, # missing-function-docstring
     R0912, # too-many-branches
     R0914, # too-many-locals
-    R1713, # consider-using-join
 [FORMAT]
 indent-string='  '
 indent-after-paren=2

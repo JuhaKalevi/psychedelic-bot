@@ -1,7 +1,6 @@
 import json
 import os
 import tiktoken
-import mattermost_api
 import openai_api
 
 async def choose_system_message(post):
@@ -31,7 +30,7 @@ async def from_context(context, model='gpt-4'):
   context_messages = []
   context_tokens = await count_tokens(system_message)
   for post_id in context['order']:
-    if await mattermost_api.post_is_from_bot(context['posts'][post_id]):
+    if 'from_bot' in context['posts'][post_id]['props']:
       role = 'assistant'
     else:
       role = 'user'

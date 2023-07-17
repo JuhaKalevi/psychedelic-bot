@@ -19,52 +19,48 @@ async def context_manager(event):
   if not ('event' in event and event['event'] == 'posted' and event['data']['sender_name'] != bot_name):
     return
   post = json.loads(event['data']['post'])
-  if await mattermost_api.post_is_from_bot(post):
+  if 'from_bot' in post['props']:
     return
   if post['root_id']:
     reply_to = post['root_id']
   else:
     reply_to = post['id']
-  channel_from_post = await mattermost_api.channel_from_post(bot, post)
+  channel_from_post = await bot.channels.get_channel(post['channel_id'])
   always_reply = f"{bot_name} always reply" in channel_from_post['purpose']
   file_ids = []
   message = post['message']
   if post['root_id'] == "" and (always_reply or bot_name_in_message(message)):
     magic_words_response = await respond_to_magic_words(post, file_ids)
     if magic_words_response is not None:
-      await mattermost_api.create_post(bot, {'channel_id':post['channel_id'], 'message':magic_words_response, 'file_ids':file_ids, 'root_id':post['root_id']})
+      await mattermost_api.create_or_update_post(bot, {'channel_id':post['channel_id'], 'message':magic_words_response, 'file_ids':file_ids, 'root_id':post['root_id']})
       return
     image_generation_response = await multimedia.consider_image_generation(bot, message, file_ids, post)
     if image_generation_response is not None:
-      return await mattermost_api.create_post(bot, {'channel_id':post['channel_id'], 'message':image_generation_response, 'file_ids':file_ids, 'root_id':reply_to})
+      return await mattermost_api.create_or_update_post(bot, {'channel_id':post['channel_id'], 'message':image_generation_response, 'file_ids':file_ids, 'root_id':reply_to})
     if await generate_text.is_asking_for_channel_summary(message):
-      context = await mattermost_api.channel_context(bot, post)
+      context = await bot.posts.get_posts_for_channel(post['channel_id'])
     else:
       context = {'order':[post['id']], 'posts':{post['id']: post}}
-    reply_post = None
-    reply_post_id = None
-    responses = []
-    async for response in generate_text.from_context(context):
-      responses.append(response)
-      if not reply_post:
-        reply_post = await mattermost_api.create_post(bot, {'channel_id':post['channel_id'], 'message':response, 'file_ids':file_ids, 'root_id':reply_to})
-        reply_post_id = reply_post['id']
-      else:
-        reply_post = await mattermost_api.patch_post(bot, reply_post_id, {'channel_id':post['channel_id'], 'message':''.join(responses), 'file_ids':file_ids, 'root_id':reply_to})
+    reply_id = None
+    stream_chunks = []
+    async for chunk in generate_text.from_context(context):
+      stream_chunks.append(chunk)
+      reply_id = await mattermost_api.create_or_update_post(bot, reply_id, {'channel_id':post['channel_id'], 'message':''.join(stream_chunks), 'file_ids':file_ids, 'root_id':reply_to})
   else:
-    context = await mattermost_api.thread_context(bot, post)
+    context = await bot.posts.get_thread(post['id'])
     for post in context['posts'].values():
       if bot_name_in_message(post['message']):
-        async for response in generate_text.from_context(context):
-          await mattermost_api.create_post(bot, {'channel_id':post['channel_id'], 'message':response, 'file_ids':file_ids, 'root_id':reply_to})
+        reply_id = None
+        stream_chunks = []
+        async for chunk in generate_text.from_context(context):
+          stream_chunks.append(chunk)
+          reply_id = await mattermost_api.create_or_update_post(bot, reply_id, {'channel_id':post['channel_id'], 'message':''.join(stream_chunks), 'file_ids':file_ids, 'root_id':reply_to})
 
 async def respond_to_magic_words(post, file_ids):
   word = post['message'].lower()
   if word.startswith("caption"):
-    print("DEBUG: user msg starts with: caption! Got this post: ", post)
     response = await multimedia.captioner(post, bot)
   elif word.startswith("pix2pix"):
-    print("HAHAA! Gonna do pix2pix now! Got these file_ids:", file_ids, "and this post: ", post)
     response = await multimedia.instruct_pix2pix(bot, file_ids, post)
   elif word.startswith("2x"):
     response = await multimedia.upscale_image(bot, file_ids, post, 2)
@@ -73,7 +69,6 @@ async def respond_to_magic_words(post, file_ids):
   elif word.startswith("llm"):
     response = await textgen_api.textgen_chat_completion(post['message'], {'internal': [], 'visible': []})
   elif word.startswith("storyteller"):
-    print("DEBUG: user msg starts with: storyteller! Got this post: ", post)
     response = await multimedia.storyteller(post, bot)
   elif word.startswith("summary"):
     response = await multimedia.youtube_transcription(post['message'])

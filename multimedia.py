@@ -20,7 +20,7 @@ async def captioner(post, bot):
   captions = []
   async with httpx.AsyncClient() as client:
     for post_file_id in post['file_ids']:
-      file_response = mattermost_api.get_mattermost_file(bot, post_file_id)
+      file_response = await bot.files.get_file(file_id=post_file_id)
       try:
         if file_response.status_code == 200:
           file_type = os.path.splitext(file_response.headers["Content-Disposition"])[1][1:]
@@ -104,7 +104,7 @@ async def upscale_image(bot, file_ids, post, scale):
     return "Invalid upscale scale"
   comment = ''
   for post_file_id in post['file_ids']:
-    file_response = await mattermost_api.get_mattermost_file(bot, post_file_id)
+    file_response = await bot.files.get_file(file_id=post_file_id)
     if file_response.status_code == 200:
       file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
       post_file_path = f'{post_file_id}.{file_type}'
@@ -145,7 +145,7 @@ async def instruct_pix2pix(bot, file_ids, post):
   comment = ''
   for post_file_id in post['file_ids']:
     print(f"DEBUG: Processing file_id={post_file_id}")
-    file_response = await mattermost_api.get_mattermost_file(bot, post_file_id)
+    file_response = await bot.files.get_file(file_id=post_file_id)
     if file_response.status_code == 200:
       file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
       post_file_path = f'{post_file_id}.{file_type}'
