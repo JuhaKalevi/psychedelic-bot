@@ -46,7 +46,7 @@ async def context_manager(event):
     async for chunk in generate_text.from_context(context):
       stream_chunks.append(chunk)
       print(stream_chunks)
-      reply_id = await mattermost_api.create_or_update_post(bot, reply_id, {'channel_id':post['channel_id'], 'message':''.join(stream_chunks), 'file_ids':file_ids, 'root_id':reply_to})
+      reply_id = await mattermost_api.create_or_update_post(bot, {'channel_id':post['channel_id'], 'message':''.join(stream_chunks), 'file_ids':file_ids, 'root_id':reply_to}, reply_id)
   else:
     context = await bot.posts.get_thread(post['id'])
     for post in context['posts'].values():
@@ -55,7 +55,7 @@ async def context_manager(event):
         stream_chunks = []
         async for chunk in generate_text.from_context(context):
           stream_chunks.append(chunk)
-          reply_id = await mattermost_api.create_or_update_post(bot, reply_id, {'channel_id':post['channel_id'], 'message':''.join(stream_chunks), 'file_ids':file_ids, 'root_id':reply_to})
+          reply_id = await mattermost_api.create_or_update_post(bot, reply_id, {'channel_id':post['channel_id'], 'message':''.join(stream_chunks), 'file_ids':file_ids, 'root_id':reply_to}, reply_id)
 
 async def respond_to_magic_words(post, file_ids):
   word = post['message'].lower()
