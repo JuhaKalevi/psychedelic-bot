@@ -21,6 +21,12 @@ async def post_is_from_bot(post):
 async def thread_context(bot, post):
   return await bot.posts.get_thread(post['id'])
 
+async def update_post(bot, post_id, options):
+  try:
+    return await bot.posts.update_post(post_id=post_id, options=options)
+  except (ConnectionResetError, mattermostdriver.exceptions.InvalidOrMissingParameters, mattermostdriver.exceptions.ResourceNotFound) as err:
+    print(f'ERROR mattermost.posts.update_post(): {err}')
+
 async def upload_mattermost_file(bot, channel_id, files):
   file = await bot.files.upload_file(channel_id, files=files)
   return file['file_infos'][0]['id']
