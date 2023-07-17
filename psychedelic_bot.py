@@ -50,7 +50,7 @@ async def context_manager(event):
         reply_post = await mattermost_api.create_post(bot, {'channel_id':post['channel_id'], 'message':response, 'file_ids':file_ids, 'root_id':reply_to})
         reply_post_id = reply_post['id']
       else:
-        reply_post = mattermost_api.patch_post(bot, reply_post_id, {'channel_id':post['channel_id'], 'message':''.join(responses), 'file_ids':file_ids, 'root_id':reply_to})
+        reply_post = await mattermost_api.patch_post(bot, reply_post_id, {'channel_id':post['channel_id'], 'message':''.join(responses), 'file_ids':file_ids, 'root_id':reply_to})
   else:
     context = await mattermost_api.thread_context(bot, post)
     for post in context['posts'].values():
