@@ -42,6 +42,7 @@ async def context_manager(event):
     else:
       context = {'order':[post['id']], 'posts':{post['id']: post}}
     reply_post = None
+    reply_post_id = None
     async for response in generate_text.from_context(context):
       if not reply_post:
         reply_post = await mattermost_api.create_post(bot, {'channel_id':post['channel_id'], 'message':response, 'file_ids':file_ids, 'root_id':reply_to})
