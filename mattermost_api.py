@@ -22,5 +22,5 @@ async def thread_context(bot, post):
   return await bot.posts.get_thread(post['id'])
 
 async def upload_mattermost_file(bot, channel_id, files):
-  print('upload_mattermost_file')
-  return await bot.files.upload_file(channel_id, files=files)['file_infos'][0]['id']
+  file = await bot.files.upload_file(channel_id, files=files)
+  return file['file_infos'][0]['id']
