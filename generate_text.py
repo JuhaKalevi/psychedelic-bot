@@ -43,16 +43,12 @@ async def from_context(context, model='gpt-4'):
     else:
       break
   context_messages.reverse()
-  response = ''
   async for content in openai_api.openai_chat_completion(system_message + context_messages, model):
-    response += content
-  return response
+    yield content
 
 async def from_message(message, model='gpt-4'):
-  response = ''
   async for content in openai_api.openai_chat_completion([{'role':'user', 'content':message}], model):
-    response += content
-  return response
+    yield content
 
 async def is_asking_for_channel_summary(message):
   response = await from_message(f'Is this a message where a summary of past interactions in this chat/discussion/channel is requested? Answer only True or False: {message}')
