@@ -3,10 +3,10 @@ import langdetect
 import openai_api
 
 async def generate_story_from_captions(message, model='gpt-4'):
-  return await openai_api.openai_chat_completion([{'role':'user', 'content':(f"Make a consistent story based on these image captions: {message}")}], model)
+  return await openai_api.chat_completion([{'role':'user', 'content':(f"Make a consistent story based on these image captions: {message}")}], model)
 
 async def generate_summary_from_transcription(message, model='gpt-4'):
-  response = await openai_api.openai_chat_completion([
+  response = await openai_api.chat_completion([
     {
       'role': 'user',
       'content': (f"Summarize in appropriate detail, adjusting the summary length"

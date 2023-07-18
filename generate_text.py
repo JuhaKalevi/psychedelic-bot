@@ -20,10 +20,9 @@ async def count_tokens(message):
   return token_count
 
 async def fix_image_generation_prompt(message):
-  async for response in from_message(f"convert this to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features and you don't have to use full sentences, just a few keywords, separating these aspects by commas. Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally: {message}"):
-    return response
+  return await from_message(f"convert this to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features and you don't have to use full sentences, just a few keywords, separating these aspects by commas. Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally: {message}")
 
-async def from_context(context, model='gpt-4'):
+async def from_context_streamed(context, model='gpt-4'):
   if 'order' in context:
     context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
   system_message = await choose_system_message(context['posts'][context['order'][0]])
@@ -42,25 +41,28 @@ async def from_context(context, model='gpt-4'):
     else:
       break
   context_messages.reverse()
-  async for content in openai_api.openai_chat_completion(system_message + context_messages, model):
+  async for content in openai_api.chat_completion_streamed(system_message + context_messages, model):
     yield content
 
 async def from_message(message, model='gpt-4'):
-  async for content in openai_api.openai_chat_completion([{'role':'user', 'content':message}], model):
+  return await openai_api.chat_completion_streamed([{'role':'user', 'content':message}], model)
+
+async def from_message_streamed(message, model='gpt-4'):
+  async for content in openai_api.chat_completion_streamed([{'role':'user', 'content':message}], model):
     yield content
 
 async def is_asking_for_channel_summary(message):
-  async for response in from_message(f'Is this a message where a summary of past interactions in this chat/discussion/channel is requested? Answer only True or False: {message}'):
-    return response.startswith('True')
+  response = await from_message(f'Is this a message where a summary of past interactions in this chat/discussion/channel is requested? Answer only True or False: {message}')
+  return response.startswith('True')
 
 async def is_asking_for_code_analysis(message):
-  async for response in from_message(f"Is this a message where knowledge or analysis of your code is requested? It does not matter whether you know about the files or not yet, you have a function that we will use later on if needed. Answer only True or False: {message}"):
-    return response.startswith('True')
+  response = await from_message(f"Is this a message where knowledge or analysis of your code is requested? It does not matter whether you know about the files or not yet, you have a function that we will use later on if needed. Answer only True or False: {message}")
+  return response.startswith('True')
 
 async def is_asking_for_image_generation(message):
-  async for response in from_message(f"Is this a message where an image is probably requested? Answer only True or False: {message}"):
-    return response.startswith('True')
+  response = await from_message(f"Is this a message where an image is probably requested? Answer only True or False: {message}")
+  return response.startswith('True')
 
 async def is_asking_for_multiple_images(message):
-  async for response in from_message(f"Is this a message where multiple images are requested? Answer only True or False: {message}"):
-    return response.startswith('True')
+  response = await from_message(f"Is this a message where multiple images are requested? Answer only True or False: {message}")
+  return response.startswith('True')

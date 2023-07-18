@@ -33,9 +33,9 @@ async def context_manager(event):
     magic_words_response = await respond_to_magic_words(post, file_ids)
     if magic_words_response is not None:
       return await mattermost_api.create_or_update_post(bot, {'channel_id':post['channel_id'], 'message':magic_words_response, 'file_ids':file_ids, 'root_id':post['root_id']})
-    asking_for_image_generation = await multimedia.consider_image_generation(bot, message, file_ids, post)
-    if asking_for_image_generation:
-      return await mattermost_api.create_or_update_post(bot, {'channel_id':post['channel_id'], 'message':asking_for_image_generation, 'file_ids':file_ids, 'root_id':reply_to})
+    image_generation_comment = await multimedia.consider_image_generation(bot, message, file_ids, post)
+    if image_generation_comment:
+      return await mattermost_api.create_or_update_post(bot, {'channel_id':post['channel_id'], 'message':image_generation_comment, 'file_ids':file_ids, 'root_id':reply_to})
     if await generate_text.is_asking_for_channel_summary(message):
       context = await bot.posts.get_posts_for_channel(post['channel_id'])
     else:
@@ -69,7 +69,7 @@ async def respond_to_magic_words(post, file_ids):
 async def stream_reply_to_context(context, post, file_ids, reply_to):
   reply_id = None
   stream_chunks = []
-  async for chunk in generate_text.from_context(context):
+  async for chunk in generate_text.from_context_streamed(context):
     stream_chunks.append(chunk)
     reply_id = await mattermost_api.create_or_update_post(bot, {'channel_id':post['channel_id'], 'message':''.join(stream_chunks), 'file_ids':file_ids, 'root_id':reply_to}, reply_id)
   return reply_id
