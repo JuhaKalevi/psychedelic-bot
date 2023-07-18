@@ -5,7 +5,6 @@ openai.api_key = os.environ['OPENAI_API_KEY']
 
 async def openai_chat_completion(messages, model='gpt-4'):
   try:
-    print('openai_chat_completion')
     async for chunk in await openai.ChatCompletion.acreate(model=model, messages=messages, stream=True):
       content = chunk["choices"][0].get("delta", {}).get("content")
       if content:
