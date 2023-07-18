@@ -45,7 +45,7 @@ async def from_context_streamed(context, model='gpt-4'):
     yield content
 
 async def from_message(message, model='gpt-4'):
-  return await openai_api.chat_completion_streamed([{'role':'user', 'content':message}], model)
+  return await openai_api.chat_completion([{'role':'user', 'content':message}], model)
 
 async def from_message_streamed(message, model='gpt-4'):
   async for content in openai_api.chat_completion_streamed([{'role':'user', 'content':message}], model):
