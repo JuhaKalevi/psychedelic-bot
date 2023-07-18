@@ -9,6 +9,7 @@ import textgen_api
 
 bot = mattermostdriver.AsyncDriver({'url':os.environ['MATTERMOST_URL'], 'token':os.environ['MATTERMOST_TOKEN'],'scheme':'https', 'port':443})
 bot_name = os.environ['MATTERMOST_BOT_NAME']
+lock = asyncio.Lock()
 
 def bot_name_in_message(message):
   return bot_name in message or bot_name == '@bot' and '@chatgpt' in message
@@ -69,9 +70,10 @@ async def respond_to_magic_words(post, file_ids):
 async def stream_reply_to_context(context, post, file_ids, reply_to):
   reply_id = None
   stream_chunks = []
-  async for chunk in generate_text.from_context_streamed(context):
-    stream_chunks.append(chunk)
-    reply_id = await mattermost_api.create_or_update_post(bot, {'channel_id':post['channel_id'], 'message':''.join(stream_chunks), 'file_ids':file_ids, 'root_id':reply_to}, reply_id)
+  async with lock:
+    async for chunk in generate_text.from_context_streamed(context):
+      stream_chunks.append(chunk)
+      reply_id = await mattermost_api.create_or_update_post(bot, {'channel_id':post['channel_id'], 'message':''.join(stream_chunks), 'file_ids':file_ids, 'root_id':reply_to}, reply_id)
   return reply_id
 
 async def main():
