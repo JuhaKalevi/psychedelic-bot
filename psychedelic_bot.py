@@ -14,7 +14,6 @@ def bot_name_in_message(message):
   return bot_name in message or bot_name == '@bot' and '@chatgpt' in message
 
 async def context_manager(event):
-  print('new event')
   event = json.loads(event)
   if not ('event' in event and event['event'] == 'posted' and event['data']['sender_name'] != bot_name):
     return
