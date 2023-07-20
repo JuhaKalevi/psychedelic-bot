@@ -78,7 +78,7 @@ async def generate_images(bot, file_ids, post, count):
     comment = post['message'] = await generate_text.fix_image_generation_prompt(post['message'])
   options = webui_api.get_options()
   options = {}
-  options['sd_model_checkpoint'] = 'realisticVisionV30_v30VAE.safetensors [c52892e92a]'
+  options['sd_model_checkpoint'] = 'realisticVisionV40_v4 0VAE.safetensors [e9d3cedc4b]'
   options['sd_vae'] = 'vae-ft-mse-840000-ema-pruned.safetensors'
   webui_api.set_options(options)
   result = webui_api.txt2img(prompt=post['message'], negative_prompt="(unfinished:1.43),(sloppy and messy:1.43),(incoherent:1.43),(deformed:1.43)", steps=42, sampler_name='UniPC', batch_size=count, restore_faces=True)
