@@ -33,8 +33,8 @@ async def context_manager(event):
     magic_words_response = await respond_to_magic_words(post, file_ids)
     if magic_words_response is not None:
       return await mattermost_api.create_or_update_post(bot, {'channel_id':post['channel_id'], 'message':magic_words_response, 'file_ids':file_ids, 'root_id':post['root_id']})
-    if f"{bot_name} always generate images" in channel['purpose'] or await generate_text.is_asking_for_image_generation(message):
-      if await generate_text.is_asking_for_multiple_images(message):
+    if f"{bot_name} always generate image" in channel['purpose'] or await generate_text.is_asking_for_image_generation(message):
+      if f"{bot_name} always generate images" in channel['purpose'] or await generate_text.is_asking_for_multiple_images(message):
         image_generation_comment = await multimedia.generate_images(bot, file_ids, post, 8)
       else:
         image_generation_comment = await multimedia.generate_images(bot, file_ids, post, 1)
