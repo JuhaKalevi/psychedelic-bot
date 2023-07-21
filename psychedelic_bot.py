@@ -2,6 +2,7 @@ import asyncio
 import json
 import os
 import mattermostdriver
+import basic
 import generate_text
 import multimedia
 import mattermost_api
@@ -25,18 +26,23 @@ async def context_manager(event):
     reply_to = post['root_id']
   else:
     reply_to = post['id']
-  channel_from_post = await bot.channels.get_channel(post['channel_id'])
-  always_reply = f"{bot_name} always reply" in channel_from_post['purpose']
+  channel = await bot.channels.get_channel(post['channel_id'])
   file_ids = []
   message = post['message']
-  if post['root_id'] == "" and (always_reply or bot_name_in_message(message)):
+  if post['root_id'] == "" and (f"{bot_name} always reply" in channel['purpose'] or bot_name_in_message(message)):
     magic_words_response = await respond_to_magic_words(post, file_ids)
     if magic_words_response is not None:
       return await mattermost_api.create_or_update_post(bot, {'channel_id':post['channel_id'], 'message':magic_words_response, 'file_ids':file_ids, 'root_id':post['root_id']})
-    image_generation_comment = await multimedia.consider_image_generation(bot, message, file_ids, post)
+    if f"{bot_name} always generate images" in channel['purpose'] or await generate_text.is_asking_for_image_generation(message):
+      if await generate_text.is_asking_for_multiple_images(message):
+        image_generation_comment = await multimedia.generate_images(bot, file_ids, post, 8)
+      else:
+        image_generation_comment = await multimedia.generate_images(bot, file_ids, post, 1)
+    else:
+      image_generation_comment = None
     if image_generation_comment:
       return await mattermost_api.create_or_update_post(bot, {'channel_id':post['channel_id'], 'message':image_generation_comment, 'file_ids':file_ids, 'root_id':reply_to})
-    if await generate_text.is_asking_for_channel_summary(message):
+    if await generate_text.is_asking_for_channel_summary(post):
       context = await bot.posts.get_posts_for_channel(post['channel_id'])
     else:
       context = {'order':[post['id']], 'posts':{post['id']: post}}
@@ -47,24 +53,22 @@ async def context_manager(event):
       return await stream_reply_to_context(context, post, file_ids, reply_to)
 
 async def respond_to_magic_words(post, file_ids):
-  word = post['message'].lower()
-  if word.startswith("caption"):
-    response = await multimedia.captioner(post, bot)
-  elif word.startswith("pix2pix"):
-    response = await multimedia.instruct_pix2pix(bot, file_ids, post)
-  elif word.startswith("2x"):
-    response = await multimedia.upscale_image(bot, file_ids, post, 2)
-  elif word.startswith("4x"):
-    response = await multimedia.upscale_image(bot, file_ids, post, 4)
-  elif word.startswith("llm"):
-    response = await textgen_api.textgen_chat_completion(post['message'], {'internal': [], 'visible': []})
-  elif word.startswith("storyteller"):
-    response = await multimedia.storyteller(post, bot)
-  elif word.startswith("summary"):
-    response = await multimedia.youtube_transcription(post['message'])
-  else:
-    return None
-  return response
+  post = post['message'].lower()
+  if post.startswith("caption"):
+    return await multimedia.captioner(bot, post)
+  if post.startswith("pix2pix"):
+    return await multimedia.instruct_pix2pix(bot, file_ids, post)
+  if post.startswith("2x"):
+    return await multimedia.upscale_image(bot, file_ids, post, 2)
+  if post.startswith("4x"):
+    return await multimedia.upscale_image(bot, file_ids, post, 4)
+  if post.startswith("llm"):
+    return await textgen_api.textgen_chat_completion(post['message'], {'internal': [], 'visible': []})
+  if post.startswith("storyteller"):
+    captions = await multimedia.captioner(bot, post)
+    return await basic.generate_story_from_captions(captions)
+  if post.startswith("summary"):
+    return await multimedia.youtube_transcription(post['message'])
 
 async def stream_reply_to_context(context, post, file_ids, reply_to):
   reply_id = None
