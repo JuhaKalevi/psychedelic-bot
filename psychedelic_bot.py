@@ -11,17 +11,19 @@ import textgen_api
 bot = mattermostdriver.AsyncDriver({'url':os.environ['MATTERMOST_URL'], 'token':os.environ['MATTERMOST_TOKEN'],'scheme':'https', 'port':443})
 bot_name = os.environ['MATTERMOST_BOT_NAME']
 lock = asyncio.Lock()
+tasks = []
 
 def bot_name_in_message(message):
   return bot_name in message or bot_name == '@bot' and '@chatgpt' in message
 
 async def context_manager(event):
   event = json.loads(event)
-  if not ('event' in event and event['event'] == 'posted' and event['data']['sender_name'] != bot_name):
-    return
-  post = json.loads(event['data']['post'])
-  if 'from_bot' in post['props']:
-    return
+  if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != bot_name:
+    post = json.loads(event['data']['post'])
+    if 'from_bot' not in post['props']:
+      asyncio.create_task(delegated_post_handler(post))
+
+async def delegated_post_handler(post):
   if post['root_id']:
     reply_to = post['root_id']
   else:
@@ -48,8 +50,8 @@ async def context_manager(event):
       context = {'order':[post['id']], 'posts':{post['id']: post}}
     return await stream_reply_to_context(context, post, file_ids, reply_to)
   context = await bot.posts.get_thread(post['id'])
-  for post in context['posts'].values():
-    if bot_name_in_message(post['message']):
+  for thread_post in context['posts'].values():
+    if bot_name_in_message(thread_post['message']):
       return await stream_reply_to_context(context, post, file_ids, reply_to)
 
 async def respond_to_magic_words(post, file_ids):
