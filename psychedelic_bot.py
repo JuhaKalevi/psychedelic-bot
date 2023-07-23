@@ -10,7 +10,6 @@ import textgen_api
 
 bot = mattermostdriver.AsyncDriver({'url':os.environ['MATTERMOST_URL'], 'token':os.environ['MATTERMOST_TOKEN'],'scheme':'https', 'port':443})
 bot_name = os.environ['MATTERMOST_BOT_NAME']
-lock = asyncio.Lock()
 tasks = []
 
 def bot_name_in_message(message):
@@ -18,12 +17,13 @@ def bot_name_in_message(message):
 
 async def context_manager(event):
   event = json.loads(event)
+  lock = asyncio.Lock()
   if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != bot_name:
     post = json.loads(event['data']['post'])
     if 'from_bot' not in post['props']:
-      asyncio.create_task(delegated_post_handler(post))
+      asyncio.create_task(delegated_post_handler(lock, post))
 
-async def delegated_post_handler(post):
+async def delegated_post_handler(lock, post):
   if post['root_id']:
     reply_to = post['root_id']
   else:
@@ -48,11 +48,11 @@ async def delegated_post_handler(post):
       context = await bot.posts.get_posts_for_channel(post['channel_id'])
     else:
       context = {'order':[post['id']], 'posts':{post['id']: post}}
-    return await stream_reply_to_context(context, post, file_ids, reply_to)
+    return await stream_reply_to_context(lock, context, post, file_ids, reply_to)
   context = await bot.posts.get_thread(post['id'])
   for thread_post in context['posts'].values():
     if bot_name_in_message(thread_post['message']):
-      return await stream_reply_to_context(context, post, file_ids, reply_to)
+      return await stream_reply_to_context(lock, context, post, file_ids, reply_to)
 
 async def respond_to_magic_words(post, file_ids):
   post = post['message'].lower()
@@ -72,7 +72,7 @@ async def respond_to_magic_words(post, file_ids):
   if post.startswith("summary"):
     return await multimedia.youtube_transcription(post['message'])
 
-async def stream_reply_to_context(context, post, file_ids, reply_to):
+async def stream_reply_to_context(lock, context, post, file_ids, reply_to):
   reply_id = None
   stream_chunks = []
   async with lock:
