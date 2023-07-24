@@ -8,6 +8,7 @@ import basic
 import generate_text
 import mattermost_api
 
+bot_name = environ['MATTERMOST_BOT_NAME']
 webui_api = WebUIApi(host=environ['STABLE_DIFFUSION_WEBUI_HOST'], port=environ['STABLE_DIFFUSION_WEBUI_PORT'])
 webui_api.set_auth('psychedelic-bot', environ['STABLE_DIFFUSION_WEBUI_API_KEY'])
 
@@ -55,22 +56,22 @@ async def captioner(bot, post):
   return '\n'.join(captions)
 
 async def generate_images(bot, file_ids, post, count):
-  comment = ''
-  mainly_english = await basic.is_mainly_english(post['message'].encode('utf-8'))
+  prompt = post['message'].removeprefix(bot_name)
+  mainly_english = await basic.is_mainly_english(prompt.encode('utf-8'))
   if not mainly_english:
-    comment = post['message'] = await generate_text.fix_image_generation_prompt(post['message'])
+    prompt = await generate_text.fix_image_generation_prompt(prompt)
   options = webui_api.get_options()
   options = {}
   options['sd_model_checkpoint'] = 'realisticVisionV40_v4 0VAE.safetensors [e9d3cedc4b]'
   options['sd_vae'] = 'vae-ft-mse-840000-ema-pruned.safetensors'
   webui_api.set_options(options)
-  result = webui_api.txt2img(prompt=post['message'], negative_prompt="(unfinished:1.43),(sloppy and messy:1.43),(incoherent:1.43),(deformed:1.43)", steps=42, sampler_name='UniPC', batch_size=count, restore_faces=True)
+  result = webui_api.txt2img(prompt=prompt, negative_prompt="(unfinished:1.43),(sloppy and messy:1.43),(incoherent:1.43),(deformed:1.43)", steps=42, sampler_name='UniPC', batch_size=count, restore_faces=True)
   for image in result.images:
     image.save("result.png")
     with open('result.png', 'rb') as image_file:
       uploaded_file_id = await mattermost_api.upload_mattermost_file(bot, post['channel_id'], {'files':('result.png', image_file)})
       file_ids.append(uploaded_file_id)
-  return comment
+  return prompt
 
 async def instruct_pix2pix(bot, file_ids, post):
   print(f"DEBUG: Starting function with bot={bot}, file_ids={file_ids}, post={post}")
