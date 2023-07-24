@@ -8,6 +8,7 @@ import basic
 import generate_text
 import mattermost_api
 
+bot_name = environ['MATTERMOST_BOT_NAME']
 webui_api = WebUIApi(host=environ['STABLE_DIFFUSION_WEBUI_HOST'], port=environ['STABLE_DIFFUSION_WEBUI_PORT'])
 webui_api.set_auth('psychedelic-bot', environ['STABLE_DIFFUSION_WEBUI_API_KEY'])
 
@@ -55,21 +56,65 @@ async def captioner(bot, post):
   return '\n'.join(captions)
 
 async def generate_images(bot, file_ids, post, count):
-  comment = ''
-  mainly_english = await basic.is_mainly_english(post['message'].encode('utf-8'))
+  prompt = post['message'].removeprefix(bot_name)
+  mainly_english = await basic.is_mainly_english(prompt.encode('utf-8'))
   if not mainly_english:
-    comment = post['message'] = await generate_text.fix_image_generation_prompt(post['message'])
+    prompt = await generate_text.fix_image_generation_prompt(prompt)
   options = webui_api.get_options()
   options = {}
   options['sd_model_checkpoint'] = 'realisticVisionV40_v4 0VAE.safetensors [e9d3cedc4b]'
   options['sd_vae'] = 'vae-ft-mse-840000-ema-pruned.safetensors'
   webui_api.set_options(options)
-  result = webui_api.txt2img(prompt=post['message'], negative_prompt="(unfinished:1.43),(sloppy and messy:1.43),(incoherent:1.43),(deformed:1.43)", steps=42, sampler_name='UniPC', batch_size=count, restore_faces=True)
+  result = webui_api.txt2img(prompt=prompt, negative_prompt="(unfinished:1.43),(sloppy and messy:1.43),(incoherent:1.43),(deformed:1.43)", steps=42, sampler_name='UniPC', batch_size=count, restore_faces=True)
   for image in result.images:
     image.save("result.png")
     with open('result.png', 'rb') as image_file:
       uploaded_file_id = await mattermost_api.upload_mattermost_file(bot, post['channel_id'], {'files':('result.png', image_file)})
       file_ids.append(uploaded_file_id)
+  return prompt
+
+async def instruct_pix2pix(bot, file_ids, post):
+  print(f"DEBUG: Starting function with bot={bot}, file_ids={file_ids}, post={post}")
+  comment = ''
+  for post_file_id in post['file_ids']:
+    print(f"DEBUG: Processing file_id={post_file_id}")
+    file_response = await bot.files.get_file(file_id=post_file_id)
+    if file_response.status_code == 200:
+      file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
+      post_file_path = f'{post_file_id}.{file_type}'
+      print(f"DEBUG: post_file_path={post_file_path}, file_type={file_type}")
+      with open(post_file_path, 'wb') as new_image:
+        new_image.write(file_response.content)
+    try:
+      post_file_image = PIL.Image.open(post_file_path)
+      options = webui_api.get_options()
+      print(f"DEBUG: Current options={options}")
+      options = {}
+      options['sd_model_checkpoint'] = 'instruct-pix2pix-00-22000.safetensors [fbc31a67aa]'
+      options['sd_vae'] = "None"
+      print(f"DEBUG: Set new options={options}")
+      webui_api.set_options(options)
+      prompt = post['message']
+      print(f"DEBUG: Prompt for img2img={prompt}")
+      result = webui_api.img2img(images=[post_file_image], prompt=post['message'], steps=150, seed=-1, cfg_scale=7.5, denoising_strength=1.5)
+      print(f"DEBUG: img2img result={result}")
+      if not result:
+        raise RuntimeError("API returned an invalid response")
+      processed_image_path = f"processed_{post_file_id}.png"
+      result.image.save(processed_image_path)
+      print(f"DEBUG: Saved result to path={processed_image_path}")
+      with open(processed_image_path, 'rb') as image_file:
+        file_id = await mattermost_api.upload_mattermost_file(bot, post['channel_id'], {'files': (processed_image_path, image_file)})
+      print(f"DEBUG: Uploaded file, got file_id={file_id}")
+      file_ids.append(file_id)
+      comment += "Image processed successfully"
+      print(f"DEBUG: Success, comment={comment}")
+    except RuntimeError as err:
+      comment += f"Error occurred while processing image: {str(err)}"
+    finally:
+      for temporary_file_path in (post_file_path, processed_image_path):
+        if path.exists(temporary_file_path):
+          remove(temporary_file_path)
   return comment
 
 async def instruct_pix2pix(bot, file_ids, post):
