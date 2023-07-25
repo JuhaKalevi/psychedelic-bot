@@ -67,8 +67,8 @@ async def generate_images(bot, file_ids, post, count):
   webui_api.set_options(options)
   result = webui_api.txt2img(prompt=prompt, negative_prompt="(unfinished:1.43),(sloppy and messy:1.43),(incoherent:1.43),(deformed:1.43)", steps=42, sampler_name='UniPC', batch_size=count, restore_faces=True)
   for image in result.images:
-    image.save("result.png")
-    with open('result.png', 'rb') as image_file:
+    image.save('/tmp/result.png')
+    with open('/tmp/result.png', 'rb') as image_file:
       uploaded_file_id = await mattermost_api.upload_mattermost_file(bot, post['channel_id'], {'files':('result.png', image_file)})
       file_ids.append(uploaded_file_id)
   return prompt
