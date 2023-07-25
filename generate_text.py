@@ -31,6 +31,7 @@ async def from_context_streamed(context, model='gpt-4'):
   system_message = await choose_system_message(context['posts'][context['order'][0]])
   context_messages = []
   context_tokens = await count_tokens(system_message)
+  context_limit = 7777
   for post_id in context['order']:
     if 'from_bot' in context['posts'][post_id]['props']:
       role = 'assistant'
@@ -38,9 +39,12 @@ async def from_context_streamed(context, model='gpt-4'):
       role = 'user'
     message = {'role':role, 'content':context['posts'][post_id]['message']}
     message_tokens = await count_tokens(message)
-    if context_tokens + message_tokens < 7777:
+    if context_tokens + message_tokens < context_limit:
       context_messages.append(message)
       context_tokens += message_tokens
+    elif context_tokens + message_tokens < 14745:
+      model = 'gpt-3.5-turbo-16k'
+      context_limit = 14745
     else:
       break
   context_messages.reverse()
