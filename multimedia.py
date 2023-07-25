@@ -19,6 +19,7 @@ webui_api = webuiapi.WebUIApi(host=os.environ['STABLE_DIFFUSION_WEBUI_HOST'], po
 webui_api.set_auth('psychedelic-bot', os.environ['STABLE_DIFFUSION_WEBUI_API_KEY'])
 
 async def captioner(bot, post):
+  logger.debug('starting captioner()')
   captions = []
   async with httpx.AsyncClient() as client:
     for post_file_id in post['file_ids']:
