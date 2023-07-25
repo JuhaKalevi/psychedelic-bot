@@ -1,22 +1,22 @@
+import asyncio
 import base64
-from json import dumps
-from os import environ, path, remove
+import json
+import os
 import re
-from webuiapi import WebUIApi
+import aiofiles
+import gradio_client
+import httpx
+import webuiapi
 import PIL
 import basic
 import generate_text
 import mattermost_api
 
-bot_name = environ['MATTERMOST_BOT_NAME']
-webui_api = WebUIApi(host=environ['STABLE_DIFFUSION_WEBUI_HOST'], port=environ['STABLE_DIFFUSION_WEBUI_PORT'])
-webui_api.set_auth('psychedelic-bot', environ['STABLE_DIFFUSION_WEBUI_API_KEY'])
+bot_name = os.environ['MATTERMOST_BOT_NAME']
+webui_api = webuiapi.WebUIApi(host=os.environ['STABLE_DIFFUSION_WEBUI_HOST'], port=os.environ['STABLE_DIFFUSION_WEBUI_PORT'])
+webui_api.set_auth('psychedelic-bot', os.environ['STABLE_DIFFUSION_WEBUI_API_KEY'])
 
 async def captioner(bot, post):
-  import httpx
-  import asyncio
-  import aiofiles
-  import os
   captions = []
   async with httpx.AsyncClient() as client:
     for post_file_id in post['file_ids']:
@@ -43,7 +43,7 @@ async def captioner(bot, post):
           }
           url = "https://stablehorde.net/api/v2/interrogate/async"
           headers = {"Content-Type": "application/json","apikey": "a8kMOjo-sgqlThYpupXS7g"}
-          response = await client.post(url, headers=headers, data=dumps(data))
+          response = await client.post(url, headers=headers, data=json.dumps(data))
           response_content = response.json()
           await asyncio.sleep(15)
           caption_res = await client.get('https://stablehorde.net/api/v2/interrogate/status/' + response_content['id'], headers=headers, timeout=420)
@@ -80,7 +80,7 @@ async def instruct_pix2pix(bot, file_ids, post):
     print(f"DEBUG: Processing file_id={post_file_id}")
     file_response = await bot.files.get_file(file_id=post_file_id)
     if file_response.status_code == 200:
-      file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
+      file_type = os.path.splitext(file_response.headers["Content-Disposition"])[1][1:]
       post_file_path = f'{post_file_id}.{file_type}'
       print(f"DEBUG: post_file_path={post_file_path}, file_type={file_type}")
       with open(post_file_path, 'wb') as new_image:
@@ -113,8 +113,8 @@ async def instruct_pix2pix(bot, file_ids, post):
       comment += f"Error occurred while processing image: {str(err)}"
     finally:
       for temporary_file_path in (post_file_path, processed_image_path):
-        if path.exists(temporary_file_path):
-          remove(temporary_file_path)
+        if os.path.exists(temporary_file_path):
+          os.remove(temporary_file_path)
   return comment
 
 async def upscale_image(bot, file_ids, post, scale):
@@ -130,7 +130,7 @@ async def upscale_image(bot, file_ids, post, scale):
   for post_file_id in post['file_ids']:
     file_response = await bot.files.get_file(file_id=post_file_id)
     if file_response.status_code == 200:
-      file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
+      file_type = os.path.splitext(file_response.headers["Content-Disposition"])[1][1:]
       post_file_path = f'{post_file_id}.{file_type}'
       with open(post_file_path, 'wb') as post_file:
         post_file.write(file_response.content)
@@ -147,17 +147,16 @@ async def upscale_image(bot, file_ids, post, scale):
       comment += f"Error occurred while upscaling image: {str(err)}"
     finally:
       for temporary_file_path in (post_file_path, upscaled_image_path):
-        if path.exists(temporary_file_path):
-          remove(temporary_file_path)
+        if os.path.exists(temporary_file_path):
+          os.remove(temporary_file_path)
   return comment
 
 async def youtube_transcription(user_input):
-  from gradio_client import Client
   input_str = user_input
   url_pattern = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
   urls = re.findall(url_pattern, input_str)
   if urls:
-    gradio = Client(environ['TRANSCRIPTION_API_URI'])
+    gradio = gradio_client.Client(os.environ['TRANSCRIPTION_API_URI'])
     prediction = gradio.predict(user_input, fn_index=1)
     if 'error' in prediction:
       return f"ERROR gradio.predict(): {prediction['error']}"
