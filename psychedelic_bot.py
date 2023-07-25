@@ -52,22 +52,22 @@ async def delegated_post_handler(lock, post):
       return await stream_reply_to_context(lock, context, post, file_ids, reply_to)
 
 async def respond_to_magic_words(post, file_ids):
-  post = post['message'].lower()
-  if post.startswith("caption"):
+  message = post['message'].lower()
+  if message.startswith("caption"):
     return await multimedia.captioner(bot, post)
-  if post.startswith("pix2pix"):
-    return await multimedia.instruct_pix2pix(bot, file_ids, post)
-  if post.startswith("2x"):
-    return await multimedia.upscale_image(bot, file_ids, post, 2)
-  if post.startswith("4x"):
-    return await multimedia.upscale_image(bot, file_ids, post, 4)
-  if post.startswith("llm"):
-    return await textgen_api.textgen_chat_completion(post['message'], {'internal': [], 'visible': []})
-  if post.startswith("storyteller"):
-    captions = await multimedia.captioner(bot, post)
+  if message.startswith("pix2pix"):
+    return await multimedia.instruct_pix2pix(bot, file_ids, message)
+  if message.startswith("2x"):
+    return await multimedia.upscale_image(bot, file_ids, message, 2)
+  if message.startswith("4x"):
+    return await multimedia.upscale_image(bot, file_ids, message, 4)
+  if message.startswith("llm"):
+    return await textgen_api.textgen_chat_completion(message, {'internal': [], 'visible': []})
+  if message.startswith("storyteller"):
+    captions = await multimedia.captioner(bot, message)
     return await basic.generate_story_from_captions(captions)
-  if post.startswith("summary"):
-    return await multimedia.youtube_transcription(post['message'])
+  if message.startswith("summary"):
+    return await multimedia.youtube_transcription(message)
 
 async def stream_reply_to_context(lock, context, post, file_ids, reply_to):
   reply_id = None
