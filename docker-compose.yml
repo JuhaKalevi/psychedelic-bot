@@ -5,9 +5,11 @@ services:
     network_mode: bridge
     restart: always
     stop_grace_period: 1s
+    user: ${UID}:${GID}
   main:
     build: .
     env_file: main.env
     network_mode: bridge
     restart: always
     stop_grace_period: 1s
+    user: ${UID}:${GID}
