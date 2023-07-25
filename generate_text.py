@@ -18,9 +18,8 @@ async def choose_system_message(post):
     default_system_message = []
   return default_system_message
 
-async def count_tokens(message):
-  token_count = len(tiktoken.get_encoding('cl100k_base').encode(json.dumps(message)))
-  return token_count
+def count_tokens(message):
+  return len(tiktoken.get_encoding('cl100k_base').encode(json.dumps(message)))
 
 async def fix_image_generation_prompt(message):
   return await from_message(f"convert this to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features and you don't have to use full sentences, just a few keywords, separating these aspects by commas. Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally: {message}")
@@ -30,7 +29,7 @@ async def from_context_streamed(context, model='gpt-4'):
     context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
   system_message = await choose_system_message(context['posts'][context['order'][0]])
   context_messages = []
-  context_tokens = await count_tokens(system_message)
+  context_tokens = count_tokens(system_message)
   context_limit = 7777
   for post_id in context['order']:
     if 'from_bot' in context['posts'][post_id]['props']:
@@ -38,7 +37,7 @@ async def from_context_streamed(context, model='gpt-4'):
     else:
       role = 'user'
     message = {'role':role, 'content':context['posts'][post_id]['message']}
-    message_tokens = await count_tokens(message)
+    message_tokens = count_tokens(message)
     if context_tokens + message_tokens < context_limit:
       context_messages.append(message)
       context_tokens += message_tokens
