@@ -26,10 +26,11 @@ async def captioner(bot, post):
           file_type = os.path.splitext(file_response.headers["Content-Disposition"])[1][1:]
           file_path_in_content = re.findall('filename="(.+)"', file_response.headers["Content-Disposition"])[0]
           post_file_path = f'{post_file_id}.{file_type}'
-          async with aiofiles.open(post_file_path, 'wb') as post_file:
+          async with aiofiles.open(f'/tmp/{post_file_path}', 'wb') as post_file:
             await post_file.write(file_response.content)
-          with open(post_file_path, 'rb') as perkele:
-            img_byte = perkele.read()
+          with open(f'/tmp/{post_file_path}', 'rb') as temp_file:
+            img_byte = temp_file.read()
+          os.remove(f'/tmp/{post_file_path}')
           source_image_base64 = base64.b64encode(img_byte).decode("utf-8")
           data = {
             "forms": [
