@@ -1,8 +1,8 @@
 import logging
 import os
 
-def get_logger():
-  logger = logging.getLogger('my_logger')
+def get_logger(caller):
+  logger = logging.getLogger(caller)
   handler = logging.StreamHandler()
   handler.setLevel(logging.DEBUG)
   log_level_name = os.getenv('LOG_LEVEL', 'WARNING')

@@ -4,7 +4,7 @@ import tiktoken
 import log
 import openai_api
 
-logger = log.get_logger()
+logger = log.get_logger(__name__)
 
 async def choose_system_message(post):
   if await is_asking_for_code_analysis(post['message']):
@@ -20,7 +20,7 @@ async def choose_system_message(post):
 
 async def count_tokens(message):
   token_count = len(tiktoken.get_encoding('cl100k_base').encode(json.dumps(message)))
-  logger.info('token_count: %s', token_count)
+  logger.debug('token_count: %s', token_count)
   return token_count
 
 async def fix_image_generation_prompt(message):
