@@ -42,7 +42,7 @@ async def delegated_post_handler(lock, post):
         image_generation_comment = await multimedia.generate_images(bot, file_ids, post, 1)
       return await mattermost_api.create_or_update_post(bot, {'channel_id':post['channel_id'], 'message':image_generation_comment, 'file_ids':file_ids, 'root_id':''})
     if await generate_text.is_asking_for_channel_summary(post):
-      context = await bot.posts.get_posts_for_channel(post['channel_id'])
+      context = await bot.posts.get_posts_for_channel(post['channel_id'], params={'per_page':143})
     else:
       context = {'order':[post['id']], 'posts':{post['id']: post}}
     return await stream_reply_to_context(lock, context, post, file_ids, reply_to)
