@@ -22,7 +22,7 @@ async def captioner(bot, post):
   captions = []
   async with httpx.AsyncClient() as client:
     for post_file_id in post['file_ids']:
-      file_response = await bot.files.get_file(file_id=post_file_id)
+      file_response = bot.files.get_file(file_id=post_file_id)
       logger.debug('captioner(): file_respone=%s', file_response)
       try:
         if file_response.status_code == 200:
