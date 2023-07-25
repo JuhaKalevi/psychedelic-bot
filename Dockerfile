@@ -11,4 +11,4 @@ RUN python3 -m venv venv
 RUN . venv/bin/activate
 RUN pip install aiofiles chardet gradio_client langdetect mattermostdriver openai tiktoken webuiapi
 COPY *.py requirements.txt /app/
-CMD python3 -u psychedelic_bot.py
+CMD ["/usr/bin/python3", "-u", "psychedelic_bot.py"]
