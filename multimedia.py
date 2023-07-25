@@ -19,11 +19,11 @@ webui_api = webuiapi.WebUIApi(host=os.environ['STABLE_DIFFUSION_WEBUI_HOST'], po
 webui_api.set_auth('psychedelic-bot', os.environ['STABLE_DIFFUSION_WEBUI_API_KEY'])
 
 async def captioner(bot, post):
-  logger.debug('starting captioner()')
   captions = []
   async with httpx.AsyncClient() as client:
     for post_file_id in post['file_ids']:
       file_response = await bot.files.get_file(file_id=post_file_id)
+      logger.debug('captioner(): file_respone=%s', file_response)
       try:
         if file_response.status_code == 200:
           file_type = os.path.splitext(file_response.headers["Content-Disposition"])[1][1:]
