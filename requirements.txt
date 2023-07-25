@@ -3,6 +3,5 @@ chardet
 gradio_client
 langdetect
 openai
-pylint
 tiktoken
 webuiapi

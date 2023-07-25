@@ -9,6 +9,6 @@ RUN python3 -u setup.py install
 WORKDIR /app
 RUN python3 -m venv venv
 RUN . venv/bin/activate
-RUN pip install aiofiles chardet gradio_client langdetect mattermostdriver openai tiktoken webuiapi
+RUN pip install -r requirements.txt
 COPY *.py requirements.txt /app/
 CMD ["/usr/bin/python3", "-u", "psychedelic_bot.py"]
