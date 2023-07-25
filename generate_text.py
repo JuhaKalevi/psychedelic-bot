@@ -20,7 +20,6 @@ async def choose_system_message(post):
 
 async def count_tokens(message):
   token_count = len(tiktoken.get_encoding('cl100k_base').encode(json.dumps(message)))
-  logger.debug('token_count: %s', token_count)
   return token_count
 
 async def fix_image_generation_prompt(message):
@@ -45,6 +44,7 @@ async def from_context_streamed(context, model='gpt-4'):
     else:
       break
   context_messages.reverse()
+  logger.debug('token_count: %s', context_tokens)
   async for content in openai_api.chat_completion_streamed(system_message + context_messages, model):
     yield content
 
