@@ -76,6 +76,7 @@ async def stream_reply_to_context(lock, context, post, file_ids, reply_to):
     async for chunk in generate_text.from_context_streamed(context):
       stream_chunks.append(chunk)
       reply_id = await mattermost_api.create_or_update_post(bot, {'channel_id':post['channel_id'], 'message':''.join(stream_chunks), 'file_ids':file_ids, 'root_id':reply_to}, reply_id)
+      await asyncio.sleep(42)
   return reply_id
 
 async def main():
