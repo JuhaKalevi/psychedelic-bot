@@ -10,9 +10,11 @@ import webuiapi
 import PIL
 import basic
 import generate_text
+import log
 import mattermost_api
 
 bot_name = os.environ['MATTERMOST_BOT_NAME']
+logger = log.get_logger(__name__)
 webui_api = webuiapi.WebUIApi(host=os.environ['STABLE_DIFFUSION_WEBUI_HOST'], port=os.environ['STABLE_DIFFUSION_WEBUI_PORT'])
 webui_api.set_auth('psychedelic-bot', os.environ['STABLE_DIFFUSION_WEBUI_API_KEY'])
 
@@ -26,6 +28,7 @@ async def captioner(bot, post):
           file_type = os.path.splitext(file_response.headers["Content-Disposition"])[1][1:]
           file_path_in_content = re.findall('filename="(.+)"', file_response.headers["Content-Disposition"])[0]
           post_file_path = f'{post_file_id}.{file_type}'
+          logger.debug("DEBUG: file_path_in_content=%s, post_file_path=%s", file_path_in_content, post_file_path)
           async with aiofiles.open(f'/tmp/{post_file_path}', 'wb') as post_file:
             await post_file.write(file_response.content)
           with open(f'/tmp/{post_file_path}', 'rb') as temp_file:
