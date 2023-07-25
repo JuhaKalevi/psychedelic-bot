@@ -43,6 +43,8 @@ async def from_context_streamed(context, model='gpt-4'):
       context_messages.append(message)
       context_tokens += message_tokens
     elif context_tokens + message_tokens < 14745:
+      context_messages.append(message)
+      context_tokens += message_tokens
       model = 'gpt-3.5-turbo-16k'
       context_limit = 14745
     else:
