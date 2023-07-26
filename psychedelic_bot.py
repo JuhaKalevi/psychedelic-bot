@@ -25,10 +25,6 @@ async def context_manager(event):
       asyncio.create_task(delegated_post_handler(lock, post))
 
 async def delegated_post_handler(lock, post):
-  if post['root_id']:
-    reply_to = post['root_id']
-  else:
-    reply_to = post['id']
   channel = await bot.channels.get_channel(post['channel_id'])
   file_ids = []
   message = post['message']
@@ -44,13 +40,13 @@ async def delegated_post_handler(lock, post):
       return await mattermost_api.create_or_update_post(bot, {'channel_id':post['channel_id'], 'message':image_generation_comment, 'file_ids':file_ids, 'root_id':''})
     if await generate_text.is_asking_for_channel_summary(post):
       context = await bot.posts.get_posts_for_channel(post['channel_id'], params={'per_page':143})
-    else:
-      context = {'order':[post['id']], 'posts':{post['id']: post}}
-    return await stream_reply_to_context(lock, context, post, file_ids, reply_to)
+      return await stream_reply_to_context(lock, context, post, file_ids)
+    context = {'order':[post['id']], 'posts':{post['id']: post}}
+    return await stream_reply_to_context(lock, context, post, file_ids, post['id'])
   context = await bot.posts.get_thread(post['id'])
   for thread_post in context['posts'].values():
     if bot_name_in_message(thread_post['message']):
-      return await stream_reply_to_context(lock, context, post, file_ids, reply_to)
+      return await stream_reply_to_context(lock, context, post, file_ids, post['id'])
 
 async def respond_to_magic_words(post, file_ids):
   message = post['message'].lower()
@@ -70,7 +66,7 @@ async def respond_to_magic_words(post, file_ids):
   if message.startswith("summary"):
     return await multimedia.youtube_transcription(message)
 
-async def stream_reply_to_context(lock, context, post, file_ids, reply_to):
+async def stream_reply_to_context(lock, context, post, file_ids, reply_to=''):
   reply_id = None
   buffer = []
   chunks_processed = []
