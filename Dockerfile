@@ -1,4 +1,4 @@
-FROM debian:bullseye
+FROM debian:bullseye-slim
 RUN apt-get update
 RUN apt-get -y install --no-install-recommends g++ gcc git python3-dev python3-pip python3-venv
 WORKDIR /app
