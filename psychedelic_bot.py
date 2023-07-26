@@ -80,12 +80,12 @@ async def stream_reply_to_context(lock, context, post, file_ids, reply_to):
       buffer.append(chunk)
       if (time.time() - start_time) * 1000 >= 143:
         joined_chunks = ''.join(buffer)
-        reply_id = await mattermost_api.create_or_update_post(bot, {'channel_id':post['channel_id'], 'message':chunks_processed+joined_chunks, 'file_ids':file_ids, 'root_id':reply_to}, reply_id)
+        reply_id = await mattermost_api.create_or_update_post(bot, {'channel_id':post['channel_id'], 'message':[chunks_processed]+joined_chunks, 'file_ids':file_ids, 'root_id':reply_to}, reply_id)
         chunks_processed.append(joined_chunks)
         buffer = []
         start_time = time.time()
     if buffer:
-      reply_id = await mattermost_api.create_or_update_post(bot, {'channel_id':post['channel_id'], 'message':chunks_processed+''.join(buffer), 'file_ids':file_ids, 'root_id':reply_to}, reply_id)
+      reply_id = await mattermost_api.create_or_update_post(bot, {'channel_id':post['channel_id'], 'message':[chunks_processed]+''.join(buffer), 'file_ids':file_ids, 'root_id':reply_to}, reply_id)
   return reply_id
 
 async def main():
