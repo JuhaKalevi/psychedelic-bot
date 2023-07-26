@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import time
 import mattermostdriver
 import basic
 import generate_text
@@ -71,11 +72,17 @@ async def respond_to_magic_words(post, file_ids):
 
 async def stream_reply_to_context(lock, context, post, file_ids, reply_to):
   reply_id = None
-  stream_chunks = []
+  buffer = []
+  start_time = time.time()
   async with lock:
     async for chunk in generate_text.from_context_streamed(context):
-      stream_chunks.append(chunk)
-      reply_id = await mattermost_api.create_or_update_post(bot, {'channel_id':post['channel_id'], 'message':''.join(stream_chunks), 'file_ids':file_ids, 'root_id':reply_to}, reply_id)
+      buffer.append(chunk)
+      if (time.time() - start_time) * 1000 >= 143:
+        reply_id = await mattermost_api.create_or_update_post(bot, {'channel_id':post['channel_id'], 'message':''.join(buffer), 'file_ids':file_ids, 'root_id':reply_to}, reply_id)
+        buffer = []
+        start_time = time.time()
+    if buffer:
+      reply_id = await mattermost_api.create_or_update_post(bot, {'channel_id':post['channel_id'], 'message':''.join(buffer), 'file_ids':file_ids, 'root_id':reply_to}, reply_id)
   return reply_id
 
 async def main():
