@@ -46,7 +46,7 @@ async def delegated_post_handler(lock, post):
   context = await bot.posts.get_thread(post['id'])
   for thread_post in context['posts'].values():
     if bot_name_in_message(thread_post['message']):
-      return await stream_reply_to_context(lock, context, post, file_ids, post['id'])
+      return await stream_reply_to_context(lock, context, post, file_ids, post['root_id'])
 
 async def respond_to_magic_words(post, file_ids):
   message = post['message'].lower()
