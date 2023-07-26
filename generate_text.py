@@ -7,16 +7,15 @@ import openai_api
 logger = log.get_logger(__name__)
 
 async def choose_system_message(post):
+  system_message = []
   if await is_asking_for_code_analysis(post['message']):
-    code_snippets = []
-    for file_path in [x for x in os.listdir() if x.endswith('.py') or x.endswith('.yml') or x.endswith('.sh')]:
+    files = []
+    for file_path in [x for x in os.listdir() if x.endswith(('.py','.sh','.yml'))]:
       with open(file_path, 'r', encoding='utf-8') as file:
-        code = file.read()
-      code_snippets.append(f'--- BEGIN {file_path} ---\n{code}\n')
-    default_system_message = [{'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+'```'.join(code_snippets)}]
-  else:
-    default_system_message = []
-  return default_system_message
+        content = file.read()
+      files.append(f'--- BEGIN {file_path} ---\n{content}\n--- END {file_path} ---\n')
+    system_message.append({'role':'system', 'content':'This is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+'```'.join(files)})
+  return system_message
 
 def count_tokens(message):
   return len(tiktoken.get_encoding('cl100k_base').encode(json.dumps(message)))
