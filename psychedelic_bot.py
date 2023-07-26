@@ -77,7 +77,7 @@ async def stream_reply_to_context(lock, context, post, file_ids, reply_to):
   start_time = time.time()
   async for chunk in generate_text.from_context_streamed(context):
     buffer.append(chunk)
-    if (time.time() - start_time) * 1000 >= 143:
+    if (time.time() - start_time) * 1000 >= 250:
       joined_chunks = ''.join(buffer)
       async with lock:
         reply_id = await mattermost_api.create_or_update_post(bot, {'channel_id':post['channel_id'], 'message':''.join(chunks_processed)+joined_chunks, 'file_ids':file_ids, 'root_id':reply_to}, reply_id)
