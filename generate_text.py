@@ -4,6 +4,10 @@ import tiktoken
 import log
 import openai_api
 
+if os.environ['MATTERMOST_BOT_NAME'] == '@devbot':
+  GPT4_MODEL = 'gpt-4-0314'
+else:
+  GPT4_MODEL = 'gpt-4'
 logger = log.get_logger(__name__)
 
 async def choose_system_message(post):
@@ -23,7 +27,7 @@ def count_tokens(message):
 async def fix_image_generation_prompt(message):
   return await from_message(f"convert this to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features and you don't have to use full sentences, just a few keywords, separating these aspects by commas. Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally: {message}")
 
-async def from_context_streamed(context, model='gpt-4'):
+async def from_context_streamed(context, model=GPT4_MODEL):
   if 'order' in context:
     context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
   system_message = await choose_system_message(context['posts'][context['order'][0]])
@@ -50,10 +54,10 @@ async def from_context_streamed(context, model='gpt-4'):
   async for content in openai_api.chat_completion_streamed(system_message + context_messages, model):
     yield content
 
-async def from_message(message, model='gpt-4'):
+async def from_message(message, model=GPT4_MODEL):
   return await openai_api.chat_completion([{'role':'user', 'content':message}], model)
 
-async def from_message_streamed(message, model='gpt-4'):
+async def from_message_streamed(message, model=GPT4_MODEL):
   async for content in openai_api.chat_completion_streamed([{'role':'user', 'content':message}], model):
     yield content
 
