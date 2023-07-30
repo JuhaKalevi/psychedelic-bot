@@ -38,7 +38,8 @@ async def delegated_post_handler(post, lock=asyncio.Lock()):
   if magic_words_response is not None:
     return await mattermost_api.create_or_update_post(bot, {'channel_id':post['channel_id'], 'message':magic_words_response, 'file_ids':file_ids, 'root_id':post['root_id']})
   if post['root_id'] == "" and (f"{bot_name} always reply" in channel['purpose'] or bot_name_in_message(message)):
-    logger.debug(openai_api.chat_completion_functions(message, available_functions))
+    function_choice = await openai_api.chat_completion_functions(message, available_functions)
+    logger.debug(function_choice)
     if f"{bot_name} always generate image" in channel['purpose'] or await generate_text.is_asking_for_image_generation(message):
       if f"{bot_name} always generate images" in channel['purpose'] or await generate_text.is_asking_for_multiple_images(message):
         image_generation_comment = await multimedia.generate_images(bot, file_ids, post, 8)
