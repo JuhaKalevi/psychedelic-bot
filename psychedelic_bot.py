@@ -5,33 +5,40 @@ import time
 import mattermostdriver
 import basic
 import generate_text
+import log
 import multimedia
 import mattermost_api
+import openai_api
 import textgen_api
 
 bot = mattermostdriver.AsyncDriver({'url':os.environ['MATTERMOST_URL'], 'token':os.environ['MATTERMOST_TOKEN'],'scheme':'https', 'port':443})
 bot_name = os.environ['MATTERMOST_BOT_NAME']
+logger = log.get_logger(__name__)
 tasks = []
+
+available_functions = {
+  'generate_images': multimedia.generate_images
+}
 
 def bot_name_in_message(message):
   return bot_name in message or bot_name == '@bot' and '@chatgpt' in message
 
 async def context_manager(event):
   event = json.loads(event)
-  lock = asyncio.Lock()
   if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != bot_name:
     post = json.loads(event['data']['post'])
     if 'from_bot' not in post['props']:
-      asyncio.create_task(delegated_post_handler(lock, post))
+      asyncio.create_task(delegated_post_handler(post))
 
-async def delegated_post_handler(lock, post):
+async def delegated_post_handler(post, lock=asyncio.Lock()):
   channel = await bot.channels.get_channel(post['channel_id'])
-  file_ids = []
   message = post['message']
+  file_ids = []
+  magic_words_response = await respond_to_magic_words(post, file_ids)
+  if magic_words_response is not None:
+    return await mattermost_api.create_or_update_post(bot, {'channel_id':post['channel_id'], 'message':magic_words_response, 'file_ids':file_ids, 'root_id':post['root_id']})
   if post['root_id'] == "" and (f"{bot_name} always reply" in channel['purpose'] or bot_name_in_message(message)):
-    magic_words_response = await respond_to_magic_words(post, file_ids)
-    if magic_words_response is not None:
-      return await mattermost_api.create_or_update_post(bot, {'channel_id':post['channel_id'], 'message':magic_words_response, 'file_ids':file_ids, 'root_id':post['root_id']})
+    logger.debug(openai_api.chat_completion_functions(message, available_functions))
     if f"{bot_name} always generate image" in channel['purpose'] or await generate_text.is_asking_for_image_generation(message):
       if f"{bot_name} always generate images" in channel['purpose'] or await generate_text.is_asking_for_multiple_images(message):
         image_generation_comment = await multimedia.generate_images(bot, file_ids, post, 8)
