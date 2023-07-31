@@ -38,7 +38,7 @@ async def chat_completion_functions(message, available_functions):
   response_message = response["choices"][0]["message"]
   if response_message.get("function_call"):
     function_name = response_message["function_call"]["name"]
-    function_response = available_functions[function_name](*json.loads(response_message["function_call"]["arguments"]))
+    function_response = await available_functions[function_name](*json.loads(response_message["function_call"]["arguments"]))
     messages.append(response_message)
     messages.append({"role": "function", "name":function_name, "content":function_response})
     return await chat_completion(messages, 'gpt-3-5-turbo-0613')
