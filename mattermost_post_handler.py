@@ -30,6 +30,7 @@ class MattermostPostHandler():
     self.lock = asyncio.Lock()
 
   async def generate_images(self, count):
+    logger.debug(count)
     post = self.post
     file_ids = self.file_ids
     prompt = post['message'].removeprefix(bot.name)
