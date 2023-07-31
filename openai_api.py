@@ -12,16 +12,12 @@ functions = [
     "parameters": {
       "type": "object",
       "properties": {
-        "message":{
-          "type":"string",
-          "description":"The image the user wants to be generated."
-        },
         "count":{
           "type":"integer",
           "description":"How many images? 1-8"
         },
       },
-      "required": ["message","count"]
+      "required": ["count"]
     }
   }
 ]
