@@ -16,8 +16,8 @@ functions = [
           "type":"string",
           "description":"The image the user wants to be generated."
         },
+      },
       "required": ["message"]
-      }
     }
   }
 ]
