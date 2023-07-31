@@ -1,7 +1,9 @@
 import json
 import os
 import openai
+import log
 
+logger = log.get_logger(__name__)
 openai.api_key = os.environ['OPENAI_API_KEY']
 openai_exceptions = (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.ServiceUnavailableError, openai.error.Timeout)
 
@@ -39,6 +41,7 @@ async def chat_completion_functions(message, available_functions):
   if response_message.get("function_call"):
     function_name = response_message["function_call"]["name"]
     function_response = await available_functions[function_name](*json.loads(response_message["function_call"]["arguments"]))
+    logger.debug(function_response)
     messages.append(response_message)
     messages.append({"role": "function", "name":function_name, "content":function_response})
     return await chat_completion(messages, 'gpt-3-5-turbo-0613')
