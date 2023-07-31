@@ -29,7 +29,7 @@ class MattermostPostHandler():
     self.file_ids = []
     self.lock = asyncio.Lock()
 
-  async def generate_images(self, count):
+  async def generate_images(self, count=0):
     logger.debug(count)
     post = self.post
     file_ids = self.file_ids
