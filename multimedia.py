@@ -12,11 +12,11 @@ import basic
 import generate_text
 import mattermost_api
 
-bot_name = os.environ['MATTERMOST_BOT_NAME']
+bot = mattermost_api.bot
 webui_api = webuiapi.WebUIApi(host=os.environ['STABLE_DIFFUSION_WEBUI_HOST'], port=os.environ['STABLE_DIFFUSION_WEBUI_PORT'])
 webui_api.set_auth('psychedelic-bot', os.environ['STABLE_DIFFUSION_WEBUI_API_KEY'])
 
-async def captioner(bot, post):
+async def captioner(post):
   captions = []
   async with httpx.AsyncClient() as client:
     for post_file_id in post['file_ids']:
@@ -56,8 +56,8 @@ async def captioner(bot, post):
         continue
   return '\n'.join(captions)
 
-async def generate_images(bot, file_ids, post, count):
-  prompt = post['message'].removeprefix(bot_name)
+async def generate_images(file_ids, post, count):
+  prompt = post['message'].removeprefix(bot.name)
   mainly_english = await basic.is_mainly_english(prompt.encode('utf-8'))
   if not mainly_english:
     prompt = await generate_text.fix_image_generation_prompt(prompt)
@@ -70,11 +70,11 @@ async def generate_images(bot, file_ids, post, count):
   for image in result.images:
     image.save('/tmp/result.png')
     with open('/tmp/result.png', 'rb') as image_file:
-      uploaded_file_id = await mattermost_api.upload_mattermost_file(bot, post['channel_id'], {'files':('result.png', image_file)})
+      uploaded_file_id = await bot.upload_mattermost_file(post['channel_id'], {'files':('result.png', image_file)})
       file_ids.append(uploaded_file_id)
   return prompt
 
-async def instruct_pix2pix(bot, file_ids, post):
+async def instruct_pix2pix(file_ids, post):
   print(f"DEBUG: Starting function with bot={bot}, file_ids={file_ids}, post={post}")
   comment = ''
   for post_file_id in post['file_ids']:
@@ -105,7 +105,7 @@ async def instruct_pix2pix(bot, file_ids, post):
       result.image.save(processed_image_path)
       print(f"DEBUG: Saved result to path={processed_image_path}")
       with open(processed_image_path, 'rb') as image_file:
-        file_id = await mattermost_api.upload_mattermost_file(bot, post['channel_id'], {'files': (processed_image_path, image_file)})
+        file_id = await bot.upload_mattermost_file(post['channel_id'], {'files': (processed_image_path, image_file)})
       print(f"DEBUG: Uploaded file, got file_id={file_id}")
       file_ids.append(file_id)
       comment += "Image processed successfully"
@@ -118,7 +118,7 @@ async def instruct_pix2pix(bot, file_ids, post):
           os.remove(temporary_file_path)
   return comment
 
-async def upscale_image(bot, file_ids, post, scale):
+async def upscale_image(file_ids, post, scale):
   if scale == 2:
     upscale_width = 1024
     upscale_height = 1024
@@ -141,7 +141,7 @@ async def upscale_image(bot, file_ids, post, scale):
       upscaled_image_path = f"upscaled_{post_file_id}.png"
       result.image.save(upscaled_image_path)
       with open(upscaled_image_path, 'rb') as image_file:
-        file_id = await mattermost_api.upload_mattermost_file(bot, post['channel_id'], {'files':(upscaled_image_path, image_file)})
+        file_id = await bot.upload_mattermost_file(post['channel_id'], {'files':(upscaled_image_path, image_file)})
       file_ids.append(file_id)
       comment += "Image upscaled successfully"
     except RuntimeError as err:

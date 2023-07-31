@@ -11,9 +11,14 @@ functions = [
     "description": "Generate images from the user message using a local API",
     "parameters": {
       "type": "object",
-      "properties": {"message":{"type":"string"}},
+      "properties": {
+        "message":{
+          "type":"string",
+          "description":"The image the user wants to be generated."
+        },
       "required": ["message"]
-    },
+      }
+    }
   }
 ]
 
