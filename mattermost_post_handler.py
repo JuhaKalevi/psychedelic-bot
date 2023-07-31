@@ -10,6 +10,7 @@ import multimedia
 import openai_api
 import textgen_api
 
+
 bot = mattermost_api.bot
 logger = log.get_logger(__name__)
 webui_api = webuiapi.WebUIApi(host=os.environ['STABLE_DIFFUSION_WEBUI_HOST'], port=os.environ['STABLE_DIFFUSION_WEBUI_PORT'])
@@ -17,13 +18,15 @@ webui_api.set_auth('psychedelic-bot', os.environ['STABLE_DIFFUSION_WEBUI_API_KEY
 
 class MattermostPostHandler():
 
-  def __init__(self, post, available_functions):
+  def __init__(self, post):
+    self.available_functions = {
+      'generate_images': self.generate_images
+    }
     self.context = None
     self.reply_to = None
     self.post = post
     self.message = post['message']
     self.file_ids = []
-    self.available_functions = available_functions
     self.lock = asyncio.Lock()
 
   async def generate_images(self, count):
