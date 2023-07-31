@@ -9,6 +9,25 @@ openai_exceptions = (openai.error.APIConnectionError, openai.error.APIError, ope
 
 functions = [
   {
+    "name": "channel_summary",
+    "description": "Summarize previous discussions in a larger context (user calls it channel or discussion or just 'here')",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type":"integer",
+          "description":"How many previous posts to summarize?"
+        }
+      },
+      "required": ["count"]
+    }
+  },
+  {
+    "name": "code_analysis",
+    "description": "Analyze code files that are automatically readable by your function. That's your chatbot code!",
+    "parameters": {"type": "object"}
+  },
+  {
     "name": "generate_images",
     "description": "Generate images from the user message using a local API",
     "parameters": {
@@ -17,7 +36,7 @@ functions = [
         "count": {
           "type":"integer",
           "description":"How many images? 1-8"
-        },
+        }
       },
       "required": ["count"]
     }

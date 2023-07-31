@@ -20,7 +20,9 @@ class MattermostPostHandler():
 
   def __init__(self, post):
     self.available_functions = {
-      'generate_images': self.generate_images
+      'channel_summary': self.channel_summary,
+      'code_analysis': self.code_analysis,
+      'generate_images': self.generate_images,
     }
     self.context = None
     self.reply_to = None
@@ -29,8 +31,20 @@ class MattermostPostHandler():
     self.file_ids = []
     self.lock = asyncio.Lock()
 
+  async def channel_summary(self, count):
+    self.context = await bot.posts.get_posts_for_channel(self.post['channel_id'], params={'per_page':count})
+    return await self.stream_reply_to_context()
+
+  async def code_analysis(self):
+    files = []
+    for file_path in [x for x in os.listdir() if x.endswith(('.py','.sh','.yml'))]:
+      with open(file_path, 'r', encoding='utf-8') as file:
+        content = file.read()
+      files.append(f'\n--- BEGIN {file_path} ---\n{content}\n--- END {file_path} ---\n')
+    self.message += '\nThis is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+'```'.join(files)
+    return await self.stream_reply_to_context()
+
   async def generate_images(self, count=0):
-    logger.debug(count)
     post = self.post
     file_ids = self.file_ids
     prompt = post['message'].removeprefix(bot.name)
@@ -52,6 +66,7 @@ class MattermostPostHandler():
 
   async def post_handler(self):
     post = self.post
+    self.context = await bot.posts.get_thread(post['id'])
     message = self.message
     file_ids = self.file_ids
     channel = await bot.channels.get_channel(post['channel_id'])
@@ -59,15 +74,11 @@ class MattermostPostHandler():
     if magic_words_response is not None:
       return await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':magic_words_response, 'file_ids':file_ids, 'root_id':post['root_id']})
     if post['root_id'] == "" and (f"{bot.name} always reply" in channel['purpose'] or bot.name_in_message(message)):
-      function_choice = await openai_api.chat_completion_functions(message, self.available_functions)
-      logger.debug(function_choice)
-      if await generate_text.is_asking_for_channel_summary(post):
-        self.context = await bot.posts.get_posts_for_channel(post['channel_id'], params={'per_page':143})
+      function_processed = await openai_api.chat_completion_functions(message, self.available_functions)
+      if function_processed is None:
+        self.context = {'order':[post['id']], 'posts':{post['id']: post}}
+        self.reply_to = post['id']
         return await self.stream_reply_to_context()
-      self.context = {'order':[post['id']], 'posts':{post['id']: post}}
-      self.reply_to = post['id']
-      return await self.stream_reply_to_context()
-    self.context = await bot.posts.get_thread(post['id'])
     self.reply_to = post['root_id']
     for thread_post in self.context['posts'].values():
       if bot.name_in_message(thread_post['message']):
