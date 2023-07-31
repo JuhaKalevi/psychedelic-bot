@@ -64,11 +64,3 @@ async def is_asking_for_channel_summary(message):
 async def is_asking_for_code_analysis(message):
   response = await from_message(f"Is this a message where knowledge or analysis of your code files is requested? You have a function that we will use later on if needed to read these files. Answer only True or False: {message}")
   return response.startswith('True')
-
-async def is_asking_for_image_generation(message):
-  response = await from_message(f"Is this a message where an image is probably requested? Answer only True or False: {message}")
-  return response.startswith('True')
-
-async def is_asking_for_multiple_images(message):
-  response = await from_message(f"Is this a message where multiple images are requested? Answer only True or False: {message}")
-  return response.startswith('True')
