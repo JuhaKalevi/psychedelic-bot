@@ -9,7 +9,6 @@ import httpx
 import webuiapi
 import PIL
 import basic
-import generate_text
 import mattermost_api
 
 bot = mattermost_api.bot
@@ -55,24 +54,6 @@ async def captioner(post):
         captions.append(f"Error occurred while generating captions for file {post_file_id}: {str(err)}")
         continue
   return '\n'.join(captions)
-
-async def generate_images(file_ids, post, count):
-  prompt = post['message'].removeprefix(bot.name)
-  mainly_english = await basic.is_mainly_english(prompt.encode('utf-8'))
-  if not mainly_english:
-    prompt = await generate_text.fix_image_generation_prompt(prompt)
-  options = webui_api.get_options()
-  options = {}
-  options['sd_model_checkpoint'] = 'realisticVisionV40_v4 0VAE.safetensors [e9d3cedc4b]'
-  options['sd_vae'] = 'vae-ft-mse-840000-ema-pruned.safetensors'
-  webui_api.set_options(options)
-  result = webui_api.txt2img(prompt=prompt, negative_prompt="(unfinished:1.43),(sloppy and messy:1.43),(incoherent:1.43),(deformed:1.43)", steps=42, sampler_name='UniPC', batch_size=count, restore_faces=True)
-  for image in result.images:
-    image.save('/tmp/result.png')
-    with open('/tmp/result.png', 'rb') as image_file:
-      uploaded_file_id = await bot.upload_mattermost_file(post['channel_id'], {'files':('result.png', image_file)})
-      file_ids.append(uploaded_file_id)
-  return prompt
 
 async def instruct_pix2pix(file_ids, post):
   print(f"DEBUG: Starting function with bot={bot}, file_ids={file_ids}, post={post}")

@@ -18,7 +18,7 @@ async def context_manager(event):
   if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != bot.name:
     post = json.loads(event['data']['post'])
     if 'from_bot' not in post['props']:
-      asyncio.create_task(mattermost_post_handler.MattermostPostHandler(post, available_functions).delegated_post_handler())
+      asyncio.create_task(mattermost_post_handler.MattermostPostHandler(post, available_functions).post_handler())
 
 async def main():
   await bot.login()

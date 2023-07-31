@@ -2,7 +2,6 @@ import os
 import mattermostdriver.exceptions
 class MattermostBot(mattermostdriver.AsyncDriver):
 
-  _instances = {}
   name = os.environ['MATTERMOST_BOT_NAME']
 
   async def create_or_update_post(self, options, post_id=None):

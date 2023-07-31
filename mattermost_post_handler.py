@@ -1,5 +1,7 @@
 import asyncio
+import os
 import time
+import webuiapi
 import basic
 import generate_text
 import log
@@ -10,6 +12,8 @@ import textgen_api
 
 bot = mattermost_api.bot
 logger = log.get_logger(__name__)
+webui_api = webuiapi.WebUIApi(host=os.environ['STABLE_DIFFUSION_WEBUI_HOST'], port=os.environ['STABLE_DIFFUSION_WEBUI_PORT'])
+webui_api.set_auth('psychedelic-bot', os.environ['STABLE_DIFFUSION_WEBUI_API_KEY'])
 
 class MattermostPostHandler():
 
@@ -22,7 +26,27 @@ class MattermostPostHandler():
     self.available_functions = available_functions
     self.lock = asyncio.Lock()
 
-  async def delegated_post_handler(self):
+  async def generate_images(self, count):
+    post = self.post
+    file_ids = self.file_ids
+    prompt = post['message'].removeprefix(bot.name)
+    mainly_english = await basic.is_mainly_english(prompt.encode('utf-8'))
+    if not mainly_english:
+      prompt = await generate_text.fix_image_generation_prompt(prompt)
+    options = webui_api.get_options()
+    options = {}
+    options['sd_model_checkpoint'] = 'realisticVisionV40_v4 0VAE.safetensors [e9d3cedc4b]'
+    options['sd_vae'] = 'vae-ft-mse-840000-ema-pruned.safetensors'
+    webui_api.set_options(options)
+    result = webui_api.txt2img(prompt=prompt, negative_prompt="(unfinished:1.43),(sloppy and messy:1.43),(incoherent:1.43),(deformed:1.43)", steps=42, sampler_name='UniPC', batch_size=count, restore_faces=True)
+    for image in result.images:
+      image.save('/tmp/result.png')
+      with open('/tmp/result.png', 'rb') as image_file:
+        uploaded_file_id = await bot.upload_mattermost_file(post['channel_id'], {'files':('result.png', image_file)})
+        file_ids.append(uploaded_file_id)
+    return await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':prompt, 'file_ids':file_ids, 'root_id':''})
+
+  async def post_handler(self):
     post = self.post
     message = self.message
     file_ids = self.file_ids
@@ -30,15 +54,9 @@ class MattermostPostHandler():
     magic_words_response = await self.respond_to_magic_words()
     if magic_words_response is not None:
       return await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':magic_words_response, 'file_ids':file_ids, 'root_id':post['root_id']})
-    if post['root_id'] == "" and (f"{bot.name} always reply" in channel['purpose'] or bot.name_in_message(self.message)):
-      function_choice = await openai_api.chat_completion_functions(self.message, self.available_functions)
+    if post['root_id'] == "" and (f"{bot.name} always reply" in channel['purpose'] or bot.name_in_message(message)):
+      function_choice = await openai_api.chat_completion_functions(message, self.available_functions)
       logger.debug(function_choice)
-      if f"{bot.name} always generate image" in channel['purpose'] or await generate_text.is_asking_for_image_generation(message):
-        if f"{bot.name} always generate images" in channel['purpose'] or await generate_text.is_asking_for_multiple_images(message):
-          image_generation_comment = await multimedia.generate_images(file_ids, post, 8)
-        else:
-          image_generation_comment = await multimedia.generate_images(file_ids, post, 1)
-        return await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':image_generation_comment, 'file_ids':file_ids, 'root_id':''})
       if await generate_text.is_asking_for_channel_summary(post):
         self.context = await bot.posts.get_posts_for_channel(post['channel_id'], params={'per_page':143})
         return await self.stream_reply_to_context()

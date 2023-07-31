@@ -16,8 +16,12 @@ functions = [
           "type":"string",
           "description":"The image the user wants to be generated."
         },
+        "count":{
+          "type":"int",
+          "description":"How many images? 1-8"
+        },
       },
-      "required": ["message"]
+      "required": ["message","count"]
     }
   }
 ]
