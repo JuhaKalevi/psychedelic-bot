@@ -41,7 +41,6 @@ async def chat_completion_functions(message, available_functions):
   if response_message.get("function_call"):
     function_name = response_message["function_call"]["name"]
     function_arguments = json.loads(response_message["function_call"]["arguments"])
-    logger.debug(function_name, **function_arguments)
     function_response = await available_functions[function_name](**function_arguments)
     messages.append(response_message)
     messages.append({"role": "function", "name":function_name, "content":function_response})
