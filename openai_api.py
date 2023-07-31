@@ -17,7 +17,7 @@ functions = [
           "description":"The image the user wants to be generated."
         },
         "count":{
-          "type":"int",
+          "type":"integer",
           "description":"How many images? 1-8"
         },
       },
