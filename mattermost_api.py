@@ -1,6 +1,6 @@
 import os
 import mattermostdriver.exceptions
-class MattermostBot(mattermostdriver.Driver):
+class MattermostBot(mattermostdriver.AsyncDriver):
 
   _instances = {}
   name = os.environ['MATTERMOST_BOT_NAME']
