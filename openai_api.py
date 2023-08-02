@@ -54,8 +54,9 @@ async def chat_completion_functions(message, available_functions):
   try:
     response = await openai.ChatCompletion.acreate(model='gpt-3.5-turbo-0613', messages=messages, functions=functions)
   except openai_exceptions as err:
-    return f"OpenAI API Error: {str(err)}"
+    return f"OpenAI API Error: {json.dumps(err)}"
   response_message = response["choices"][0]["message"]
+  logger.debug(response_message)
   if response_message.get("function_call"):
     function_name = response_message["function_call"]["name"]
     function_arguments = json.loads(response_message["function_call"]["arguments"])
