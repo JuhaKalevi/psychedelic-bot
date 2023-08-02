@@ -84,7 +84,7 @@ class MattermostPostHandler():
       with open(file_path, 'r', encoding='utf-8') as file:
         content = file.read()
       files.append(f'\n--- BEGIN {file_path} ---\n```\n{content}\n```\n--- END {file_path} ---\n')
-    self.message += '\nThis is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'.join(files)
+    self.message += '\nThis is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+''.join(files)
     logger.debug(self.message)
     await self.stream_reply_to_context()
 
