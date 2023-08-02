@@ -12,7 +12,7 @@ async def context_manager(_event:str) -> None:
     if 'from_bot' not in post['props']:
       asyncio.create_task(mattermost_post_handler.MattermostPostHandler(post).post_handler())
 
-async def main():
+async def main() -> None:
   await bot.login()
   await bot.init_websocket(context_manager)
 

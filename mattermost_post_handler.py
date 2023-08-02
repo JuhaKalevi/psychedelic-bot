@@ -88,7 +88,8 @@ class MattermostPostHandler():
         content = file.read()
       files.append(f'\n--- BEGIN {file_path} ---\n```\n{content}\n```\n--- END {file_path} ---\n')
     self.system_message = 'This is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+''.join(files)
-    await self.stream_reply_to_context()
+    reply_id = await self.stream_reply_to_context()
+    await bot.tag_post_with_emoji(reply_id, ':robot:')
 
   async def fix_image_generation_prompt(self, message:str):
     return await openai_api.chat_completion([
