@@ -29,7 +29,7 @@ class MattermostPostHandler():
     self.context = None
     self.file_ids = []
     self.lock = asyncio.Lock()
-    self.reply_to = None
+    self.reply_to = ''
     self.message = post['message']
     self.post = post
 
