@@ -3,7 +3,6 @@ import os
 import time
 import webuiapi
 import basic
-import generate_text
 import log
 import mattermost_api
 import openai_api
@@ -41,13 +40,49 @@ class MattermostPostHandler():
     self.message += '\nThis is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+'```'.join(files)
     return await self.stream_reply_to_context()
 
+  async def fix_image_generation_prompt(self, message):
+    return await self.from_message(f"convert this to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features and you don't have to use full sentences, just a few keywords, separating these aspects by commas. Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally: {message}")
+
+  async def from_context_streamed(self, context, model='gpt-4'):
+    if 'order' in context:
+      context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
+    context_messages = []
+    context_tokens = 0
+    context_token_limit = 7372
+    for post_id in context['order']:
+      if 'from_bot' in context['posts'][post_id]['props']:
+        role = 'assistant'
+      else:
+        role = 'user'
+      message = {'role':role, 'content':context['posts'][post_id]['message']}
+      message_tokens = openai_api.count_tokens(message)
+      new_context_tokens = context_tokens + message_tokens
+      if context_token_limit < new_context_tokens < 14744:
+        model = 'gpt-3.5-turbo-16k'
+        context_token_limit *= 2
+      elif new_context_tokens > 14744:
+        break
+      context_messages.append(message)
+      context_tokens = new_context_tokens
+    context_messages.reverse()
+    logger.debug('token_count: %s', context_tokens)
+    async for content in openai_api.chat_completion_streamed(context_messages, model):
+      yield content
+
+  async def from_message(self, message, model='gpt-4'):
+    return await openai_api.chat_completion([{'role':'user', 'content':message}], model)
+
+  async def from_message_streamed(self, message, model='gpt-4'):
+    async for content in openai_api.chat_completion_streamed([{'role':'user', 'content':message}], model):
+      yield content
+
   async def generate_images(self, count=0):
     post = self.post
     file_ids = self.file_ids
     prompt = post['message'].removeprefix(bot.name)
     mainly_english = await basic.is_mainly_english(prompt.encode('utf-8'))
     if not mainly_english:
-      prompt = await generate_text.fix_image_generation_prompt(prompt)
+      prompt = await self.fix_image_generation_prompt(prompt)
     options = webui_api.get_options()
     options = {}
     options['sd_model_checkpoint'] = 'realisticVisionV40_v4 0VAE.safetensors [e9d3cedc4b]'
@@ -59,7 +94,8 @@ class MattermostPostHandler():
       with open('/tmp/result.png', 'rb') as image_file:
         uploaded_file_id = await bot.upload_mattermost_file(post['channel_id'], {'files':('result.png', image_file)})
         file_ids.append(uploaded_file_id)
-    return await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':prompt, 'file_ids':file_ids, 'root_id':''})
+    await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':prompt, 'file_ids':file_ids, 'root_id':''})
+    return True
 
   async def post_handler(self):
     post = self.post
@@ -68,7 +104,7 @@ class MattermostPostHandler():
     channel = await bot.channels.get_channel(post['channel_id'])
     if post['root_id'] == "" and (f"{bot.name} always reply" in channel['purpose'] or bot.name_in_message(message)):
       function_processed = await openai_api.chat_completion_functions(message, self.available_functions)
-      if function_processed is None:
+      if not function_processed:
         self.context = {'order':[post['id']], 'posts':{post['id']: post}}
         self.reply_to = post['id']
         return await self.stream_reply_to_context()
@@ -85,7 +121,7 @@ class MattermostPostHandler():
     buffer = []
     chunks_processed = []
     start_time = time.time()
-    async for chunk in generate_text.from_context_streamed(self.context):
+    async for chunk in self.from_context_streamed(self.context):
       buffer.append(chunk)
       if (time.time() - start_time) * 1000 >= 250:
         joined_chunks = ''.join(buffer)

@@ -1,6 +1,7 @@
 import json
 import os
 import openai
+import tiktoken
 import log
 
 logger = log.get_logger(__name__)
@@ -74,3 +75,6 @@ async def chat_completion_streamed(messages, model='gpt-4'):
         yield content
   except openai_exceptions as err:
     yield f"OpenAI API Error: {err}"
+
+def count_tokens(message):
+  return len(tiktoken.get_encoding('cl100k_base').encode(json.dumps(message)))
