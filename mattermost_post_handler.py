@@ -106,9 +106,10 @@ class MattermostPostHandler():
       context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
     if self.system_message:
       context_messages = [{'role':'system', 'content':self.system_message}]
+      context_tokens = common.count_tokens(self.system_message)
     else:
       context_messages = []
-    context_tokens = 0
+      context_tokens = 0
     context_token_limit = 7372
     for post_id in context['order']:
       if 'from_bot' in context['posts'][post_id]['props']:
