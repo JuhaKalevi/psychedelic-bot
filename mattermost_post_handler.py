@@ -32,6 +32,7 @@ class MattermostPostHandler():
     self.reply_to = ''
     self.message = post['message']
     self.post = post
+    self.system_message = None
 
   async def captioner(self):
     post = self.post
@@ -79,13 +80,13 @@ class MattermostPostHandler():
     await self.stream_reply_to_context()
 
   async def code_analysis(self):
+    self.context = await bot.posts.get_thread(self.post['id'])
     files = []
     for file_path in [x for x in os.listdir() if x.endswith(('.py','.sh','.yml'))]:
       with open(file_path, 'r', encoding='utf-8') as file:
         content = file.read()
       files.append(f'\n--- BEGIN {file_path} ---\n```\n{content}\n```\n--- END {file_path} ---\n')
-    self.message += '\nThis is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+''.join(files)
-    logger.debug(self.message)
+    self.system_message = 'This is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+''.join(files)
     await self.stream_reply_to_context()
 
   async def fix_image_generation_prompt(self, message):
@@ -103,7 +104,7 @@ class MattermostPostHandler():
     context = self.context
     if 'order' in context:
       context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
-    context_messages = []
+    context_messages = [] + self.system_message
     context_tokens = 0
     context_token_limit = 7372
     for post_id in context['order']:
