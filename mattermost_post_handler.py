@@ -6,10 +6,7 @@ import basic
 import generate_text
 import log
 import mattermost_api
-import multimedia
 import openai_api
-import textgen_api
-
 
 bot = mattermost_api.bot
 logger = log.get_logger(__name__)
@@ -68,11 +65,7 @@ class MattermostPostHandler():
     post = self.post
     self.context = await bot.posts.get_thread(post['id'])
     message = self.message
-    file_ids = self.file_ids
     channel = await bot.channels.get_channel(post['channel_id'])
-    magic_words_response = await self.respond_to_magic_words()
-    if magic_words_response is not None:
-      return await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':magic_words_response, 'file_ids':file_ids, 'root_id':post['root_id']})
     if post['root_id'] == "" and (f"{bot.name} always reply" in channel['purpose'] or bot.name_in_message(message)):
       function_processed = await openai_api.chat_completion_functions(message, self.available_functions)
       if function_processed is None:
@@ -83,26 +76,6 @@ class MattermostPostHandler():
     for thread_post in self.context['posts'].values():
       if bot.name_in_message(thread_post['message']):
         return await self.stream_reply_to_context()
-
-  async def respond_to_magic_words(self):
-    post = self.post
-    message = self.message.lower()
-    file_ids = self.file_ids
-    if message.startswith("caption"):
-      return await multimedia.captioner(post)
-    if message.startswith("pix2pix"):
-      return await multimedia.instruct_pix2pix(file_ids, message)
-    if message.startswith("2x"):
-      return await multimedia.upscale_image(file_ids, message, 2)
-    if message.startswith("4x"):
-      return await multimedia.upscale_image(file_ids, message, 4)
-    if message.startswith("llm"):
-      return await textgen_api.textgen_chat_completion(message, {'internal': [], 'visible': []})
-    if message.startswith("storyteller"):
-      captions = await multimedia.captioner(post)
-      return await basic.generate_story_from_captions(captions)
-    if message.startswith("summary"):
-      return await multimedia.youtube_transcription(message)
 
   async def stream_reply_to_context(self, reply_to=''):
     lock = self.lock
