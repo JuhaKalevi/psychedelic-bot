@@ -77,7 +77,8 @@ class MattermostPostHandler():
 
   async def channel_summary(self, count:int):
     self.context = await bot.posts.get_posts_for_channel(self.post['channel_id'], params={'per_page':count})
-    return await self.stream_reply_to_context()
+    reply_id = await self.stream_reply_to_context()
+    logger.debug(reply_id)
 
   async def code_analysis(self):
     self.context = await bot.posts.get_thread(self.post['id'])
