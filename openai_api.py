@@ -46,14 +46,14 @@ functions = [
   }
 ]
 
-async def chat_completion(messages, model='gpt-4'):
+async def chat_completion(messages:list, model='gpt-4') -> str:
   try:
     response = await openai.ChatCompletion.acreate(model=model, messages=messages)
     return response['choices'][0]['message']['content']
   except openai_exceptions as err:
     return f"OpenAI API Error: {err}"
 
-async def chat_completion_functions(message, available_functions):
+async def chat_completion_functions(message:str, available_functions:dict) -> str:
   messages=[{"role":"user", "content":message}]
   try:
     response = await openai.ChatCompletion.acreate(model='gpt-3.5-turbo-0613', messages=messages, functions=functions)
@@ -67,7 +67,7 @@ async def chat_completion_functions(message, available_functions):
     await available_functions[function_name](**function_arguments)
   return response_message
 
-async def chat_completion_streamed(messages, model='gpt-4'):
+async def chat_completion_streamed(messages:dict, model='gpt-4'):
   try:
     async for chunk in await openai.ChatCompletion.acreate(model=model, messages=messages, stream=True):
       content = chunk["choices"][0].get("delta", {}).get("content")

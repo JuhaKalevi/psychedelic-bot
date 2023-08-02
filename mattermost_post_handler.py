@@ -75,9 +75,9 @@ class MattermostPostHandler():
           continue
     return '\n'.join(captions)
 
-  async def channel_summary(self, count):
+  async def channel_summary(self, count:int):
     self.context = await bot.posts.get_posts_for_channel(self.post['channel_id'], params={'per_page':count})
-    await self.stream_reply_to_context()
+    return await self.stream_reply_to_context()
 
   async def code_analysis(self):
     self.context = await bot.posts.get_thread(self.post['id'])
@@ -89,7 +89,7 @@ class MattermostPostHandler():
     self.system_message = 'This is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+''.join(files)
     await self.stream_reply_to_context()
 
-  async def fix_image_generation_prompt(self, message):
+  async def fix_image_generation_prompt(self, message:str):
     return await openai_api.chat_completion([
       {'role':'system', 'content':
         "Convert user image prompt to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features."
@@ -131,7 +131,7 @@ class MattermostPostHandler():
     async for content in openai_api.chat_completion_streamed(context_messages, model):
       yield content
 
-  async def from_message_streamed(self, message, model='gpt-4'):
+  async def from_message_streamed(self, message:str, model='gpt-4'):
     async for content in openai_api.chat_completion_streamed([{'role':'user', 'content':message}], model):
       yield content
 
@@ -155,7 +155,7 @@ class MattermostPostHandler():
         file_ids.append(uploaded_file_id)
     await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':prompt, 'file_ids':file_ids, 'root_id':''})
 
-  async def instruct_pix2pix(self):
+  async def instruct_pix2pix(self) -> str:
     file_ids = self.file_ids
     post = self.post
     print(f"DEBUG: Starting function with bot={bot}, file_ids={file_ids}, post={post}")
@@ -199,26 +199,27 @@ class MattermostPostHandler():
         for temporary_file_path in (post_file_path, processed_image_path):
           if os.path.exists(temporary_file_path):
             os.remove(temporary_file_path)
-    await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':prompt, 'file_ids':file_ids, 'root_id':''})
+    return await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':prompt, 'file_ids':file_ids, 'root_id':''})
 
-  async def post_handler(self):
+  async def post_handler(self) -> None:
     message = self.message
     post = self.post
     channel = await bot.channels.get_channel(post['channel_id'])
-    if post['root_id'] == "" and (f"{bot.name} always reply" in channel['purpose'] or bot.name_in_message(message)):
-      openai_response_message = await openai_api.chat_completion_functions(message, self.available_functions)
-      if openai_response_message.get('function_call'):
-        return
-      self.context = {'order':[post['id']], 'posts':{post['id']: post}}
-      self.reply_to = post['id']
-      return await self.stream_reply_to_context()
-    self.context = await bot.posts.get_thread(post['id'])
-    self.reply_to = post['root_id']
-    for thread_post in self.context['posts'].values():
-      if bot.name_in_message(thread_post['message']):
-        return await self.stream_reply_to_context()
+    if (f"{bot.name} always reply" in channel['purpose'] or bot.name_in_message(message)):
+      if post['root_id'] == "":
+        openai_response_message = await openai_api.chat_completion_functions(message, self.available_functions)
+        if not openai_response_message.get('function_call'):
+          self.context = {'order':[post['id']], 'posts':{post['id']: post}}
+          self.reply_to = post['id']
+          await self.stream_reply_to_context()
+      else:
+        self.context = await bot.posts.get_thread(post['id'])
+        self.reply_to = post['root_id']
+        for thread_post in self.context['posts'].values():
+          if bot.name_in_message(thread_post['message']):
+            await self.stream_reply_to_context()
 
-  async def stream_reply_to_context(self):
+  async def stream_reply_to_context(self) -> str:
     file_ids = self.file_ids
     lock = self.lock
     post = self.post
@@ -238,8 +239,9 @@ class MattermostPostHandler():
           start_time = time.time()
       if buffer:
         await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':''.join(chunks_processed)+''.join(buffer), 'file_ids':file_ids, 'root_id':reply_to}, reply_id)
+    return reply_id
 
-  async def upscale_image(self, scale):
+  async def upscale_image(self, scale:int) -> str:
     file_ids = self.file_ids
     post = self.post
     if scale == 2:
