@@ -19,10 +19,9 @@ class MattermostBot(mattermostdriver.AsyncDriver):
 
   async def tag_post_with_emoji(self, post_id:str, emoji:str):
     try:
-      return await self.reactions.create_reaction({'user_id': self.users.get_user_by_username(self.name), 'post_id': post_id, 'emoji_name': emoji})
+      return await self.reactions.create_reaction({'user_id': self.users.get_user_by_username(self.name), 'post_id':post_id, 'emoji_name':emoji})
     except mattermostdriver.exceptions.ResourceNotFound as err:
       print(f'ERROR mattermost.reactions.create_reaction(): {err}')
-      return
 
   async def upload_mattermost_file(self, channel_id:str, files):
     try:
