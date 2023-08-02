@@ -105,7 +105,7 @@ class MattermostPostHandler():
     if 'order' in context:
       context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
     if self.system_message:
-      context_messages = {'role':'system', 'content':self.system_message}
+      context_messages = [{'role':'system', 'content':self.system_message}]
     else:
       context_messages = []
     context_tokens = 0
