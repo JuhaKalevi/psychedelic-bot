@@ -20,7 +20,7 @@ webui_api.set_auth('psychedelic-bot', os.environ['STABLE_DIFFUSION_WEBUI_API_KEY
 
 class MattermostPostHandler():
 
-  def __init__(self, post):
+  def __init__(self, post:dict):
     self.available_functions = {
       'channel_summary': self.channel_summary,
       'code_analysis': self.code_analysis,

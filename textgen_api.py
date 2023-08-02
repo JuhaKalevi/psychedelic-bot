@@ -1,10 +1,10 @@
-from os import environ
-from json import loads
-from requests import post
+import json
+import os
+import requests
 
-async def textgen_chat_completion(user_input, history):
+async def textgen_chat_completion(message:str, history:dict) -> str:
   request = {
-    'user_input': user_input,
+    'user_input': message,
     'max_new_tokens': 1200,
     'history': history,
     'mode': 'instruct',
@@ -44,9 +44,9 @@ async def textgen_chat_completion(user_input, history):
     'skip_special_tokens': True,
     'stopping_strings': []
   }
-  response = post(environ['TEXTGEN_WEBUI_URI'], json=request, timeout=420)
+  response = requests.post(os.environ['TEXTGEN_WEBUI_URI'], json=request, timeout=420)
   if response.status_code == 200:
-    response_content = loads(response.text)
+    response_content = json.loads(response.text)
     results = response_content["results"]
     for result in results:
       chat_history = result.get("history", {})

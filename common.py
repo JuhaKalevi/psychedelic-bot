@@ -7,13 +7,13 @@ import gradio_client
 import tiktoken
 import openai_api
 
-def count_tokens(message):
+def count_tokens(message:str) -> int:
   return len(tiktoken.get_encoding('cl100k_base').encode(json.dumps(message)))
 
-async def generate_story_from_captions(message, model='gpt-4'):
+async def generate_story_from_captions(message:str, model='gpt-4') -> str:
   return await openai_api.chat_completion([{'role':'user', 'content':(f"Make a consistent story based on these image captions: {message}")}], model)
 
-async def generate_summary_from_transcription(message, model='gpt-4'):
+async def generate_summary_from_transcription(message:str, model='gpt-4') -> str:
   return await openai_api.chat_completion([{
     'role': 'user',
     'content': (
@@ -25,10 +25,10 @@ async def generate_summary_from_transcription(message, model='gpt-4'):
     )
   }], model)
 
-async def is_mainly_english(text):
+async def is_mainly_english(text:str) -> bool:
   return langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
 
-async def youtube_transcription(message):
+async def youtube_transcription(message:str) -> str:
   input_str = message
   url_pattern = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
   urls = re.findall(url_pattern, input_str)

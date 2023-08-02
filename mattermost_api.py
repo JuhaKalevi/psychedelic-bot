@@ -4,7 +4,7 @@ class MattermostBot(mattermostdriver.AsyncDriver):
 
   name = os.environ['MATTERMOST_BOT_NAME']
 
-  async def create_or_update_post(self, options, post_id=None):
+  async def create_or_update_post(self, options:dict, post_id=None) -> str:
     try:
       if post_id:
         post = await self.posts.patch_post(post_id, options=options)
@@ -14,10 +14,10 @@ class MattermostBot(mattermostdriver.AsyncDriver):
       print(f'ERROR mattermost.posts.create_post(): {err}')
     return post['id']
 
-  def name_in_message(self, message):
+  def name_in_message(self, message:str) -> bool:
     return self.name in message or self.name == '@bot' and '@chatgpt' in message
 
-  async def upload_mattermost_file(self, channel_id, files):
+  async def upload_mattermost_file(self, channel_id:str, files):
     try:
       file = await self.files.upload_file(channel_id, files=files)
     except (ConnectionResetError, mattermostdriver.exceptions.InvalidOrMissingParameters, mattermostdriver.exceptions.ResourceNotFound) as err:

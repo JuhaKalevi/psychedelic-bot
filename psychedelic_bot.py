@@ -1,16 +1,13 @@
 import asyncio
 import json
-import log
 import mattermost_api
 import mattermost_post_handler
 
 bot = mattermost_api.bot
-logger = log.get_logger(__name__)
-tasks = []
 
-async def context_manager(event):
-  event = json.loads(event)
-  if 'event' in event and event['event'] == 'posted' and event['data']['sender_name'] != bot.name:
+async def context_manager(_event:str) -> None:
+  event = json.loads(_event)
+  if event.get('event') == 'posted' and event['data']['sender_name'] != bot.name:
     post = json.loads(event['data']['post'])
     if 'from_bot' not in post['props']:
       asyncio.create_task(mattermost_post_handler.MattermostPostHandler(post).post_handler())
