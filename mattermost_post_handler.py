@@ -94,7 +94,8 @@ class MattermostPostHandler():
       with open('/tmp/result.png', 'rb') as image_file:
         uploaded_file_id = await bot.upload_mattermost_file(post['channel_id'], {'files':('result.png', image_file)})
         file_ids.append(uploaded_file_id)
-    await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':prompt, 'file_ids':file_ids, 'root_id':''})
+    result = await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':prompt, 'file_ids':file_ids, 'root_id':''})
+    logger.debug(result)
     return True
 
   async def post_handler(self):
