@@ -89,14 +89,18 @@ class MattermostPostHandler():
     await self.stream_reply_to_context()
 
   async def fix_image_generation_prompt(self, message):
-    return await openai_api.chat_completion(
-      f"Convert this image prompt to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features."
-      f" Don't use full sentences, just a few keywords, separating these aspects by commas, or periods which separate bigger units consisting of multiple comma separated keywords together."
-      f" Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally."
-      f" Don't use any kind of formatting to separate these keywords, expect commas and periods!"
-      f" IMAGE PROMPT BEGINS HERE: {message}")
+    return await openai_api.chat_completion([
+      {'role':'system', 'content':
+        "Convert user image prompt to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features."
+        " Don't use full sentences, just a few keywords, separating these aspects by commas, or periods which separate bigger units consisting of multiple comma separated keywords together."
+        " Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally."
+        " Don't use any kind of formatting to separate these keywords, expect commas and periods!"
+      },
+      {'role':'user', 'content':message}
+    ])
 
-  async def from_context_streamed(self, context, model='gpt-4'):
+  async def from_context_streamed(self):
+    context = self.context
     if 'order' in context:
       context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
     context_messages = []
@@ -219,7 +223,7 @@ class MattermostPostHandler():
     chunks_processed = []
     start_time = time.time()
     async with lock:
-      async for chunk in self.from_context_streamed(self.context):
+      async for chunk in self.from_context_streamed():
         buffer.append(chunk)
         if (time.time() - start_time) * 1000 >= 250:
           joined_chunks = ''.join(buffer)
