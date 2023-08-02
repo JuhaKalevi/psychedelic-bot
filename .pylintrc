@@ -3,9 +3,8 @@ disable=
     C0114, # missing-module-docstring
     C0115, # missing-class-docstring
     C0116, # missing-function-docstring
-    R0911, # too-many-return-statements
     R0914, # too-many-locals
 [FORMAT]
 indent-string='  '
 indent-after-paren=2
-max-line-length=666
+max-line-length=263
