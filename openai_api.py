@@ -24,7 +24,8 @@ functions = [
   },
   {
     "name": "code_analysis",
-    "description": "Analyze code files that are automatically readable by your function. That's your chatbot code!"
+    "description": "Analyze code files that are automatically readable by your function. That's your chatbot code!",
+    "parameters": {}
   },
   {
     "name": "generate_images",
