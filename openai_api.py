@@ -66,8 +66,7 @@ async def chat_completion_functions(message, available_functions):
     function_arguments = json.loads(response_message["function_call"]["arguments"])
     await available_functions[function_name](**function_arguments)
     return True
-  else:
-    return response_message['content']
+  return response_message['content']
 
 async def chat_completion_streamed(messages, model='gpt-4'):
   try:
