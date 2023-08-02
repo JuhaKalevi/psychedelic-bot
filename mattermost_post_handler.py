@@ -89,7 +89,12 @@ class MattermostPostHandler():
     await self.stream_reply_to_context()
 
   async def fix_image_generation_prompt(self, message):
-    return await self.from_message(f"convert this to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features and you don't have to use full sentences, just a few keywords, separating these aspects by commas. Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally: {message}")
+    return await openai_api.chat_completion(
+      f"Convert this image prompt to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features."
+      f" Don't use full sentences, just a few keywords, separating these aspects by commas, or periods which separate bigger units consisting of multiple comma separated keywords together."
+      f" Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally."
+      f" Don't use any kind of formatting to separate these keywords, expect commas and periods!"
+      f" IMAGE PROMPT BEGINS HERE: {message}")
 
   async def from_context_streamed(self, context, model='gpt-4'):
     if 'order' in context:
@@ -116,9 +121,6 @@ class MattermostPostHandler():
     logger.debug('token_count: %s', context_tokens)
     async for content in openai_api.chat_completion_streamed(context_messages, model):
       yield content
-
-  async def from_message(self, message, model='gpt-4'):
-    return await openai_api.chat_completion([{'role':'user', 'content':message}], model)
 
   async def from_message_streamed(self, message, model='gpt-4'):
     async for content in openai_api.chat_completion_streamed([{'role':'user', 'content':message}], model):
@@ -193,15 +195,15 @@ class MattermostPostHandler():
   async def post_handler(self):
     message = self.message
     post = self.post
-    self.context = await bot.posts.get_thread(post['id'])
     channel = await bot.channels.get_channel(post['channel_id'])
     if post['root_id'] == "" and (f"{bot.name} always reply" in channel['purpose'] or bot.name_in_message(message)):
       openai_response_message = await openai_api.chat_completion_functions(message, self.available_functions)
-      if not openai_response_message.get('function_call'):
-        self.context = {'order':[post['id']], 'posts':{post['id']: post}}
-        self.reply_to = post['id']
-        return await self.stream_reply_to_context()
-      return
+      if openai_response_message.get('function_call'):
+        return
+      self.context = {'order':[post['id']], 'posts':{post['id']: post}}
+      self.reply_to = post['id']
+      return await self.stream_reply_to_context()
+    self.context = await bot.posts.get_thread(post['id'])
     self.reply_to = post['root_id']
     for thread_post in self.context['posts'].values():
       if bot.name_in_message(thread_post['message']):
