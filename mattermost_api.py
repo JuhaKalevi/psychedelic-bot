@@ -3,7 +3,7 @@ import mattermostdriver.exceptions
 class MattermostBot(mattermostdriver.AsyncDriver):
 
   name = os.environ['MATTERMOST_BOT_NAME']
-
+  
   async def create_or_update_post(self, options:dict, post_id=None):
     try:
       if post_id:
@@ -19,7 +19,8 @@ class MattermostBot(mattermostdriver.AsyncDriver):
 
   async def tag_post_with_emoji(self, post_id:str, emoji:str):
     try:
-      return await self.reactions.create_reaction({'user_id': self.users.get_user_by_username(self.name), 'post_id':post_id, 'emoji_name':emoji})
+      user_id = await self.users.get_user_by_username(self.name)
+      return await self.reactions.create_reaction({'user_id': user_id, 'post_id':post_id, 'emoji_name':emoji})
     except mattermostdriver.exceptions.ResourceNotFound as err:
       print(f'ERROR mattermost.reactions.create_reaction(): {err}')
 
@@ -30,4 +31,4 @@ class MattermostBot(mattermostdriver.AsyncDriver):
     except (ConnectionResetError, mattermostdriver.exceptions.InvalidOrMissingParameters, mattermostdriver.exceptions.ResourceNotFound) as err:
       print(f'ERROR mattermost.files.upload_file(): {err}')
 
-bot = MattermostBot({'url':os.environ['MATTERMOST_URL'], 'token':os.environ['MATTERMOST_TOKEN'],'scheme':'https', 'port':443})
+bot = MattermostBot({'url':os.environ['MATTERMOST_URL'], 'token':os.environ['MATTERMOST_TOKEN'], 'scheme':'https', 'port':443})
