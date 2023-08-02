@@ -194,9 +194,9 @@ class MattermostPostHandler():
     return True
 
   async def post_handler(self):
+    message = self.message
     post = self.post
     self.context = await bot.posts.get_thread(post['id'])
-    message = self.message
     channel = await bot.channels.get_channel(post['channel_id'])
     if post['root_id'] == "" and (f"{bot.name} always reply" in channel['purpose'] or bot.name_in_message(message)):
       function_processed = await openai_api.chat_completion_functions(message, self.available_functions)
@@ -209,10 +209,11 @@ class MattermostPostHandler():
       if bot.name_in_message(thread_post['message']):
         return await self.stream_reply_to_context()
 
-  async def stream_reply_to_context(self, reply_to=''):
+  async def stream_reply_to_context(self):
+    file_ids = self.file_ids
     lock = self.lock
     post = self.post
-    file_ids = self.file_ids
+    reply_to = self.reply_to
     reply_id = None
     buffer = []
     chunks_processed = []
