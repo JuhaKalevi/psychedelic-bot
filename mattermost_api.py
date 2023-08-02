@@ -4,7 +4,7 @@ class MattermostBot(mattermostdriver.AsyncDriver):
 
   name = os.environ['MATTERMOST_BOT_NAME']
 
-  async def create_or_update_post(self, options:dict, post_id=None) -> str | None:
+  async def create_or_update_post(self, options:dict, post_id=None):
     try:
       if post_id:
         post = await self.posts.patch_post(post_id, options=options)
@@ -17,14 +17,14 @@ class MattermostBot(mattermostdriver.AsyncDriver):
   def name_in_message(self, message:str) -> bool:
     return self.name in message or self.name == '@bot' and '@chatgpt' in message
 
-  async def tag_post_with_emoji(self, post_id:str, emoji:str) -> str | None:
+  async def tag_post_with_emoji(self, post_id:str, emoji:str):
     try:
       return await self.reactions.create_reaction({'user_id': self.users.get_user_by_username(self.name), 'post_id': post_id, 'emoji_name': emoji})
     except mattermostdriver.exceptions.ResourceNotFound as err:
       print(f'ERROR mattermost.reactions.create_reaction(): {err}')
       return
 
-  async def upload_mattermost_file(self, channel_id:str, files) -> str | None:
+  async def upload_mattermost_file(self, channel_id:str, files):
     try:
       file = await self.files.upload_file(channel_id, files=files)
       return file['file_infos'][0]['id']
