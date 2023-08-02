@@ -27,11 +27,11 @@ class MattermostPostHandler():
       'generate_images': self.generate_images,
     }
     self.context = None
-    self.reply_to = None
-    self.post = post
-    self.message = post['message']
     self.file_ids = []
     self.lock = asyncio.Lock()
+    self.reply_to = None
+    self.message = post['message']
+    self.post = post
 
   async def captioner(self):
     post = self.post
@@ -76,7 +76,7 @@ class MattermostPostHandler():
 
   async def channel_summary(self, count):
     self.context = await bot.posts.get_posts_for_channel(self.post['channel_id'], params={'per_page':count})
-    return await self.stream_reply_to_context()
+    await self.stream_reply_to_context()
 
   async def code_analysis(self):
     files = []
@@ -85,7 +85,7 @@ class MattermostPostHandler():
         content = file.read()
       files.append(f'\n--- BEGIN {file_path} ---\n{content}\n--- END {file_path} ---\n')
     self.message += '\nThis is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+'```'.join(files)
-    return await self.stream_reply_to_context()
+    await self.stream_reply_to_context()
 
   async def fix_image_generation_prompt(self, message):
     return await self.from_message(f"convert this to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features and you don't have to use full sentences, just a few keywords, separating these aspects by commas. Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally: {message}")
@@ -141,9 +141,7 @@ class MattermostPostHandler():
       with open('/tmp/result.png', 'rb') as image_file:
         uploaded_file_id = await bot.upload_mattermost_file(post['channel_id'], {'files':('result.png', image_file)})
         file_ids.append(uploaded_file_id)
-    result = await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':prompt, 'file_ids':file_ids, 'root_id':''})
-    logger.debug(result)
-    return True
+    await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':prompt, 'file_ids':file_ids, 'root_id':''})
 
   async def instruct_pix2pix(self):
     file_ids = self.file_ids
@@ -189,9 +187,7 @@ class MattermostPostHandler():
         for temporary_file_path in (post_file_path, processed_image_path):
           if os.path.exists(temporary_file_path):
             os.remove(temporary_file_path)
-    result = await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':prompt, 'file_ids':file_ids, 'root_id':''})
-    logger.debug(result)
-    return True
+    await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':prompt, 'file_ids':file_ids, 'root_id':''})
 
   async def post_handler(self):
     message = self.message
@@ -200,7 +196,7 @@ class MattermostPostHandler():
     channel = await bot.channels.get_channel(post['channel_id'])
     if post['root_id'] == "" and (f"{bot.name} always reply" in channel['purpose'] or bot.name_in_message(message)):
       function_processed = await openai_api.chat_completion_functions(message, self.available_functions)
-      if not function_processed:
+      if function_processed is not True:
         self.context = {'order':[post['id']], 'posts':{post['id']: post}}
         self.reply_to = post['id']
         return await self.stream_reply_to_context()
@@ -218,19 +214,17 @@ class MattermostPostHandler():
     buffer = []
     chunks_processed = []
     start_time = time.time()
-    async for chunk in self.from_context_streamed(self.context):
-      buffer.append(chunk)
-      if (time.time() - start_time) * 1000 >= 250:
-        joined_chunks = ''.join(buffer)
-        async with lock:
+    async with lock:
+      async for chunk in self.from_context_streamed(self.context):
+        buffer.append(chunk)
+        if (time.time() - start_time) * 1000 >= 250:
+          joined_chunks = ''.join(buffer)
           reply_id = await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':''.join(chunks_processed)+joined_chunks, 'file_ids':file_ids, 'root_id':reply_to}, reply_id)
-        chunks_processed.append(joined_chunks)
-        buffer.clear()
-        start_time = time.time()
-    if buffer:
-      async with lock:
-        reply_id = await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':''.join(chunks_processed)+''.join(buffer), 'file_ids':file_ids, 'root_id':reply_to}, reply_id)
-    return reply_id
+          chunks_processed.append(joined_chunks)
+          buffer.clear()
+          start_time = time.time()
+      if buffer:
+        await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':''.join(chunks_processed)+''.join(buffer), 'file_ids':file_ids, 'root_id':reply_to}, reply_id)
 
   async def upscale_image(self, scale):
     file_ids = self.file_ids
