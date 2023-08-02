@@ -25,7 +25,10 @@ functions = [
   {
     "name": "code_analysis",
     "description": "Analyze code files that are automatically readable by your function. That's your chatbot code!",
-    "parameters": {}
+    "parameters": {
+      "type": "object",
+      "properties": {}
+    }
   },
   {
     "name": "generate_images",
