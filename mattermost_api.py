@@ -1,5 +1,8 @@
 import os
 import mattermostdriver.exceptions
+import log
+
+logger = log.get_logger(__name__)
 class MattermostBot(mattermostdriver.AsyncDriver):
 
   name = os.environ['MATTERMOST_BOT_NAME']
@@ -20,6 +23,7 @@ class MattermostBot(mattermostdriver.AsyncDriver):
   async def tag_post_with_emoji(self, post_id:str, emoji:str):
     try:
       user_id = await self.users.get_user_by_username(self.name)
+      logger.debug({'user_id':user_id, 'post_id':post_id, 'emoji_name':emoji})
       return await self.reactions.create_reaction({'user_id': user_id, 'post_id':post_id, 'emoji_name':emoji})
     except mattermostdriver.exceptions.ResourceNotFound as err:
       print(f'ERROR mattermost.reactions.create_reaction(): {err}')
