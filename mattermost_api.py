@@ -3,7 +3,7 @@ import mattermostdriver.exceptions
 class MattermostBot(mattermostdriver.AsyncDriver):
 
   name = os.environ['MATTERMOST_BOT_NAME']
-  
+
   async def create_or_update_post(self, options:dict, post_id=None):
     try:
       if post_id:
