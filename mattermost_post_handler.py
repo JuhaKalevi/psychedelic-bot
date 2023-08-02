@@ -100,7 +100,7 @@ class MattermostPostHandler():
       {'role':'user', 'content':message}
     ])
 
-  async def from_context_streamed(self):
+  async def from_context_streamed(self, model='gpt-4'):
     context = self.context
     if 'order' in context:
       context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
