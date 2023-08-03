@@ -203,7 +203,7 @@ class MattermostPostHandler():
             os.remove(temporary_file_path)
     return await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':prompt, 'file_ids':file_ids, 'root_id':''})
 
-  async def post_handler(self) -> None:
+  async def post_handler(self):
     message = self.message
     post = self.post
     channel = await bot.channels.get_channel(post['channel_id'])
