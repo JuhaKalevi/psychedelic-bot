@@ -219,6 +219,8 @@ class MattermostPostHandler():
         self.context = await bot.posts.get_thread(post['id'])
         self.reply_to = post['root_id']
         for thread_post in self.context['posts'].values():
+          logger.debug(thread_post)
+        for thread_post in self.context['posts'].values():
           if bot.name_in_message(thread_post['message']):
             await self.stream_reply_to_context()
 
