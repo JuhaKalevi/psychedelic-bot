@@ -75,12 +75,11 @@ class MattermostPostHandler():
           continue
     return '\n'.join(captions)
 
-  async def channel_summary(self, count:int):
+  async def channel_summary(self, count:int) -> None:
     self.context = await bot.posts.get_posts_for_channel(self.post['channel_id'], params={'per_page':count})
-    reply_id = await self.stream_reply_to_context()
-    logger.debug(reply_id)
+    await self.stream_reply_to_context()
 
-  async def code_analysis(self):
+  async def code_analysis(self) -> None:
     self.context = await bot.posts.get_thread(self.post['id'])
     files = []
     for file_path in [x for x in os.listdir() if x.endswith(('.py','.sh','.yml'))]:
@@ -92,7 +91,7 @@ class MattermostPostHandler():
     reaction = await bot.create_reaction(reply_id, 'robot_face')
     return reaction
 
-  async def fix_image_generation_prompt(self, message:str):
+  async def fix_image_generation_prompt(self, message:str) -> str:
     return await openai_api.chat_completion([
       {'role':'system', 'content':
         "Convert user image prompt to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features."

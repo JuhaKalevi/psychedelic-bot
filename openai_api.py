@@ -61,11 +61,9 @@ async def chat_completion_functions(message:str, available_functions:dict) -> st
     return f"OpenAI API Error: {json.dumps(err)}"
   response_message = response_message["choices"][0]["message"]
   if response_message.get("function_call"):
-    logger.debug(response_message["function_call"])
     function = response_message["function_call"]["name"]
     arguments = json.loads(response_message["function_call"]["arguments"])
     function_response = await available_functions[function](**arguments)
-    logger.debug(function_response)
   return response_message
 
 async def chat_completion_streamed(messages:dict, model='gpt-4'):
