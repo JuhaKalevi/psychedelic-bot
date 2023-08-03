@@ -217,15 +217,16 @@ class MattermostPostHandler():
           return await self.stream_reply_to_context()
     self.context = await bot.posts.get_thread(post['id'])
     self.reply_to = post['root_id']
-    for thread_post in self.context['posts'].values():
-      if thread_post['metadata'].get('reactions'):
-        for reaction in thread_post['metadata']['reactions']:
-          logger.debug("DEBUG: reaction=%s", reaction)
-          if reaction['emoji_name'] == 'robot_face' and reaction['user_id'] == bot.user_id:
-            return await self.code_analysis()
-    for thread_post in self.context['posts'].values():
-      if bot.name_in_message(thread_post['message']):
-        return await self.stream_reply_to_context()
+    async with self.lock:
+      for thread_post in self.context['posts'].values():
+        if thread_post['metadata'].get('reactions'):
+          for reaction in thread_post['metadata']['reactions']:
+            logger.debug("DEBUG: reaction=%s", reaction)
+            if reaction['emoji_name'] == 'robot_face' and reaction['user_id'] == bot.user_id:
+              return await self.code_analysis()
+      for thread_post in self.context['posts'].values():
+        if bot.name_in_message(thread_post['message']):
+          return await self.stream_reply_to_context()
 
   async def stream_reply_to_context(self) -> str:
     file_ids = self.file_ids
