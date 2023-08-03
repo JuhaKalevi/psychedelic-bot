@@ -213,15 +213,14 @@ class MattermostPostHandler():
         if not openai_response_message.get('function_call'):
           self.context = {'order':[post['id']], 'posts':{post['id']: post}}
           self.reply_to = post['id']
-          await self.stream_reply_to_context()
-      else:
-        self.context = await bot.posts.get_thread(post['id'])
-        self.reply_to = post['root_id']
-        for thread_post in self.context['posts'].values():
-          logger.debug(thread_post['metadata']['reactions'])
-        for thread_post in self.context['posts'].values():
-          if bot.name_in_message(thread_post['message']):
-            await self.stream_reply_to_context()
+          return await self.stream_reply_to_context()
+    self.context = await bot.posts.get_thread(post['id'])
+    self.reply_to = post['root_id']
+    for thread_post in self.context['posts'].values():
+      logger.debug(thread_post['metadata']['reactions'])
+    for thread_post in self.context['posts'].values():
+      if bot.name_in_message(thread_post['message']):
+        await self.stream_reply_to_context()
 
   async def stream_reply_to_context(self) -> str:
     file_ids = self.file_ids
