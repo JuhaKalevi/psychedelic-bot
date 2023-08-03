@@ -22,7 +22,8 @@ class MattermostBot(mattermostdriver.AsyncDriver):
     return self.name in message or self.name == '@bot' and '@chatgpt' in message
 
   async def tag_post_with_emoji(self, post_id:str, emoji:str):
-    logger.debug(post_id, emoji)
+    logger.debug(post_id)
+    logger.debug(emoji)
     try:
       user_id = await self.users.get_user_by_username(self.name)
       logger.debug('emoji call: %s', json.dumps({'user_id':user_id, 'post_id':post_id, 'emoji_name':emoji}))
