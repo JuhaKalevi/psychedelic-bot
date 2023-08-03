@@ -219,6 +219,7 @@ class MattermostPostHandler():
     for thread_post in self.context['posts'].values():
       if thread_post['metadata'].get('reactions'):
         for reaction in thread_post['metadata']['reactions']:
+          logger.debug("DEBUG: reaction=%s", reaction)
           if reaction['emoji_name'] == 'robot_face' and reaction['user_id'] == bot.user_id:
             await self.code_analysis()
             return
