@@ -28,7 +28,6 @@ class MattermostPostHandler():
     }
     self.context = None
     self.file_ids = []
-    self.lock = asyncio.Lock()
     self.reply_to = ''
     self.message = post['message']
     self.post = post
@@ -217,7 +216,7 @@ class MattermostPostHandler():
           return await self.stream_reply_to_context()
     self.context = await bot.posts.get_thread(post['id'])
     self.reply_to = post['root_id']
-    async with self.lock:
+    async with asyncio.Lock():
       for thread_post in self.context['posts'].values():
         if thread_post['metadata'].get('reactions'):
           for reaction in thread_post['metadata']['reactions']:
@@ -230,14 +229,13 @@ class MattermostPostHandler():
 
   async def stream_reply_to_context(self) -> str:
     file_ids = self.file_ids
-    lock = self.lock
     post = self.post
     reply_to = self.reply_to
     reply_id = None
     buffer = []
     chunks_processed = []
     start_time = time.time()
-    async with lock:
+    async with asyncio.Lock():
       async for chunk in self.from_context_streamed():
         buffer.append(chunk)
         if (time.time() - start_time) * 1000 >= 250:
