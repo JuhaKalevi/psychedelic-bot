@@ -8,4 +8,4 @@ disable=
 [FORMAT]
 indent-string='  '
 indent-after-paren=2
-max-line-length=263
+max-line-length=420
