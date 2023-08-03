@@ -22,8 +22,7 @@ class MattermostBot(mattermostdriver.AsyncDriver):
 
   async def tag_post_with_emoji(self, post_id:str, emoji:str):
     try:
-      user_id = await self.users.get_user_by_username(self.name)
-      user_id.strip('@')
+      user_id = await self.users.get_user_by_username(self.name.strip('@'))
       logger.debug(user_id)
       logger.debug(post_id)
       logger.debug(emoji)
