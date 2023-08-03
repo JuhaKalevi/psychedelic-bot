@@ -212,12 +212,16 @@ class MattermostPostHandler():
         if not openai_response_message.get('function_call'):
           self.context = {'order':[post['id']], 'posts':{post['id']: post}}
           self.reply_to = post['id']
-          return await self.stream_reply_to_context()
+          await self.stream_reply_to_context()
+          return
     self.context = await bot.posts.get_thread(post['id'])
     self.reply_to = post['root_id']
     for thread_post in self.context['posts'].values():
       if thread_post['metadata'].get('reactions'):
-        logger.debug(thread_post['metadata']['reactions'])
+        for reaction in thread_post['metadata']['reactions']:
+          if reaction['emoji_name'] == 'robot_face' and reaction['user_id'] == bot.user_id:
+            await self.code_analysis()
+            return
     for thread_post in self.context['posts'].values():
       if bot.name_in_message(thread_post['message']):
         await self.stream_reply_to_context()
