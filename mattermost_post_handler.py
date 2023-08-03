@@ -240,7 +240,7 @@ class MattermostPostHandler():
           buffer.clear()
           start_time = time.time()
       if buffer:
-        await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':''.join(chunks_processed)+''.join(buffer), 'file_ids':file_ids, 'root_id':reply_to}, reply_id)
+        reply_id = await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':''.join(chunks_processed)+''.join(buffer), 'file_ids':file_ids, 'root_id':reply_to}, reply_id)
     return reply_id
 
   async def upscale_image(self, scale:int) -> str:
