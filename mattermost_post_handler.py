@@ -89,7 +89,7 @@ class MattermostPostHandler():
       files.append(f'\n--- BEGIN {file_path} ---\n```\n{content}\n```\n--- END {file_path} ---\n')
     self.system_message = 'This is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic!'+''.join(files)
     reply_id = await self.stream_reply_to_context()
-    reaction = await bot.tag_post_with_emoji(reply_id, 'robot_face')
+    reaction = await bot.create_reaction(reply_id, 'robot_face')
     return reaction
 
   async def fix_image_generation_prompt(self, message:str):
@@ -154,7 +154,7 @@ class MattermostPostHandler():
     for image in result.images:
       image.save('/tmp/result.png')
       with open('/tmp/result.png', 'rb') as image_file:
-        uploaded_file_id = await bot.upload_mattermost_file(post['channel_id'], {'files':('result.png', image_file)})
+        uploaded_file_id = await bot.upload_file(post['channel_id'], {'files':('result.png', image_file)})
         file_ids.append(uploaded_file_id)
     await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':prompt, 'file_ids':file_ids, 'root_id':''})
 
@@ -191,7 +191,7 @@ class MattermostPostHandler():
         result.image.save(processed_image_path)
         print(f"DEBUG: Saved result to path={processed_image_path}")
         with open(processed_image_path, 'rb') as image_file:
-          file_id = await bot.upload_mattermost_file(post['channel_id'], {'files': (processed_image_path, image_file)})
+          file_id = await bot.upload_file(post['channel_id'], {'files': (processed_image_path, image_file)})
         print(f"DEBUG: Uploaded file, got file_id={file_id}")
         file_ids.append(file_id)
         comment += "Image processed successfully"
@@ -269,7 +269,7 @@ class MattermostPostHandler():
         upscaled_image_path = f"upscaled_{post_file_id}.png"
         result.image.save(upscaled_image_path)
         with open(upscaled_image_path, 'rb') as image_file:
-          file_id = await bot.upload_mattermost_file(post['channel_id'], {'files':(upscaled_image_path, image_file)})
+          file_id = await bot.upload_file(post['channel_id'], {'files':(upscaled_image_path, image_file)})
         file_ids.append(file_id)
         comment += "Image upscaled successfully"
       except RuntimeError as err:
