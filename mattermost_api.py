@@ -1,4 +1,3 @@
-import json
 import os
 import mattermostdriver.exceptions
 import log
@@ -22,14 +21,13 @@ class MattermostBot(mattermostdriver.AsyncDriver):
     return self.name in message or self.name == '@bot' and '@chatgpt' in message
 
   async def tag_post_with_emoji(self, post_id:str, emoji:str):
-    logger.debug(post_id)
-    logger.debug(emoji)
     try:
       user_id = await self.users.get_user_by_username(self.name)
-      logger.debug('emoji call: %s', json.dumps({'user_id':user_id, 'post_id':post_id, 'emoji_name':emoji}))
-      return await self.reactions.create_reaction({'user_id': user_id, 'post_id':post_id, 'emoji_name':emoji})
+      reaction = await self.reactions.create_reaction({'user_id': user_id, 'post_id':post_id, 'emoji_name':emoji})
+      return reaction
     except mattermostdriver.exceptions.ResourceNotFound as err:
       print(f'ERROR mattermost.reactions.create_reaction(): {err}')
+      return err
 
   async def upload_mattermost_file(self, channel_id:str, files):
     try:
