@@ -73,4 +73,5 @@ async def chat_completion_streamed(messages:dict, model='gpt-4'):
       if content:
         yield content
   except openai_exceptions as err:
-    yield f"OpenAI API Error: {err}"
+    logger.debug("OpenAI API Error: %s", err)
+    return
