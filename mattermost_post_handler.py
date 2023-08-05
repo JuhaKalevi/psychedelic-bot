@@ -144,8 +144,8 @@ class MattermostPostHandler():
       prompt = await self.fix_image_generation_prompt(prompt)
     options = webui_api.get_options()
     options = {}
-    options['sd_model_checkpoint'] = 'realisticVisionV40_v4 0VAE.safetensors [e9d3cedc4b]'
-    options['sd_vae'] = 'vae-ft-mse-840000-ema-pruned.safetensors'
+    options['sd_model_checkpoint'] = 'sd_xl_base_1.0.safetensors [31e35c80fc]'
+    options['sd_vae'] = 'sdxl_vae.safetensors'
     webui_api.set_options(options)
     result = webui_api.txt2img(prompt=prompt, negative_prompt="(unfinished:1.43),(sloppy and messy:1.43),(incoherent:1.43),(deformed:1.43)", steps=42, sampler_name='UniPC', batch_size=count, restore_faces=True)
     for image in result.images:
