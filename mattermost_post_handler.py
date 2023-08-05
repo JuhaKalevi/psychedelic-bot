@@ -147,7 +147,7 @@ class MattermostPostHandler():
     options['sd_model_checkpoint'] = 'sd_xl_base_1.0.safetensors [31e35c80fc]'
     options['sd_vae'] = 'sdxl_vae.safetensors'
     webui_api.set_options(options)
-    result = webui_api.txt2img(prompt=prompt, negative_prompt="(unfinished:1.43),(sloppy and messy:1.43),(incoherent:1.43),(deformed:1.43)", steps=42, sampler_name='UniPC', batch_size=count, restore_faces=True)
+    result = webui_api.txt2img(prompt=prompt, negative_prompt="(unfinished:1.43),(sloppy and messy:1.43),(incoherent:1.43),(deformed:1.43)", steps=42, batch_size=count, restore_faces=True)
     for image in result.images:
       image.save('/tmp/result.png')
       with open('/tmp/result.png', 'rb') as image_file:
