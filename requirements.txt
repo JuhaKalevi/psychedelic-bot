@@ -1,9 +1,7 @@
 aiofiles
 asyncio
-chardet
 gradio_client
 httpx
-langdetect
 openai
 tiktoken
 webuiapi

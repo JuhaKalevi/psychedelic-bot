@@ -1,8 +1,6 @@
 import json
 import os
 import re
-import chardet
-import langdetect
 import gradio_client
 import tiktoken
 import openai_api
@@ -24,9 +22,6 @@ async def generate_summary_from_transcription(message:str, model='gpt-4') -> str
       f" Transcription: {message}"
     )
   }], model)
-
-async def is_mainly_english(text:str) -> bool:
-  return langdetect.detect(text.decode(chardet.detect(text)["encoding"])) == "en"
 
 async def youtube_transcription(message:str) -> str:
   input_str = message

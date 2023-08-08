@@ -89,17 +89,6 @@ class MattermostPostHandler():
     reply_id = await self.stream_reply_to_context()
     await bot.create_reaction(reply_id, 'robot_face')
 
-  async def fix_image_generation_prompt(self, message:str) -> str:
-    return await openai_api.chat_completion([
-      {'role':'system', 'content':
-        "Convert user image prompt to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features."
-        " Don't use full sentences, just a few keywords, separating these aspects by commas, or periods which separate bigger units consisting of multiple comma separated keywords together."
-        " Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally."
-        " Don't use any kind of formatting to separate these keywords, expect commas and periods!"
-      },
-      {'role':'user', 'content':message}
-    ])
-
   async def from_context_streamed(self, model='gpt-4'):
     context = self.context
     if 'order' in context:
@@ -135,25 +124,21 @@ class MattermostPostHandler():
     async for content in openai_api.chat_completion_streamed([{'role':'user', 'content':message}], model):
       yield content
 
-  async def generate_images(self, count=0):
+  async def generate_images(self, prompt, negative_prompt, count=0):
     post = self.post
     file_ids = self.file_ids
-    prompt = post['message'].removeprefix(bot.name)
-    mainly_english = await common.is_mainly_english(prompt.encode('utf-8'))
-    if not mainly_english:
-      prompt = await self.fix_image_generation_prompt(prompt)
     options = webui_api.get_options()
     options = {}
     options['sd_model_checkpoint'] = 'sd_xl_base_1.0.safetensors [31e35c80fc]'
     options['sd_vae'] = 'sdxl_vae.safetensors'
     webui_api.set_options(options)
-    result = webui_api.txt2img(prompt=prompt, negative_prompt="(unfinished:1.43),(sloppy and messy:1.43),(incoherent:1.43),(deformed:1.43)", steps=42, batch_size=count, restore_faces=True)
+    result = webui_api.txt2img(prompt=prompt, negative_prompt=negative_prompt, steps=42, batch_size=count)
     for image in result.images:
       image.save('/tmp/result.png')
       with open('/tmp/result.png', 'rb') as image_file:
         uploaded_file_id = await bot.upload_file(post['channel_id'], {'files':('result.png', image_file)})
         file_ids.append(uploaded_file_id)
-    await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':prompt, 'file_ids':file_ids, 'root_id':''})
+    await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':f"prompt: {prompt}\nnegative_prompt: {negative_prompt}", 'file_ids':file_ids, 'root_id':''})
 
   async def instruct_pix2pix(self) -> str:
     file_ids = self.file_ids
