@@ -210,7 +210,9 @@ class MattermostPostHandler():
     if (f"{bot.name} always reply" in channel['purpose'] or bot.name_in_message(message)):
       if post['root_id'] == "":
         openai_response_message = await openai_api.chat_completion_functions(message, self.available_functions)
-        if not openai_response_message.get('function_call'):
+        if openai_response_message.get('function_call'):
+          return
+        else:
           self.context = {'order':[post['id']], 'posts':{post['id']: post}}
           self.reply_to = post['id']
           return await self.stream_reply_to_context()
