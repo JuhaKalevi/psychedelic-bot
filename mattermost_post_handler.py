@@ -212,10 +212,9 @@ class MattermostPostHandler():
         openai_response_message = await openai_api.chat_completion_functions(message, self.available_functions)
         if openai_response_message.get('function_call'):
           return
-        else:
-          self.context = {'order':[post['id']], 'posts':{post['id']: post}}
-          self.reply_to = post['id']
-          return await self.stream_reply_to_context()
+        self.context = {'order':[post['id']], 'posts':{post['id']: post}}
+        self.reply_to = post['id']
+        return await self.stream_reply_to_context()
     self.context = await bot.posts.get_thread(post['id'])
     self.reply_to = post['root_id']
     async with asyncio.Lock():
