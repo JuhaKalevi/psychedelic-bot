@@ -40,12 +40,13 @@ functions = [
           "type":"string",
           "description":"Convert user image request to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features."
                         " Don't use full sentences, just a few keywords, separating these aspects by commas, or periods which separate bigger units consisting of multiple comma separated keywords together."
-                        " Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally."
+                        " Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally, for example breathtaking, award-winning, professional, highly detailed"
                         " Don't use any kind of formatting to separate these keywords, expect commas and periods! Remember to translate everything to english!"
         },
         "negative_prompt": {
           "type":"string",
           "description":"List some features that describe what should NOT be in the generated image, based on what the user wants to see. For example if the user wants a photograph, it should not be drawn or comic style & vice versa."
+                        " Also, in most cases people don't want anime, cartoon, graphic, text, painting, crayon, graphite, abstract glitch, blurry looking pictures unless they specifically say so. You can use these as default negative prompts usually!"
                         " Don't use full sentences, just a few keywords, separating these aspects by commas, or periods which separate bigger units consisting of multiple comma separated keywords together."
                         " Don't use any kind of formatting to separate these keywords, expect commas and periods! Remember to translate everything to english!"
         },
