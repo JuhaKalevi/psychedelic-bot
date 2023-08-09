@@ -83,14 +83,17 @@ function_descriptions = [
   }
 ]
 
-async def chat_completion(messages:list, model='gpt-4', functions=None) -> str:
+async def chat_completion(messages:list, model='gpt-4', functions=None):
   try:
     response = await openai.ChatCompletion.acreate(model=model, messages=messages, functions=functions)
-    return response['choices'][0]['message']['content']
+    response_message = response['choices'][0]['message']
+    if response_message.get('function_call'):
+      return response_message
+    return response_message['content']
   except openai_exceptions as err:
     return f"OpenAI API Error: {err}"
 
-async def chat_completion_functions(message:str, available_functions:dict, channel_id:str) -> str:
+async def chat_completion_functions(message:str, available_functions:dict, channel_id:str):
   response_message = await chat_completion([{"role":"user", "content":message}], model='gpt-4-0613', functions=function_descriptions)
   if response_message.get("function_call"):
     function = response_message["function_call"]["name"]
