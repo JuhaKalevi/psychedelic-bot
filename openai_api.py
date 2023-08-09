@@ -2,12 +2,14 @@ import json
 import os
 import openai
 import log
+import mattermost_api
 
+bot = mattermost_api.bot
 logger = log.get_logger(__name__)
 openai.api_key = os.environ['OPENAI_API_KEY']
 openai_exceptions = (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.ServiceUnavailableError, openai.error.Timeout)
 
-functions = [
+function_descriptions = [
   {
     "name": "channel_summary",
     "description": "Summarize previous discussions in a larger context (user calls it channel or discussion or just 'here')",
@@ -74,10 +76,6 @@ functions = [
         "location": {
           "type": "string",
           "description": "The city and state, e.g. San Francisco, CA"
-        },
-        "unit": {
-          "type": "string",
-          "enum": ["celsius", "fahrenheit"]
         }
       },
       "required": ["location"]
@@ -85,24 +83,26 @@ functions = [
   }
 ]
 
-async def chat_completion(messages:list, model='gpt-4') -> str:
+async def chat_completion(messages:list, model='gpt-4', functions=None) -> str:
   try:
-    response = await openai.ChatCompletion.acreate(model=model, messages=messages)
+    response = await openai.ChatCompletion.acreate(model=model, messages=messages, functions=functions)
     return response['choices'][0]['message']['content']
   except openai_exceptions as err:
     return f"OpenAI API Error: {err}"
 
-async def chat_completion_functions(response_message:str, available_functions:dict) -> str:
-  messages=[{"role":"user", "content":response_message}]
-  try:
-    response = await openai.ChatCompletion.acreate(model='gpt-4-0613', messages=messages, functions=functions)
-  except openai_exceptions as err:
-    return f"OpenAI API Error: {json.dumps(err)}"
-  response_message = response["choices"][0]["message"]
+async def chat_completion_functions(message:str, available_functions:dict) -> str:
+  response_message = await chat_completion([{"role":"user", "content":message}], model='gpt-4-0613', functions=function_descriptions)
   if response_message.get("function_call"):
     function = response_message["function_call"]["name"]
     arguments = json.loads(response_message["function_call"]["arguments"])
-    await available_functions[function](**arguments)
+    result = await available_functions[function](**arguments)
+    if result is not None:
+      messages = [
+        {"role": "user", "content": message},
+        {"role": "assistant", "content": None, "function_call": {"name": function, "arguments": json.dumps(arguments)}},
+        {"role": "function", "name": function, "content": json.dumps(result)}
+      ]
+      await chat_completion(messages, model='gpt-4-0613', functions=function_descriptions)
   return response_message
 
 async def chat_completion_streamed(messages:dict, model='gpt-4'):
