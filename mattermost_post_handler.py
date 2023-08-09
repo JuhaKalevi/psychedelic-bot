@@ -124,7 +124,8 @@ class MattermostPostHandler():
     async for content in openai_api.chat_completion_streamed([{'role':'user', 'content':message}], model):
       yield content
 
-  async def generate_images(self, prompt, negative_prompt, count=0):
+  async def generate_images(self, prompt, negative_prompt, count, resolution='1024x1024'):
+    width, height = resolution.split('x')
     post = self.post
     file_ids = self.file_ids
     options = webui_api.get_options()
@@ -132,7 +133,7 @@ class MattermostPostHandler():
     options['sd_model_checkpoint'] = 'sd_xl_base_1.0.safetensors [31e35c80fc]'
     options['sd_vae'] = 'sdxl_vae.safetensors'
     webui_api.set_options(options)
-    result = webui_api.txt2img(prompt=prompt, negative_prompt=negative_prompt, steps=34, batch_size=count, width=1024, height=1024, sampler_name='DPM++ 2M Karras')
+    result = webui_api.txt2img(prompt=prompt, negative_prompt=negative_prompt, steps=34, batch_size=count, width=width, height=height, sampler_name='DPM++ 2M Karras')
     for image in result.images:
       image.save('/tmp/result.png')
       with open('/tmp/result.png', 'rb') as image_file:

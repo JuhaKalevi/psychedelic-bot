@@ -53,6 +53,10 @@ functions = [
         "count": {
           "type":"integer",
           "description":"How many images? 1-8"
+        },
+        "resolution": {
+          "type":"string",
+          "description":"Resolution for requested image"
         }
       },
       "required": ["prompt","negative_prompt","count"]
