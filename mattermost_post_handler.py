@@ -144,7 +144,7 @@ class MattermostPostHandler():
     await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':f"prompt: {prompt}\nnegative_prompt: {negative_prompt}\nresolution: {resolution}", 'file_ids':file_ids, 'root_id':''})
 
   async def get_current_weather(self, location):
-    return requests.get(f"https://api.weatherapi.com/v1/current.json?key={os.environ['WEATHERAPI_KEY']}&q={location}", timeout=7).content
+    return requests.get(f"https://api.weatherapi.com/v1/current.json?key={os.environ['WEATHERAPI_KEY']}&q={location}", timeout=7).json()
 
   async def instruct_pix2pix(self) -> str:
     file_ids = self.file_ids
