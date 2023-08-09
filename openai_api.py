@@ -67,14 +67,17 @@ async def chat_completion(messages:list, model='gpt-4') -> str:
   except openai_exceptions as err:
     return f"OpenAI API Error: {err}"
 
-async def chat_completion_functions(message:str, available_functions:dict) -> str:
-  messages=[{"role":"user", "content":message}]
+async def chat_completion_functions(response_message:str, available_functions:dict) -> str:
+  messages=[{"role":"user", "content":response_message}]
   try:
     response = await openai.ChatCompletion.acreate(model='gpt-4-0613', messages=messages, functions=functions)
   except openai_exceptions as err:
     return f"OpenAI API Error: {json.dumps(err)}"
-  function = available_functions[response["choices"][0]["message"]["function_call"]]
-  return await function["name"](**json.loads(function["arguments"]))
+  response_message = response["choices"][0]["message"]
+  if response_message.get("function_call"):
+    function_call = available_functions[response_message["function_call"]]
+    await function_call["name"](**json.loads(function_call["arguments"]))
+  return response_message
 
 async def chat_completion_streamed(messages:dict, model='gpt-4'):
   try:
