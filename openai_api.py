@@ -59,6 +59,7 @@ functions = [
           "description":"Resolution for requested image."
                         " Default resolution is 1024x1024, and it has to be in this format even if the user describes it in a different way, for example 1080p translates to 1920x1080."
                         " It's also possible to just describe shape of the image, and it should also be translated to the standard format using 1024x1024 as the starting point."
+                        " If no resolution is specified, consider what the user wants to see, and use the most common resolution for that type of image."
         }
       },
       "required": ["prompt","negative_prompt","count"]
