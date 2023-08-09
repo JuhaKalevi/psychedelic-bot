@@ -132,7 +132,7 @@ class MattermostPostHandler():
     options['sd_model_checkpoint'] = 'sd_xl_base_1.0.safetensors [31e35c80fc]'
     options['sd_vae'] = 'sdxl_vae.safetensors'
     webui_api.set_options(options)
-    result = webui_api.txt2img(prompt=prompt, negative_prompt=negative_prompt, steps=50, batch_size=count, width=1024, height=1024)
+    result = webui_api.txt2img(prompt=prompt, negative_prompt=negative_prompt, steps=50, batch_size=count, width=1024, height=1024, sampler_name='DPM++ 2M Karras')
     for image in result.images:
       image.save('/tmp/result.png')
       with open('/tmp/result.png', 'rb') as image_file:
