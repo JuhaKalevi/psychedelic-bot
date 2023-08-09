@@ -145,6 +145,7 @@ class MattermostPostHandler():
 
   async def get_current_weather(self, location):
     message = requests.get(f"https://api.weatherapi.com/v1/current.json?key={os.environ['WEATHERAPI_KEY']}&q={location}", timeout=7).content.decode('utf-8')
+    logger.debug("DEBUG: message=%s", message)
     await bot.create_or_update_post({'channel_id':self.post['channel_id'], 'message':message, 'file_ids':None, 'root_id':''})
 
   async def instruct_pix2pix(self) -> str:
