@@ -90,7 +90,7 @@ async def chat_completion(messages:list, model='gpt-4', functions=None) -> str:
   except openai_exceptions as err:
     return f"OpenAI API Error: {err}"
 
-async def chat_completion_functions(message:str, available_functions:dict) -> str:
+async def chat_completion_functions(message:str, available_functions:dict, channel_id:str) -> str:
   response_message = await chat_completion([{"role":"user", "content":message}], model='gpt-4-0613', functions=function_descriptions)
   if response_message.get("function_call"):
     function = response_message["function_call"]["name"]
@@ -102,7 +102,8 @@ async def chat_completion_functions(message:str, available_functions:dict) -> st
         {"role": "assistant", "content": None, "function_call": {"name": function, "arguments": json.dumps(arguments)}},
         {"role": "function", "name": function, "content": json.dumps(result)}
       ]
-      await chat_completion(messages, model='gpt-4-0613', functions=function_descriptions)
+      final_result = await chat_completion(messages, model='gpt-4-0613', functions=function_descriptions)
+      await bot.create_or_update_post({'channel_id':channel_id, 'message':final_result, 'file_ids':None, 'root_id':''})
   return response_message
 
 async def chat_completion_streamed(messages:dict, model='gpt-4'):
