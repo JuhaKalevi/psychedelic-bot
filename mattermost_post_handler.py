@@ -7,6 +7,7 @@ import time
 import aiofiles
 import httpx
 import PIL
+import requests
 import webuiapi
 import common
 import log
@@ -25,6 +26,7 @@ class MattermostPostHandler():
       'channel_summary': self.channel_summary,
       'code_analysis': self.code_analysis,
       'generate_images': self.generate_images,
+      'get_current_weather': self.get_current_weather,
     }
     self.context = None
     self.file_ids = []
@@ -140,6 +142,10 @@ class MattermostPostHandler():
         uploaded_file_id = await bot.upload_file(post['channel_id'], {'files':('result.png', image_file)})
         file_ids.append(uploaded_file_id)
     await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':f"prompt: {prompt}\nnegative_prompt: {negative_prompt}\nresolution: {resolution}", 'file_ids':file_ids, 'root_id':''})
+
+  async def get_current_weather(self, location):
+    message = requests.get(f"https://api.weatherapi.com/v1/current.json?key={os.environ['WEATHERAPI_KEY']}&q={location}", timeout=7)
+    await bot.create_or_update_post({'channel_id':self.post['channel_id'], 'message':message, 'file_ids':None, 'root_id':''})
 
   async def instruct_pix2pix(self) -> str:
     file_ids = self.file_ids
