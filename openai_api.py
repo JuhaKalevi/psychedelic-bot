@@ -70,7 +70,7 @@ async def chat_completion(messages:list, model='gpt-4') -> str:
 async def chat_completion_functions(message:str, available_functions:dict) -> str:
   messages=[{"role":"user", "content":message}]
   try:
-    response_message = await openai.ChatCompletion.acreate(model='gpt-3.5-turbo-0613', messages=messages, functions=functions)
+    response_message = await openai.ChatCompletion.acreate(model='gpt-4-0613', messages=messages, functions=functions)
   except openai_exceptions as err:
     return f"OpenAI API Error: {json.dumps(err)}"
   response_message = response_message["choices"][0]["message"]
