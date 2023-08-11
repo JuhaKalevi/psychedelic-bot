@@ -1,5 +1,6 @@
 import asyncio
 import base64
+import datetime
 import json
 import os
 import re
@@ -110,7 +111,7 @@ class MattermostPostHandler():
         header = ''
       else:
         role = 'user'
-        header = json.dumps({'name':post_user['username']})+'\n'
+        header = json.dumps({'name':post_user['username'], 'timestamp':datetime.datetime.utcfromtimestamp(time.time())})+'\n'
       message = {'role':role, 'content':header+post['message']}
       message_tokens = common.count_tokens(message)
       new_context_tokens = context_tokens + message_tokens
