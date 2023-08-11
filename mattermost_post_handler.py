@@ -106,8 +106,8 @@ class MattermostPostHandler():
     for post_id in context['order']:
       if 'from_bot' in context['posts'][post_id]['props']:
         role = 'assistant'
-        message = {'role':role, 'content':context['posts'][post_id]['message']}
-    else:
+        message = {'role':role, 'content':context['posts'][post_id]['message'], 'name':post_username}
+      else:
         role = 'user'
         message = {'role':role, 'content':context['posts'][post_id]['message'], 'name':post_username}
       message_tokens = common.count_tokens(message)
