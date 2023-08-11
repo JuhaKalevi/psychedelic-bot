@@ -93,6 +93,7 @@ class MattermostPostHandler():
 
   async def from_context_streamed(self, model='gpt-4'):
     context = self.context
+    post_username = await bot.users.get_user(self.post['user_id'])['username']
     if 'order' in context:
       context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
     if self.system_message:
@@ -107,7 +108,7 @@ class MattermostPostHandler():
         role = 'assistant'
       else:
         role = 'user'
-      message = {'role':role, 'content':context['posts'][post_id]['message']}
+      message = {'role':role, 'content':context['posts'][post_id]['message'], 'name':post_username}
       message_tokens = common.count_tokens(message)
       new_context_tokens = context_tokens + message_tokens
       if context_token_limit < new_context_tokens < 14744:
@@ -123,7 +124,8 @@ class MattermostPostHandler():
       yield content
 
   async def from_message_streamed(self, message:str, model='gpt-4'):
-    async for content in openai_api.chat_completion_streamed([{'role':'user', 'content':message}], model):
+    post_username = await bot.users.get_user(self.post['user_id'])['username']
+    async for content in openai_api.chat_completion_streamed([{'role':'user', 'content':message, 'name':post_username}], model):
       yield content
 
   async def generate_images(self, prompt, negative_prompt, count, resolution='1024x1024'):
@@ -196,7 +198,7 @@ class MattermostPostHandler():
     message = self.message
     post = self.post
     channel = await bot.channels.get_channel(post['channel_id'])
-    bot_user = await bot.users.get_user_by_username(bot.name.strip('@'))
+    bot_user = await bot.users.get_user('me')
     bot.user_id = bot_user['id']
     if (f"{bot.name} always reply" in channel['purpose'] or bot.name_in_message(message)):
       if post['root_id'] == "":
