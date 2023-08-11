@@ -93,7 +93,6 @@ class MattermostPostHandler():
 
   async def from_context_streamed(self, model='gpt-4'):
     context = self.context
-    post_user = await bot.users.get_user(self.post['user_id'])
     if 'order' in context:
       context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
     if self.system_message:
@@ -104,12 +103,15 @@ class MattermostPostHandler():
       context_tokens = 0
     context_token_limit = 7372
     for post_id in context['order']:
-      if 'from_bot' in context['posts'][post_id]['props']:
+      post = context['posts'][post_id]
+      post_user = await bot.users.get_user(self.post['user_id'])
+      if 'from_bot' in post['props']:
         role = 'assistant'
-        message = {'role':role, 'content':context['posts'][post_id]['message'], 'name':post_user['username']}
+        header = ''
       else:
         role = 'user'
-        message = {'role':role, 'content':context['posts'][post_id]['message'], 'name':post_user['username']}
+        header = json.dumps({'name':post_user['username']})+'\n'
+      message = {'role':role, 'content':header+post['message']}
       message_tokens = common.count_tokens(message)
       new_context_tokens = context_tokens + message_tokens
       if context_token_limit < new_context_tokens < 14744:
