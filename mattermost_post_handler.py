@@ -93,7 +93,7 @@ class MattermostPostHandler():
 
   async def from_context_streamed(self, model='gpt-4'):
     context = self.context
-    post_username = await bot.users.get_user(self.post['user_id'])['username']
+    post_user = await bot.users.get_user(self.post['user_id'])
     if 'order' in context:
       context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
     if self.system_message:
@@ -106,10 +106,10 @@ class MattermostPostHandler():
     for post_id in context['order']:
       if 'from_bot' in context['posts'][post_id]['props']:
         role = 'assistant'
-        message = {'role':role, 'content':context['posts'][post_id]['message'], 'name':post_username}
+        message = {'role':role, 'content':context['posts'][post_id]['message'], 'name':post_user['username']}
       else:
         role = 'user'
-        message = {'role':role, 'content':context['posts'][post_id]['message'], 'name':post_username}
+        message = {'role':role, 'content':context['posts'][post_id]['message'], 'name':post_user['username']}
       message_tokens = common.count_tokens(message)
       new_context_tokens = context_tokens + message_tokens
       if context_token_limit < new_context_tokens < 14744:
@@ -125,8 +125,8 @@ class MattermostPostHandler():
       yield content
 
   async def from_message_streamed(self, message:str, model='gpt-4'):
-    post_username = await bot.users.get_user(self.post['user_id'])['username']
-    async for content in openai_api.chat_completion_streamed([{'role':'user', 'content':message, 'name':post_username}], model):
+    post_user = await bot.users.get_user(self.post['user_id'])
+    async for content in openai_api.chat_completion_streamed([{'role':'user', 'content':message, 'name':post_user['username']}], model):
       yield content
 
   async def generate_images(self, prompt, negative_prompt, count, resolution='1024x1024'):
