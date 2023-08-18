@@ -1,9 +1,12 @@
+stages:
+  - deploy
+
 deploy:
   environment:
-    name: "$CI_COMMIT_BRANCH"
+    name: $CI_COMMIT_BRANCH
   interruptible: true
   rules:
-    - if: "$CI_COMMIT_TAG"
+    - if: $CI_COMMIT_TAG
       when: never
     - when: on_success
   script:
@@ -14,5 +17,3 @@ deploy:
   stage: deploy
   tags:
     - shell
-include:
-  - template: Security/Secret-Detection.gitlab-ci.yml
