@@ -155,6 +155,7 @@ class MattermostPostHandler():
 
   async def google_for_answers(self, url=''):
     for result in googlesearch.search(url):
+      logger.debug(result)
       return result
 
   async def instruct_pix2pix(self) -> str:
