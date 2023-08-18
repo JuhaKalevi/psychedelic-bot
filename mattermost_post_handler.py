@@ -153,8 +153,8 @@ class MattermostPostHandler():
   async def get_current_weather(self, location):
     return requests.get(f"https://api.weatherapi.com/v1/current.json?key={os.environ['WEATHERAPI_KEY']}&q={location}", timeout=7).json()
 
-  async def google_for_answers(self, string):
-    for url in googlesearch.search(string):
+  async def google_for_answers(self, url=''):
+    for url in googlesearch.search(url):
       return url
 
   async def instruct_pix2pix(self) -> str:
