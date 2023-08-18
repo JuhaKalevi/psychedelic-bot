@@ -1,6 +1,6 @@
 aiofiles
 asyncio
-googlesearch
+googlesearch-python
 gradio_client
 httpx
 openai
