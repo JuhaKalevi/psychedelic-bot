@@ -154,8 +154,8 @@ class MattermostPostHandler():
     return requests.get(f"https://api.weatherapi.com/v1/current.json?key={os.environ['WEATHERAPI_KEY']}&q={location}", timeout=7).json()
 
   async def google_for_answers(self, url=''):
-    for url in googlesearch.search(url):
-      return url
+    for result in googlesearch.search(url):
+      return result
 
   async def instruct_pix2pix(self) -> str:
     file_ids = self.file_ids
