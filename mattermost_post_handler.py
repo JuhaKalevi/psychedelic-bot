@@ -28,6 +28,7 @@ class MattermostPostHandler():
       'code_analysis': self.code_analysis,
       'generate_images': self.generate_images,
       'get_current_weather': self.get_current_weather,
+      'google_for_answers': self.google_for_answers,
     }
     self.context = None
     self.file_ids = []
@@ -152,7 +153,7 @@ class MattermostPostHandler():
   async def get_current_weather(self, location):
     return requests.get(f"https://api.weatherapi.com/v1/current.json?key={os.environ['WEATHERAPI_KEY']}&q={location}", timeout=7).json()
 
-  async def google_search(self, string):
+  async def google_for_answers(self, string):
     for url in googlesearch.search(string):
       return url
 
