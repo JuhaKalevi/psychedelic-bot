@@ -5,6 +5,7 @@ import os
 import re
 import time
 import aiofiles
+import googlesearch
 import httpx
 import PIL
 import requests
@@ -150,6 +151,10 @@ class MattermostPostHandler():
 
   async def get_current_weather(self, location):
     return requests.get(f"https://api.weatherapi.com/v1/current.json?key={os.environ['WEATHERAPI_KEY']}&q={location}", timeout=7).json()
+
+  async def google_search(self, string):
+    for url in googlesearch.search(string):
+      return url
 
   async def instruct_pix2pix(self) -> str:
     file_ids = self.file_ids
