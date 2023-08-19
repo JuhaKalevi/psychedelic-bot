@@ -16,7 +16,7 @@ class MattermostBot(mattermostdriver.AsyncDriver):
         post = await self.posts.create_post(options=options)
       return post['id']
     except (ConnectionResetError, mattermostdriver.exceptions.InvalidOrMissingParameters, mattermostdriver.exceptions.ResourceNotFound) as err:
-      logger.debug('ERROR mattermost.reactions.create_reaction(): %s', err)
+      logger.debug('ERROR mattermost.posts.create_post(): %s', err)
       return err
 
   async def create_reaction(self, post_id:str, emoji:str):
