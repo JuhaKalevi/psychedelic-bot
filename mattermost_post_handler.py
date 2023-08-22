@@ -151,7 +151,7 @@ class MattermostPostHandler():
     await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':f"prompt: {prompt}\nnegative_prompt: {negative_prompt}\nresolution: {resolution}", 'file_ids':file_ids, 'root_id':''})
 
   async def get_current_weather(self, location):
-    weatherapi_response = requests.get(f"https://api.weatherapi.com/v1/current.json?key={os.environ['WEATHERAPI_KEY']}&q={location}", timeout=7).json()
+    weatherapi_response = json.loads(requests.get(f"https://api.weatherapi.com/v1/current.json?key={os.environ['WEATHERAPI_KEY']}&q={location}", timeout=7).text)
     await openai_api.chat_completion_functions_stage2(self.post, 'get_current_weather', {'location':location}, weatherapi_response)
 
   async def google_for_answers(self, url=''):
