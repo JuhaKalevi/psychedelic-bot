@@ -112,6 +112,7 @@ async def chat_completion_functions(message:str, available_functions:dict):
   return response_message
 
 async def chat_completion_functions_stage2(post:dict, function:str, arguments:dict, result:dict):
+  logger.debug('chat_completion_functions_stage2() function: %s, arguments: %s, result: %s', function, arguments, result)
   messages = [
     {"role": "user", "content": post['message']},
     {"role": "assistant", "content": None, "function_call": {"name": function, "arguments": json.dumps(arguments)}},
