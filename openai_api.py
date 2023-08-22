@@ -120,7 +120,7 @@ async def chat_completion_functions_stage2(post:dict, function:str, arguments:di
   ]
   final_result = await chat_completion(messages, model='gpt-4-0613', functions=function_descriptions)
   logger.debug('chat_completion_functions_stage2() final_result: %s', final_result)
-  await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':final_result, 'file_ids':None, 'root_id':''})
+  await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':final_result['content'], 'file_ids':None, 'root_id':''})
 
 async def chat_completion_streamed(messages:dict, model='gpt-4'):
   try:
