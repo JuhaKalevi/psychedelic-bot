@@ -155,7 +155,7 @@ class MattermostPostHandler():
 
   async def google_for_answers(self, url=''):
     results = []
-    for result in googlesearch.search(url):
+    for result in googlesearch.search(url, num_results=2):
       results.append(result)
     await bot.create_or_update_post({'channel_id':self.post['channel_id'], 'message':json.dumps(results), 'file_ids':self.file_ids, 'root_id':''})
 
