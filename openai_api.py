@@ -108,6 +108,7 @@ async def chat_completion_functions(message:str, available_functions:dict, chann
     function = response_message["function_call"]["name"]
     arguments = json.loads(response_message["function_call"]["arguments"])
     result = await available_functions[function](**arguments)
+    logger.debug('chat_completion_functions() result: %s', result)
     if result is not None:
       messages = [
         {"role": "user", "content": message},
