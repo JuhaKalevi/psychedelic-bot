@@ -151,7 +151,8 @@ class MattermostPostHandler():
     await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':f"prompt: {prompt}\nnegative_prompt: {negative_prompt}\nresolution: {resolution}", 'file_ids':file_ids, 'root_id':''})
 
   async def get_current_weather(self, location):
-    return requests.get(f"https://api.weatherapi.com/v1/current.json?key={os.environ['WEATHERAPI_KEY']}&q={location}", timeout=7).json()
+    weatherapi_response = requests.get(f"https://api.weatherapi.com/v1/current.json?key={os.environ['WEATHERAPI_KEY']}&q={location}", timeout=7).json()
+    openai_api.chat_completion_functions_stage2(self.post, 'get_current_weather', {'location':location}, weatherapi_response)
 
   async def google_for_answers(self, url=''):
     results = []
@@ -213,7 +214,7 @@ class MattermostPostHandler():
     bot.user_id = bot_user['id']
     if (f"{bot.name} always reply" in channel['purpose'] or bot.name_in_message(message)):
       if post['root_id'] == "":
-        openai_response_message = await openai_api.chat_completion_functions(message, self.available_functions, post['channel_id'])
+        openai_response_message = await openai_api.chat_completion_functions(message, self.available_functions)
         logger.debug("DEBUG: post_handler: %s", openai_response_message)
         if openai_response_message.get('function_call'):
           return
