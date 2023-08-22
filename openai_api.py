@@ -115,7 +115,7 @@ async def chat_completion_functions_stage2(post:dict, function:str, arguments:di
   logger.debug('chat_completion_functions_stage2() function: %s, arguments: %s, result: %s', function, arguments, result)
   messages = [
     {"role": "user", "content": post['message']},
-    {"role": "assistant", "content": None, "function_call": {"name": function, "arguments": json.dumps(arguments)}},
+    {"role": "assistant", "content": None, "function_call": json.dumps({"name": function, "arguments": arguments})},
     {"role": "function", "name": function, "content": json.dumps(result)}
   ]
   final_result = await chat_completion(messages, model='gpt-4-0613', functions=function_descriptions)
