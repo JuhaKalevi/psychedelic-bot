@@ -152,7 +152,7 @@ class MattermostPostHandler():
 
   async def get_current_weather(self, location):
     weatherapi_response = requests.get(f"https://api.weatherapi.com/v1/current.json?key={os.environ['WEATHERAPI_KEY']}&q={location}", timeout=7).json()
-    openai_api.chat_completion_functions_stage2(self.post, 'get_current_weather', {'location':location}, weatherapi_response)
+    await openai_api.chat_completion_functions_stage2(self.post, 'get_current_weather', {'location':location}, weatherapi_response)
 
   async def google_for_answers(self, url=''):
     results = []
