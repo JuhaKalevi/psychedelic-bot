@@ -214,7 +214,8 @@ class MattermostPostHandler():
     bot_user = await bot.users.get_user('me')
     bot.user_id = bot_user['id']
     if (bot.name_in_message(message)) and post['root_id'] == "":
-      openai_response_message = await openai_api.chat_completion_functions(message, self.available_functions)
+      messages = self.instructions + [{"role":"user", "content":message}]
+      openai_response_message = await openai_api.chat_completion_functions(messages, self.available_functions)
       if openai_response_message.get('content'):
         await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':openai_response_message['content'], 'file_ids':self.file_ids, 'root_id':post['id']})
       return
