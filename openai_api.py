@@ -94,9 +94,9 @@ function_descriptions = [
     }
   }
 ]
-instructions = {'role':'system', 'content':'You are a chatbot part of a larger system that leverages various AI capalibities from OpenAI & others.'
+instructions = [{'role':'system', 'content':'You are a chatbot part of a larger system that leverages various AI capalibities from OpenAI & others.'
                 ' In essence, you have the feature to generate images, as such a function is described in function call descriptions.'
-                ' Answer all questions with humour level 100% writing like Gandalf the Grey, and you will be fine.'}
+                ' Answer all questions with humour level 100% writing like Gandalf the Grey, and you will be fine.'}]
 
 async def chat_completion(messages:list, model='gpt-4', functions=None):
   try:
