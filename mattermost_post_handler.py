@@ -207,7 +207,7 @@ class MattermostPostHandler():
     post = self.post
     channel = await bot.channels.get_channel(post['channel_id'])
     logger.debug(channel['type'])
-    if channel['type'] == 'D':
+    if channel['type'] == 'G':
       self.instructions[0]['content'] += f" {channel['header']}"
     else:
       self.instructions[0]['content'] += f" {channel['purpose']}"
