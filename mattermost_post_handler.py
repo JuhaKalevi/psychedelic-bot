@@ -85,12 +85,11 @@ class MattermostPostHandler():
   async def code_analysis(self) -> None:
     self.context = await bot.posts.get_thread(self.post['id'])
     files = []
-    instructions_content = self.instructions[0]['content']
     for file_path in [x for x in os.listdir() if x.endswith(('.py','.sh','.yml'))]:
       with open(file_path, 'r', encoding='utf-8') as file:
         content = file.read()
       files.append(f'\n--- BEGIN {file_path} ---\n```\n{content}\n```\n--- END {file_path} ---\n')
-    instructions_content = '\nThis is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic! Abstain from praising or thanking the user, be serious.'+''.join(files) + instructions_content
+    self.instructions[0]['content'] = '\nThis is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic! Abstain from praising or thanking the user, be serious.'+''.join(files) + self.instructions[0]['content']
     reply_id = await self.stream_reply_to_context()
     await bot.create_reaction(reply_id, 'robot_face')
 
