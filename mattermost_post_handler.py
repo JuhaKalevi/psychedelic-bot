@@ -36,7 +36,6 @@ class MattermostPostHandler():
     self.reply_to = ''
     self.message = post['message']
     self.post = post
-    self.system_message = None
 
   async def captioner(self):
     post = self.post
@@ -86,11 +85,12 @@ class MattermostPostHandler():
   async def code_analysis(self) -> None:
     self.context = await bot.posts.get_thread(self.post['id'])
     files = []
+    instructions_content = self.instructions[0]['content']
     for file_path in [x for x in os.listdir() if x.endswith(('.py','.sh','.yml'))]:
       with open(file_path, 'r', encoding='utf-8') as file:
         content = file.read()
       files.append(f'\n--- BEGIN {file_path} ---\n```\n{content}\n```\n--- END {file_path} ---\n')
-    self.system_message = 'This is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic! Abstain from praising or thanking the user, be serious.'+''.join(files)
+    instructions_content = '\nThis is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic! Abstain from praising or thanking the user, be serious.'+''.join(files) + instructions_content
     reply_id = await self.stream_reply_to_context()
     await bot.create_reaction(reply_id, 'robot_face')
 
@@ -98,12 +98,8 @@ class MattermostPostHandler():
     context = self.context
     if 'order' in context:
       context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
-    if self.system_message:
-      context_messages = [{'role':'system', 'content':self.system_message}]
-      context_tokens = common.count_tokens(self.system_message)
-    else:
-      context_messages = []
-      context_tokens = 0
+    context_messages = []
+    context_tokens = 0
     context_token_limit = 7372
     for post_id in context['order']:
       post = context['posts'][post_id]
