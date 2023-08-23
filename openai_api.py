@@ -107,27 +107,24 @@ async def chat_completion_functions(message:str, available_functions:dict):
   if response_message.get("function_call"):
     function = response_message["function_call"]["name"]
     arguments = json.loads(response_message["function_call"]["arguments"])
-    result = await available_functions[function](**arguments)
-    logger.debug('chat_completion_functions() result: %s', result)
+    await available_functions[function](**arguments)
   return response_message
 
 async def chat_completion_functions_stage2(post:dict, function:str, arguments:dict, result:dict):
-  logger.debug('chat_completion_functions_stage2() function: %s, arguments: %s, result: %s', function, arguments, result)
   messages = [
     {"role": "user", "content": post['message']},
     {"role": "assistant", "content": None, "function_call": {"name": function, "arguments": json.dumps(arguments)}},
     {"role": "function", "name": function, "content": json.dumps(result)}
   ]
   final_result = await chat_completion(messages, model='gpt-4-0613', functions=function_descriptions)
-  logger.debug('chat_completion_functions_stage2() final_result: %s', final_result)
   await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':final_result['content'], 'file_ids':None, 'root_id':''})
 
-async def chat_completion_streamed(instructions, messages:dict, model='gpt-4'):
+async def chat_completion_streamed(instructions:list, messages:list, model='gpt-4'):
+  logger.debug(instructions)
   try:
     async for chunk in await openai.ChatCompletion.acreate(model=model, messages=instructions+messages, stream=True):
       content = chunk["choices"][0].get("delta", {}).get("content")
       if content:
         yield content
-  except openai_exceptions as err:
-    logger.debug("OpenAI API Error: %s", err)
+  except openai_exceptions:
     return
