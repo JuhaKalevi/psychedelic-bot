@@ -1,10 +1,9 @@
 import json
 import os
 import openai
-import log
-from mattermost_api import bot
+import mattermost_api
 
-logger = log.get_logger(__name__)
+bot = mattermost_api.bot
 openai.api_key = os.environ['OPENAI_API_KEY']
 openai_exceptions = (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.ServiceUnavailableError, openai.error.Timeout)
 
@@ -118,9 +117,9 @@ async def chat_completion_functions_stage2(post:dict, function:str, arguments:di
   final_result = await chat_completion(messages, model='gpt-4-0613', functions=function_descriptions)
   await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':final_result['content'], 'file_ids':None, 'root_id':''})
 
-async def chat_completion_streamed(post_handler:object, model='gpt-4'):
+async def chat_completion_streamed(messages:list, model='gpt-4'):
   try:
-    async for chunk in await openai.ChatCompletion.acreate(model=model, messages=post_handler['instructions']+post_handler['messages'], stream=True):
+    async for chunk in await openai.ChatCompletion.acreate(model=model, messages=messages, stream=True):
       content = chunk["choices"][0].get("delta", {}).get("content")
       if content:
         yield content
