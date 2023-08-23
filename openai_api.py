@@ -101,7 +101,7 @@ async def chat_completion(messages:list, model='gpt-4', functions=None):
     return f"OpenAI API Error: {err}"
 
 async def chat_completion_functions(message:str, available_functions:dict):
-  response_message = await chat_completion([{"role":"user", "content":message}], model='gpt-4-0613', functions=function_descriptions)
+  response_message:dict = await chat_completion([{"role":"user", "content":message}], model='gpt-4-0613', functions=function_descriptions)
   if response_message.get("function_call"):
     function = response_message["function_call"]["name"]
     arguments = json.loads(response_message["function_call"]["arguments"])

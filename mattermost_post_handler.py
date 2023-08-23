@@ -212,15 +212,11 @@ class MattermostPostHandler():
       self.instructions[0]['content'] += f" {channel['purpose']}"
     bot_user = await bot.users.get_user('me')
     bot.user_id = bot_user['id']
-    if (f"{bot.name} always reply" in channel['purpose'] or bot.name_in_message(message)):
-      if post['root_id'] == "":
-        openai_response_message = await openai_api.chat_completion_functions(message, self.available_functions)
-        logger.debug("DEBUG: post_handler: %s", openai_response_message)
-        if openai_response_message.get('function_call'):
-          return
-        self.context = {'order':[post['id']], 'posts':{post['id']: post}}
-        self.reply_to = post['id']
-        return await self.stream_reply_to_context()
+    if (bot.name_in_message(message)) and post['root_id'] == "":
+      openai_response_message = await openai_api.chat_completion_functions(message, self.available_functions)
+      if openai_response_message.get('content'):
+        await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':openai_response_message['content'], 'file_ids':self.file_ids, 'root_id':post['id']})
+      return
     self.context = await bot.posts.get_thread(post['id'])
     self.reply_to = post['root_id']
     async with asyncio.Lock():
