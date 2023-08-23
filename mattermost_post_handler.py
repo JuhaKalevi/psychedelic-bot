@@ -32,6 +32,7 @@ class MattermostPostHandler():
     }
     self.context = None
     self.file_ids = []
+    self.instructions = [{'role':'system', 'content':'You are a chatbot part of a larger system that leverages various AI capalibities from OpenAI & others. In essence, you have the feature to generate images, as such a function is described in function call descriptions.'}]
     self.reply_to = ''
     self.message = post['message']
     self.post = post
@@ -210,6 +211,10 @@ class MattermostPostHandler():
     message = self.message
     post = self.post
     channel = await bot.channels.get_channel(post['channel_id'])
+    if channel['type'] == 'D':
+      self.instructions[0]['content'] += f" {channel['header']}"
+    else:
+      self.instructions[0]['content'] += f" {channel['purpose']}"
     bot_user = await bot.users.get_user('me')
     bot.user_id = bot_user['id']
     if (f"{bot.name} always reply" in channel['purpose'] or bot.name_in_message(message)):

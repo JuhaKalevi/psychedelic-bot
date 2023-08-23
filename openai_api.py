@@ -94,9 +94,6 @@ function_descriptions = [
     }
   }
 ]
-instructions = [{'role':'system', 'content':'You are a chatbot part of a larger system that leverages various AI capalibities from OpenAI & others.'
-                ' In essence, you have the feature to generate images, as such a function is described in function call descriptions.'
-                ' Answer all questions with humour level 100% writing like Gandalf the Grey, and you will be fine.'}]
 
 async def chat_completion(messages:list, model='gpt-4', functions=None):
   try:
@@ -125,7 +122,7 @@ async def chat_completion_functions_stage2(post:dict, function:str, arguments:di
   logger.debug('chat_completion_functions_stage2() final_result: %s', final_result)
   await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':final_result['content'], 'file_ids':None, 'root_id':''})
 
-async def chat_completion_streamed(messages:dict, model='gpt-4'):
+async def chat_completion_streamed(instructions, messages:dict, model='gpt-4'):
   try:
     async for chunk in await openai.ChatCompletion.acreate(model=model, messages=instructions+messages, stream=True):
       content = chunk["choices"][0].get("delta", {}).get("content")
