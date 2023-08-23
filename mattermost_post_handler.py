@@ -126,12 +126,13 @@ class MattermostPostHandler():
       context_tokens = new_context_tokens
     context_messages.reverse()
     logger.debug('token_count: %s', context_tokens)
-    async for content in openai_api.chat_completion_streamed(context_messages, model):
+    async for content in openai_api.chat_completion_streamed(self, model):
       yield content
 
   async def from_message_streamed(self, message:str, model='gpt-4'):
     post_user = await bot.users.get_user(self.post['user_id'])
-    async for content in openai_api.chat_completion_streamed([{'role':'user', 'content':message, 'name':post_user['username']}], model):
+    self.context = [{'role':'user', 'content':message, 'name':post_user['username']}]
+    async for content in openai_api.chat_completion_streamed(self, model):
       yield content
 
   async def generate_images(self, prompt, negative_prompt, count, resolution='1024x1024'):
