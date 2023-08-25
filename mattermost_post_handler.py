@@ -11,12 +11,10 @@ import PIL
 import requests
 import webuiapi
 import common
-import log
 import mattermost_api
 import openai_api
 
 bot = mattermost_api.bot
-logger = log.get_logger(__name__)
 webui_api = webuiapi.WebUIApi(host=os.environ['STABLE_DIFFUSION_WEBUI_HOST'], port=os.environ['STABLE_DIFFUSION_WEBUI_PORT'])
 webui_api.set_auth('psychedelic-bot', os.environ['STABLE_DIFFUSION_WEBUI_API_KEY'])
 
@@ -90,20 +88,19 @@ class MattermostPostHandler():
         content = file.read()
       files.append(f'\n--- BEGIN {file_path} ---\n```\n{content}\n```\n--- END {file_path} ---\n')
     self.instructions[0]['content'] = '\nThis is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic! Abstain from praising or thanking the user, be serious.'+''.join(files) + self.instructions[0]['content']
-    reply_id = await self.stream_reply_to_context()
-    await bot.create_reaction(reply_id, 'robot_face')
+    await bot.react(await self.stream_reply_to_context(), 'robot_face')
 
   async def from_context_streamed(self, model='gpt-4'):
-    data = self.context
-    if 'order' in data:
-      data['order'].sort(key=lambda x: data['posts'][x]['create_at'], reverse=True)
+    cxt = self.context
+    if 'order' in cxt:
+      cxt['order'].sort(key=lambda x: cxt['posts'][x]['create_at'], reverse=True)
     msgs = []
     tokens = 0
     ratio = 0.8
     limit1 = 8192*ratio
     limit2 = 2*limit1
-    for p_id in data['order']:
-      post = data['posts'][p_id]
+    for p_id in cxt['order']:
+      post = cxt['posts'][p_id]
       if 'from_bot' in post['props']:
         role = 'assistant'
       else:
@@ -118,14 +115,13 @@ class MattermostPostHandler():
       msgs.append(msg)
       tokens = new_tokens
     msgs.reverse()
-    logger.debug('token_count: %s', tokens)
     async for part in openai_api.chat_completion_streamed(self.instructions+msgs, model):
       yield part
 
   async def from_message_streamed(self, message:str, model='gpt-4'):
-    post_user = await bot.users.get_user(self.post['user_id'])
-    async for content in openai_api.chat_completion_streamed(self.instructions+[{'role':'user', 'content':message, 'name':post_user['username']}], model):
-      yield content
+    user = await bot.users.get_user(self.post['user_id'])
+    async for part in openai_api.chat_completion_streamed(self.instructions+[{'role':'user', 'content':message, 'name':user['username']}], model):
+      yield part
 
   async def generate_images(self, prompt, negative_prompt, count, resolution='1024x1024'):
     width, height = resolution.split('x')
@@ -157,41 +153,31 @@ class MattermostPostHandler():
   async def instruct_pix2pix(self) -> str:
     file_ids = self.file_ids
     post = self.post
-    print(f"DEBUG: Starting function with bot={bot}, file_ids={file_ids}, post={post}")
     comment = ''
     for post_file_id in post['file_ids']:
-      print(f"DEBUG: Processing file_id={post_file_id}")
       file_response = await bot.files.get_file(file_id=post_file_id)
       if file_response.status_code == 200:
         file_type = os.path.splitext(file_response.headers["Content-Disposition"])[1][1:]
         post_file_path = f'{post_file_id}.{file_type}'
-        print(f"DEBUG: post_file_path={post_file_path}, file_type={file_type}")
         with open(post_file_path, 'wb') as new_image:
           new_image.write(file_response.content)
       try:
         post_file_image = PIL.Image.open(post_file_path)
         options = webui_api.get_options()
-        print(f"DEBUG: Current options={options}")
         options = {}
         options['sd_model_checkpoint'] = 'instruct-pix2pix-00-22000.safetensors [fbc31a67aa]'
         options['sd_vae'] = "None"
-        print(f"DEBUG: Set new options={options}")
         webui_api.set_options(options)
         prompt = post['message']
-        print(f"DEBUG: Prompt for img2img={prompt}")
         result = webui_api.img2img(images=[post_file_image], prompt=post['message'], steps=150, seed=-1, cfg_scale=7.5, denoising_strength=1.5)
-        print(f"DEBUG: img2img result={result}")
         if not result:
           raise RuntimeError("API returned an invalid response")
         processed_image_path = f"processed_{post_file_id}.png"
         result.image.save(processed_image_path)
-        print(f"DEBUG: Saved result to path={processed_image_path}")
         with open(processed_image_path, 'rb') as image_file:
           file_id = await bot.upload_file(post['channel_id'], {'files': (processed_image_path, image_file)})
-        print(f"DEBUG: Uploaded file, got file_id={file_id}")
         file_ids.append(file_id)
         comment += "Image processed successfully"
-        print(f"DEBUG: Success, comment={comment}")
       except RuntimeError as err:
         comment += f"Error occurred while processing image: {str(err)}"
       finally:
@@ -204,7 +190,6 @@ class MattermostPostHandler():
     message = self.message
     post = self.post
     channel = await bot.channels.get_channel(post['channel_id'])
-    logger.debug(channel['type'])
     if channel['type'] == 'G':
       self.instructions[0]['content'] += f" {channel['header']}"
     else:
@@ -212,22 +197,21 @@ class MattermostPostHandler():
     bot_user = await bot.users.get_user('me')
     bot.user_id = bot_user['id']
     if (bot.name_in_message(message)) and post['root_id'] == "":
-      messages = self.instructions + [{"role":"user", "content":message}]
-      openai_response_message = await openai_api.chat_completion_functions(messages, self.available_functions)
-      if openai_response_message.get('content'):
-        await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':openai_response_message['content'], 'file_ids':self.file_ids, 'root_id':post['id']})
+      msgs = self.instructions + [{"role":"user", "content":message}]
+      res = await openai_api.chat_completion_functions(msgs, self.available_functions)
+      if res.get('content'):
+        await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':res['content'], 'file_ids':self.file_ids, 'root_id':post['id']})
       return
     self.context = await bot.posts.get_thread(post['id'])
     self.reply_to = post['root_id']
     async with asyncio.Lock():
-      for thread_post in self.context['posts'].values():
-        if thread_post['metadata'].get('reactions'):
-          for reaction in thread_post['metadata']['reactions']:
-            logger.debug("DEBUG: reaction=%s", reaction)
+      for post in self.context['posts'].values():
+        if post['metadata'].get('reactions'):
+          for reaction in post['metadata']['reactions']:
             if reaction['emoji_name'] == 'robot_face' and reaction['user_id'] == bot.user_id:
               return await self.code_analysis()
-      for thread_post in self.context['posts'].values():
-        if bot.name_in_message(thread_post['message']):
+      for post in self.context['posts'].values():
+        if bot.name_in_message(post['message']):
           return await self.stream_reply_to_context()
 
   async def stream_reply_to_context(self) -> str:
