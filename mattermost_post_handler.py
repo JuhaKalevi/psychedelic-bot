@@ -94,35 +94,33 @@ class MattermostPostHandler():
     await bot.create_reaction(reply_id, 'robot_face')
 
   async def from_context_streamed(self, model='gpt-4'):
-    context = self.context
-    if 'order' in context:
-      context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
-    context_messages = []
-    context_tokens = 0
-    context_token_limit = 7372
-    for post_id in context['order']:
-      post = context['posts'][post_id]
-      post_user = await bot.users.get_user(self.post['user_id'])
+    data = self.context
+    if 'order' in data:
+      data['order'].sort(key=lambda x: data['posts'][x]['create_at'], reverse=True)
+    msgs = []
+    tokens = 0
+    ratio = 0.8
+    limit1 = 8192*ratio
+    limit2 = 2*limit1
+    for p_id in data['order']:
+      post = data['posts'][p_id]
       if 'from_bot' in post['props']:
         role = 'assistant'
-        header = ''
       else:
         role = 'user'
-        header = json.dumps({'name':post_user['username']})+'\n'
-      message = {'role':role, 'content':header+post['message']}
-      message_tokens = common.count_tokens(message)
-      new_context_tokens = context_tokens + message_tokens
-      if context_token_limit < new_context_tokens < 14744:
+      msg = {'role':role, 'content':post['message']}
+      msg_tokens = common.count_tokens(msg)
+      new_tokens = tokens + msg_tokens
+      if limit1 < new_tokens < limit2 and model == 'gpt-4':
         model = 'gpt-3.5-turbo-16k'
-        context_token_limit *= 2
-      elif new_context_tokens > 14744:
+      elif new_tokens > limit2:
         break
-      context_messages.append(message)
-      context_tokens = new_context_tokens
-    context_messages.reverse()
-    logger.debug('token_count: %s', context_tokens)
-    async for content in openai_api.chat_completion_streamed(self.instructions+context_messages, model):
-      yield content
+      msgs.append(msg)
+      tokens = new_tokens
+    msgs.reverse()
+    logger.debug('token_count: %s', tokens)
+    async for part in openai_api.chat_completion_streamed(self.instructions+msgs, model):
+      yield part
 
   async def from_message_streamed(self, message:str, model='gpt-4'):
     post_user = await bot.users.get_user(self.post['user_id'])
