@@ -30,7 +30,7 @@ class MattermostPostHandler():
     }
     self.context = None
     self.file_ids = []
-    self.instructions = [{'role':'system', 'content':'You are a chatbot part of a larger system that leverages various AI capalibities from OpenAI & others. In essence, you have the feature to generate images, as such a function is described in function call descriptions. User messages begin with a JSON header like {"name": "bunnyh"} which identifies different users from each other.'}]
+    self.instructions = [{'role':'system', 'content':'User messages begin with JSON header which identifies different users from each other. Header must be ignored unless identities are relevant to discussion.'}]
     self.reply_to = ''
     self.message = post['message']
     self.post = post
