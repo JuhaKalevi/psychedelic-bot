@@ -1,5 +1,5 @@
 from json import dumps, loads
-import os
+from os import environ
 import requests
 import openai.error
 import tiktoken
@@ -90,7 +90,7 @@ function_descriptions = [
   }
 ]
 
-openai.api_key = os.environ['OPENAI_API_KEY']
+openai.api_key = environ['OPENAI_API_KEY']
 openai_exceptions = (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.ServiceUnavailableError, openai.error.Timeout)
 
 async def chat_completion(messages:list, model='gpt-4', functions=None):
@@ -177,7 +177,7 @@ async def textgen_chat_completion(message:str, history:dict) -> str:
     'skip_special_tokens': True,
     'stopping_strings': []
   }
-  response = requests.post(os.environ['TEXTGEN_WEBUI_URI'], json=request, timeout=420)
+  response = requests.post(environ['TEXTGEN_WEBUI_URI'], json=request, timeout=420)
   if response.status_code == 200:
     response_content = loads(response.text)
     results = response_content["results"]

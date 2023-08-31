@@ -1,8 +1,8 @@
-from asyncio import create_task, run
+import asyncio
 from json import loads
 from os import environ
 import mattermostdriver.exceptions
-import platforms
+import actions
 
 class PsychedelicBot(mattermostdriver.AsyncDriver):
 
@@ -10,6 +10,7 @@ class PsychedelicBot(mattermostdriver.AsyncDriver):
     self.name = environ['MATTERMOST_BOT_NAME']
     self.user_id = ''
     super().__init__({'url':environ['MATTERMOST_URL'], 'token':environ['MATTERMOST_TOKEN'], 'scheme':'https', 'port':443})
+    asyncio.create_task(self.__listener__())
 
   async def __listener__(self):
     await self.login()
@@ -20,7 +21,7 @@ class PsychedelicBot(mattermostdriver.AsyncDriver):
     if event.get('event') == 'posted' and event['data']['sender_name'] != self.name:
       post = loads(event['data']['post'])
       if 'from_bot' not in post['props']:
-        create_task(platforms.MattermostPostHandler(self, post))
+        actions.Mattermost(self, post)
 
   async def create_or_update_post(self, opts:dict, _id=None):
     try:
@@ -49,4 +50,4 @@ class PsychedelicBot(mattermostdriver.AsyncDriver):
     except (ConnectionResetError, mattermostdriver.exceptions.InvalidOrMissingParameters, mattermostdriver.exceptions.ResourceNotFound) as err:
       return err
 
-run(PsychedelicBot().__listener__())
+asyncio.run(PsychedelicBot())

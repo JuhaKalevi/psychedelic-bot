@@ -11,12 +11,12 @@ import httpx
 import PIL
 import requests
 import webuiapi
-import ai
+import models
 
 webui_api = webuiapi.WebUIApi(host=os.environ['STABLE_DIFFUSION_WEBUI_HOST'], port=os.environ['STABLE_DIFFUSION_WEBUI_PORT'])
 webui_api.set_auth('psychedelic-bot', os.environ['STABLE_DIFFUSION_WEBUI_API_KEY'])
 
-class MattermostPostHandler():
+class Mattermost():
 
   def __init__(self, bot, post:dict):
     self.available_functions = {
@@ -33,6 +33,36 @@ class MattermostPostHandler():
     self.reply_to = ''
     self.message = post['message']
     self.post = post
+    asyncio.create_task(self.__post_handler__())
+
+  async def __post_handler__(self):
+    bot = self.bot
+    message = self.message
+    post = self.post
+    channel = await bot.channels.get_channel(post['channel_id'])
+    if channel['type'] == 'G':
+      self.instructions[0]['content'] += f" {channel['header']}"
+    else:
+      self.instructions[0]['content'] += f" {channel['purpose']}"
+    bot_user = await bot.users.get_user('me')
+    bot.user_id = bot_user['id']
+    if (bot.name_in_message(message)) and post['root_id'] == "":
+      msgs = self.instructions + [{"role":"user", "content":message}]
+      res = await models.chat_completion_functions(msgs, self.available_functions)
+      if res.get('content'):
+        await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':res['content'], 'file_ids':self.file_ids, 'root_id':post['id']})
+      return
+    self.context = await bot.posts.get_thread(post['id'])
+    self.reply_to = post['root_id']
+    async with asyncio.Lock():
+      for post in self.context['posts'].values():
+        if post['metadata'].get('reactions'):
+          for reaction in post['metadata']['reactions']:
+            if reaction['emoji_name'] == 'robot_face' and reaction['user_id'] == bot.user_id:
+              return await self.code_analysis()
+      for post in self.context['posts'].values():
+        if bot.name_in_message(post['message']):
+          return await self.stream_reply_to_context()
 
   async def captioner(self):
     bot = self.bot
@@ -86,7 +116,7 @@ class MattermostPostHandler():
       {"role": "assistant", "content": None, "function_call": {"name": function, "arguments": json.dumps(arguments)}},
       {"role": "function", "name": function, "content": json.dumps(result)}
     ]
-    final_result = await ai.chat_completion(messages, model='gpt-4-0613', functions=ai.function_descriptions)
+    final_result = await models.chat_completion(messages, model='gpt-4-0613', functions=models.function_descriptions)
     await self.bot.create_or_update_post({'channel_id':post['channel_id'], 'message':final_result['content'], 'file_ids':None, 'root_id':''})
 
   async def code_analysis(self):
@@ -116,7 +146,7 @@ class MattermostPostHandler():
       else:
         role = 'user'
       msg = {'role':role, 'content':post['message']}
-      msg_tokens = ai.count_tokens(msg)
+      msg_tokens = models.count_tokens(msg)
       new_tokens = tokens + msg_tokens
       if limit1 < new_tokens < limit2 and model == 'gpt-4':
         model = 'gpt-3.5-turbo-16k'
@@ -125,12 +155,12 @@ class MattermostPostHandler():
       msgs.append(msg)
       tokens = new_tokens
     msgs.reverse()
-    async for part in ai.chat_completion_streamed(self.instructions+msgs, model):
+    async for part in models.chat_completion_streamed(self.instructions+msgs, model):
       yield part
 
   async def from_message_streamed(self, message:str, model='gpt-4'):
     user = await self.bot.users.get_user(self.post['user_id'])
-    async for part in ai.chat_completion_streamed(self.instructions+[{'role':'user', 'content':message, 'name':user['username']}], model):
+    async for part in models.chat_completion_streamed(self.instructions+[{'role':'user', 'content':message, 'name':user['username']}], model):
       yield part
 
   async def generate_images(self, prompt, negative_prompt, count, resolution='1024x1024'):
@@ -197,35 +227,6 @@ class MattermostPostHandler():
           if os.path.exists(temporary_file_path):
             os.remove(temporary_file_path)
     return await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':prompt, 'file_ids':file_ids, 'root_id':''})
-
-  async def post_handler(self):
-    bot = self.bot
-    message = self.message
-    post = self.post
-    channel = await bot.channels.get_channel(post['channel_id'])
-    if channel['type'] == 'G':
-      self.instructions[0]['content'] += f" {channel['header']}"
-    else:
-      self.instructions[0]['content'] += f" {channel['purpose']}"
-    bot_user = await bot.users.get_user('me')
-    bot.user_id = bot_user['id']
-    if (bot.name_in_message(message)) and post['root_id'] == "":
-      msgs = self.instructions + [{"role":"user", "content":message}]
-      res = await ai.chat_completion_functions(msgs, self.available_functions)
-      if res.get('content'):
-        await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':res['content'], 'file_ids':self.file_ids, 'root_id':post['id']})
-      return
-    self.context = await bot.posts.get_thread(post['id'])
-    self.reply_to = post['root_id']
-    async with asyncio.Lock():
-      for post in self.context['posts'].values():
-        if post['metadata'].get('reactions'):
-          for reaction in post['metadata']['reactions']:
-            if reaction['emoji_name'] == 'robot_face' and reaction['user_id'] == bot.user_id:
-              return await self.code_analysis()
-      for post in self.context['posts'].values():
-        if bot.name_in_message(post['message']):
-          return await self.stream_reply_to_context()
 
   async def stream_reply_to_context(self) -> str:
     bot = self.bot
@@ -295,5 +296,5 @@ class MattermostPostHandler():
       prediction = gradio.predict(message, fn_index=1)
       if 'error' in prediction:
         return f"ERROR gradio.predict(): {prediction['error']}"
-      ytsummary = await ai.generate_summary_from_transcription(prediction)
+      ytsummary = await models.generate_summary_from_transcription(prediction)
       return ytsummary
