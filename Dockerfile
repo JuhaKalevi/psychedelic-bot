@@ -11,5 +11,5 @@ RUN python3 -m venv venv
 RUN . venv/bin/activate
 COPY requirements.txt /app/
 RUN pip install -r requirements.txt
-COPY *.py *.yml *.sh /app/
-CMD ["/usr/bin/python3", "-u", "psychedelic_bot.py"]
+COPY src/*.py /app/
+CMD ["/usr/bin/python3", "psychedelic_bot.py"]

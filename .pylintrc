@@ -6,8 +6,6 @@ disable=
     C0301, # line-too-long
     R0902, # too-many-instance-attributes
     R0914, # too-many-locals
-    R1732, # consider-using-with
-    W1514, # unspecified-encoding
 [FORMAT]
 indent-string='  '
 indent-after-paren=2
