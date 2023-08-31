@@ -14,6 +14,7 @@ deploy:
     - chmod 400 "$SSH_DEPLOY_KEY"
     - ssh-add "$SSH_DEPLOY_KEY"
     - ssh -oStrictHostKeyChecking=no psychedelic-bot@ai.psychedelic.fi $CI_COMMIT_BRANCH
+    - eval $(ssh-agent -k)
   stage: deploy
   tags:
     - shell
