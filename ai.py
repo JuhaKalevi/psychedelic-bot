@@ -1,11 +1,8 @@
-import json
+from json import dumps, loads
 import os
-import openai
-import mattermost_api
-
-bot = mattermost_api.bot
-openai.api_key = os.environ['OPENAI_API_KEY']
-openai_exceptions = (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.ServiceUnavailableError, openai.error.Timeout)
+import requests
+import openai.error
+import tiktoken
 
 function_descriptions = [
   {
@@ -93,6 +90,9 @@ function_descriptions = [
   }
 ]
 
+openai.api_key = os.environ['OPENAI_API_KEY']
+openai_exceptions = (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.ServiceUnavailableError, openai.error.Timeout)
+
 async def chat_completion(messages:list, model='gpt-4', functions=None):
   try:
     response = await openai.ChatCompletion.acreate(model=model, messages=messages, functions=functions)
@@ -104,18 +104,9 @@ async def chat_completion_functions(messages:list, available_functions:dict):
   response_message:dict = await chat_completion(messages, model='gpt-4-0613', functions=function_descriptions)
   if response_message.get("function_call"):
     function = response_message["function_call"]["name"]
-    arguments = json.loads(response_message["function_call"]["arguments"])
+    arguments = loads(response_message["function_call"]["arguments"])
     await available_functions[function](**arguments)
   return response_message
-
-async def chat_completion_functions_stage2(post:dict, function:str, arguments:dict, result:dict):
-  messages = [
-    {"role": "user", "content": post['message']},
-    {"role": "assistant", "content": None, "function_call": {"name": function, "arguments": json.dumps(arguments)}},
-    {"role": "function", "name": function, "content": json.dumps(result)}
-  ]
-  final_result = await chat_completion(messages, model='gpt-4-0613', functions=function_descriptions)
-  await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':final_result['content'], 'file_ids':None, 'root_id':''})
 
 async def chat_completion_streamed(messages:list, model='gpt-4'):
   try:
@@ -125,3 +116,77 @@ async def chat_completion_streamed(messages:list, model='gpt-4'):
         yield content
   except openai_exceptions:
     return
+
+def count_tokens(msg:str):
+  return len(tiktoken.get_encoding('cl100k_base').encode(dumps(msg)))
+
+async def generate_story_from_captions(msg:str, model='gpt-4'):
+  return await chat_completion([{'role':'user', 'content':(f"Make a consistent story based on these image captions: {msg}")}], model)
+
+async def generate_summary_from_transcription(msg:str, model='gpt-4'):
+  return await chat_completion([{
+    'role': 'user',
+    'content': (
+      f"Summarize in appropriate detail, adjusting the summary length according to the transcription's length, the YouTube-video transcription below. IGNORE all advertisement(s), sponsorship(s), discount(s), promotions(s), etc. completely!"
+      f" Also make a guess on how many different characters' speech is included in the transcription."
+      f" Also analyze the style of this video (comedy, drama, instructional, educational, etc.)."
+      f" Also give scoring 0-10 about the video for each of these categories: originality, difficulty, humor, boringness, creativity, artful."
+      f" Transcription: {msg}"
+    )
+  }], model)
+
+async def textgen_chat_completion(message:str, history:dict) -> str:
+  request = {
+    'user_input': message,
+    'max_new_tokens': 1200,
+    'history': history,
+    'mode': 'instruct',
+    'character': 'Example',
+    'instruction_template': 'WizardLM',
+    'your_name': 'You',
+    'regenerate': False,
+    '_continue': False,
+    'stop_at_newline': False,
+    'chat_generation_attempts': 1,
+    'chat-instruct_command': 'Continue the chat dialogue below. Write a lengthy step-by-step answer for the character "<|character|>".\n\n<|prompt|>',
+    'preset': 'None',
+    'do_sample': True,
+    'temperature': 0.7,
+    'top_p': 0.1,
+    'typical_p': 1,
+    'epsilon_cutoff': 0,  # In units of 1e-4
+    'eta_cutoff': 0,  # In units of 1e-4
+    'tfs': 1,
+    'top_a': 0,
+    'repetition_penalty': 1.18,
+    'repetition_penalty_range': 0,
+    'top_k': 40,
+    'min_length': 0,
+    'no_repeat_ngram_size': 0,
+    'num_beams': 1,
+    'penalty_alpha': 0,
+    'length_penalty': 1,
+    'early_stopping': False,
+    'mirostat_mode': 0,
+    'mirostat_tau': 5,
+    'mirostat_eta': 0.1,
+    'seed': -1,
+    'add_bos_token': True,
+    'truncation_length': 2048,
+    'ban_eos_token': False,
+    'skip_special_tokens': True,
+    'stopping_strings': []
+  }
+  response = requests.post(os.environ['TEXTGEN_WEBUI_URI'], json=request, timeout=420)
+  if response.status_code == 200:
+    response_content = loads(response.text)
+    results = response_content["results"]
+    for result in results:
+      chat_history = result.get("history", {})
+      internal_history = chat_history.get("internal", [])
+      if internal_history:
+        last_entry = internal_history[-1]
+        if len(last_entry) > 1:
+          answer = last_entry[1]
+          return answer
+  return 'oops'

@@ -6,21 +6,19 @@ import re
 import time
 import aiofiles
 import googlesearch
+import gradio_client
 import httpx
 import PIL
 import requests
 import webuiapi
-import common
-import mattermost_api
-import openai_api
+import ai
 
-bot = mattermost_api.bot
 webui_api = webuiapi.WebUIApi(host=os.environ['STABLE_DIFFUSION_WEBUI_HOST'], port=os.environ['STABLE_DIFFUSION_WEBUI_PORT'])
 webui_api.set_auth('psychedelic-bot', os.environ['STABLE_DIFFUSION_WEBUI_API_KEY'])
 
 class MattermostPostHandler():
 
-  def __init__(self, post:dict):
+  def __init__(self, bot, post:dict):
     self.available_functions = {
       'channel_summary': self.channel_summary,
       'code_analysis': self.code_analysis,
@@ -28,6 +26,7 @@ class MattermostPostHandler():
       'get_current_weather': self.get_current_weather,
       'google_for_answers': self.google_for_answers,
     }
+    self.bot = bot
     self.context = None
     self.file_ids = []
     self.instructions = [{'role':'system', 'content':'User messages begin with JSON header which identifies different users from each other. Header must be ignored unless identities are relevant to discussion. Do not reveal the persona you are potentially assigned to imitate!'}]
@@ -36,6 +35,7 @@ class MattermostPostHandler():
     self.post = post
 
   async def captioner(self):
+    bot = self.bot
     post = self.post
     captions = []
     async with httpx.AsyncClient() as client:
@@ -76,11 +76,21 @@ class MattermostPostHandler():
           continue
     return '\n'.join(captions)
 
-  async def channel_summary(self, count:int) -> None:
-    self.context = await bot.posts.get_posts_for_channel(self.post['channel_id'], params={'per_page':count})
+  async def channel_summary(self, count:int):
+    self.context = await self.bot.posts.get_posts_for_channel(self.post['channel_id'], params={'per_page':count})
     await self.stream_reply_to_context()
 
-  async def code_analysis(self) -> None:
+  async def chat_completion_functions_stage2(self, post:dict, function:str, arguments:dict, result:dict):
+    messages = [
+      {"role": "user", "content": post['message']},
+      {"role": "assistant", "content": None, "function_call": {"name": function, "arguments": json.dumps(arguments)}},
+      {"role": "function", "name": function, "content": json.dumps(result)}
+    ]
+    final_result = await ai.chat_completion(messages, model='gpt-4-0613', functions=ai.function_descriptions)
+    await self.bot.create_or_update_post({'channel_id':post['channel_id'], 'message':final_result['content'], 'file_ids':None, 'root_id':''})
+
+  async def code_analysis(self):
+    bot = self.bot
     self.context = await bot.posts.get_thread(self.post['id'])
     files = []
     for file_path in [x for x in os.listdir() if x.endswith(('.py','.sh','.yml'))]:
@@ -106,7 +116,7 @@ class MattermostPostHandler():
       else:
         role = 'user'
       msg = {'role':role, 'content':post['message']}
-      msg_tokens = common.count_tokens(msg)
+      msg_tokens = ai.count_tokens(msg)
       new_tokens = tokens + msg_tokens
       if limit1 < new_tokens < limit2 and model == 'gpt-4':
         model = 'gpt-3.5-turbo-16k'
@@ -115,15 +125,16 @@ class MattermostPostHandler():
       msgs.append(msg)
       tokens = new_tokens
     msgs.reverse()
-    async for part in openai_api.chat_completion_streamed(self.instructions+msgs, model):
+    async for part in ai.chat_completion_streamed(self.instructions+msgs, model):
       yield part
 
   async def from_message_streamed(self, message:str, model='gpt-4'):
-    user = await bot.users.get_user(self.post['user_id'])
-    async for part in openai_api.chat_completion_streamed(self.instructions+[{'role':'user', 'content':message, 'name':user['username']}], model):
+    user = await self.bot.users.get_user(self.post['user_id'])
+    async for part in ai.chat_completion_streamed(self.instructions+[{'role':'user', 'content':message, 'name':user['username']}], model):
       yield part
 
   async def generate_images(self, prompt, negative_prompt, count, resolution='1024x1024'):
+    bot = self.bot
     width, height = resolution.split('x')
     post = self.post
     file_ids = self.file_ids
@@ -142,15 +153,16 @@ class MattermostPostHandler():
 
   async def get_current_weather(self, location):
     weatherapi_response = json.loads(requests.get(f"https://api.weatherapi.com/v1/current.json?key={os.environ['WEATHERAPI_KEY']}&q={location}", timeout=7).text)
-    await openai_api.chat_completion_functions_stage2(self.post, 'get_current_weather', {'location':location}, weatherapi_response)
+    await self.chat_completion_functions_stage2(self.post, 'get_current_weather', {'location':location}, weatherapi_response)
 
   async def google_for_answers(self, url=''):
     results = []
     for result in googlesearch.search(url, num_results=2):
       results.append(result)
-    await bot.create_or_update_post({'channel_id':self.post['channel_id'], 'message':json.dumps(results), 'file_ids':self.file_ids, 'root_id':''})
+    await self.bot.create_or_update_post({'channel_id':self.post['channel_id'], 'message':json.dumps(results), 'file_ids':self.file_ids, 'root_id':''})
 
   async def instruct_pix2pix(self) -> str:
+    bot = self.bot
     file_ids = self.file_ids
     post = self.post
     comment = ''
@@ -187,6 +199,7 @@ class MattermostPostHandler():
     return await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':prompt, 'file_ids':file_ids, 'root_id':''})
 
   async def post_handler(self):
+    bot = self.bot
     message = self.message
     post = self.post
     channel = await bot.channels.get_channel(post['channel_id'])
@@ -198,7 +211,7 @@ class MattermostPostHandler():
     bot.user_id = bot_user['id']
     if (bot.name_in_message(message)) and post['root_id'] == "":
       msgs = self.instructions + [{"role":"user", "content":message}]
-      res = await openai_api.chat_completion_functions(msgs, self.available_functions)
+      res = await ai.chat_completion_functions(msgs, self.available_functions)
       if res.get('content'):
         await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':res['content'], 'file_ids':self.file_ids, 'root_id':post['id']})
       return
@@ -215,6 +228,7 @@ class MattermostPostHandler():
           return await self.stream_reply_to_context()
 
   async def stream_reply_to_context(self) -> str:
+    bot = self.bot
     file_ids = self.file_ids
     post = self.post
     reply_to = self.reply_to
@@ -236,6 +250,7 @@ class MattermostPostHandler():
     return reply_id
 
   async def upscale_image(self, scale:int) -> str:
+    bot = self.bot
     file_ids = self.file_ids
     post = self.post
     if scale == 2:
@@ -270,3 +285,15 @@ class MattermostPostHandler():
           if os.path.exists(temporary_file_path):
             os.remove(temporary_file_path)
     return comment
+
+  async def youtube_transcription(self, message:str) -> str:
+    input_str = message
+    url_pattern = re.compile(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
+    urls = re.findall(url_pattern, input_str)
+    if urls:
+      gradio = gradio_client.Client(os.environ['TRANSCRIPTION_API_URI'])
+      prediction = gradio.predict(message, fn_index=1)
+      if 'error' in prediction:
+        return f"ERROR gradio.predict(): {prediction['error']}"
+      ytsummary = await ai.generate_summary_from_transcription(prediction)
+      return ytsummary

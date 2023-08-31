@@ -1,19 +1,52 @@
-import asyncio
-import json
-import mattermost_api
-import mattermost_post_handler
+from asyncio import create_task, run
+from json import loads
+from os import environ
+import mattermostdriver.exceptions
+import platforms
 
-bot = mattermost_api.bot
+class PsychedelicBot(mattermostdriver.AsyncDriver):
 
-async def context_manager(_event:str):
-  event = json.loads(_event)
-  if event.get('event') == 'posted' and event['data']['sender_name'] != bot.name:
-    post = json.loads(event['data']['post'])
-    if 'from_bot' not in post['props']:
-      asyncio.create_task(mattermost_post_handler.MattermostPostHandler(post).post_handler())
+  def __init__(self):
+    self.name = environ['MATTERMOST_BOT_NAME']
+    self.user_id = ''
+    super().__init__({'url':environ['MATTERMOST_URL'], 'token':environ['MATTERMOST_TOKEN'], 'scheme':'https', 'port':443})
 
-async def main():
-  await bot.login()
-  await bot.init_websocket(context_manager)
+  async def __listener__(self):
+    await self.login()
+    await self.init_websocket(self.context_manager)
 
-asyncio.run(main())
+  async def context_manager(self, raw_event:str):
+    event = loads(raw_event)
+    if event.get('event') == 'posted' and event['data']['sender_name'] != self.name:
+      post = loads(event['data']['post'])
+      if 'from_bot' not in post['props']:
+        create_task(platforms.MattermostPostHandler(self, post))
+
+  async def create_or_update_post(self, opts:dict, _id=None):
+    try:
+      if _id:
+        post = await self.posts.patch_post(_id, options=opts)
+      else:
+        post = await self.posts.create_post(options=opts)
+      return post['id']
+    except (ConnectionResetError, mattermostdriver.exceptions.InvalidOrMissingParameters, mattermostdriver.exceptions.ResourceNotFound) as err:
+      return err
+
+  async def create_reaction(self, post_id:str, emoji:str):
+    try:
+      reaction = await self.reactions.create_reaction(options={'user_id':self.user_id, 'post_id':post_id, 'emoji_name':emoji})
+      return reaction
+    except mattermostdriver.exceptions.ResourceNotFound as err:
+      return err
+
+  def name_in_message(self, message:str):
+    return self.name in message or self.name == '@bot' and '@chatgpt' in message
+
+  async def upload_file(self, channel_id:str, files):
+    try:
+      file = await self.files.upload_file(channel_id, files=files)
+      return file['file_infos'][0]['id']
+    except (ConnectionResetError, mattermostdriver.exceptions.InvalidOrMissingParameters, mattermostdriver.exceptions.ResourceNotFound) as err:
+      return err
+
+run(PsychedelicBot().__listener__())
