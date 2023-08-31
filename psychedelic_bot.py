@@ -10,7 +10,7 @@ class PsychedelicBot(mattermostdriver.AsyncDriver):
     self.name = environ['MATTERMOST_BOT_NAME']
     self.user_id = ''
     super().__init__({'url':environ['MATTERMOST_URL'], 'token':environ['MATTERMOST_TOKEN'], 'scheme':'https', 'port':443})
-    asyncio.create_task(self.__listener__())
+    asyncio.run(self.__listener__())
 
   async def __listener__(self):
     await self.login()
@@ -50,4 +50,4 @@ class PsychedelicBot(mattermostdriver.AsyncDriver):
     except (ConnectionResetError, mattermostdriver.exceptions.InvalidOrMissingParameters, mattermostdriver.exceptions.ResourceNotFound) as err:
       return err
 
-asyncio.run(PsychedelicBot())
+PsychedelicBot()
