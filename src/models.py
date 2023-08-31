@@ -47,8 +47,15 @@ function_descriptions = [
                         " Don't use full sentences, just a few keywords, separating these aspects by commas, or periods which separate bigger units consisting of multiple comma separated keywords together."
                         " Don't use any kind of formatting to separate these keywords, expect commas and periods! Remember to translate everything to english!"
         },
-        "count": {"type":"integer","enum":[1,2,3,4,5,6,7,8,9,10]},
-        "resolution": {"type":"string","enum":["1024x1024","1152x896","896x1152","1216x832","832x1216","1344x768","768x1344","1536x640","640x1536"]}
+        "count": {
+          "type":"integer",
+          "enum":[1,2,3,4,5,6,7,8,9,10]
+        },
+        "resolution": {
+          "type":"string",
+          "enum":["1024x1024","1152x896","896x1152","1216x832","832x1216","1344x768","768x1344","1536x640","640x1536"]
+          "description":"The resolution of the generated image. The first number is the width, the second number is the height. The resolution is in pixels. Try to translate user requests like 1080p to the closest resolution available."
+        }
       },
       "required": ["prompt","negative_prompt","count"]
     }
