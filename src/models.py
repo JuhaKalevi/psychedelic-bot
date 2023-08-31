@@ -47,17 +47,8 @@ function_descriptions = [
                         " Don't use full sentences, just a few keywords, separating these aspects by commas, or periods which separate bigger units consisting of multiple comma separated keywords together."
                         " Don't use any kind of formatting to separate these keywords, expect commas and periods! Remember to translate everything to english!"
         },
-        "count": {
-          "type":"integer",
-          "description":"How many images? 1-8"
-        },
-        "resolution": {
-          "type":"string",
-          "description":"Resolution for requested image."
-                        " Default resolution is 1024x1024, and it has to be in this format even if the user describes it in a different way, for example 1080p translates to 1920x1080."
-                        " It's also possible to just describe shape of the image, and it should also be translated to the standard format using 1024x1024 as the starting point. The aspect ratio can be anything but the amount of pixels should always be 1048576."
-                        " If no resolution is specified, consider what the user wants to see, and use the most common resolution for that type of image."
-        }
+        "count": {"type":"integer","enum":[1,2,3,4,5,6,7,8,9,10]},
+        "resolution": {"type":"string","enum":["1024x1024","1152x896","896x1152","1216x832","832x1216","1344x768","768x1344","1536x640","640x1536"]}
       },
       "required": ["prompt","negative_prompt","count"]
     }
