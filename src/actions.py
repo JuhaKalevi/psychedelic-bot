@@ -175,10 +175,12 @@ class Mattermost():
     webui_api.set_options(options)
     result = webui_api.txt2img(prompt=prompt, negative_prompt=negative_prompt, steps=34, batch_size=count, width=width, height=height, sampler_name='DPM++ 2M Karras')
     for image in result.images:
-      image.save('/tmp/result.png')
-      with open('/tmp/result.png', 'rb') as image_file:
+      tmp_path = f'/tmp/result_{time.time()}'
+      image.save(tmp_path)
+      with open(tmp_path, 'rb') as image_file:
         uploaded_file_id = await bot.upload_file(post['channel_id'], {'files':('result.png', image_file)})
         file_ids.append(uploaded_file_id)
+      os.remove(tmp_path)
     await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':f"prompt: {prompt}\nnegative_prompt: {negative_prompt}\nresolution: {resolution}", 'file_ids':file_ids, 'root_id':''})
 
   async def get_current_weather(self, location):
