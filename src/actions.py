@@ -175,7 +175,7 @@ class Mattermost():
     webui_api.set_options(options)
     result = webui_api.txt2img(prompt=prompt, negative_prompt=negative_prompt, steps=34, batch_size=count, width=width, height=height, sampler_name='DPM++ 2M Karras')
     for image in result.images:
-      tmp_path = f'/tmp/result_{time.time()}'
+      tmp_path = f'/tmp/result_{time.time()}.png'
       image.save(tmp_path)
       with open(tmp_path, 'rb') as image_file:
         uploaded_file_id = await bot.upload_file(post['channel_id'], {'files':('result.png', image_file)})
