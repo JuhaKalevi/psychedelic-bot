@@ -178,7 +178,7 @@ class Mattermost():
       tmp_path = f'/tmp/result_{time.time()}.png'
       image.save(tmp_path)
       with open(tmp_path, 'rb') as image_file:
-        uploaded_file_id = await bot.upload_file(post['channel_id'], {'files':(tmp_path.split('/')[1], image_file)})
+        uploaded_file_id = await bot.upload_file(post['channel_id'], {'files':(tmp_path.split('/')[2], image_file)})
         file_ids.append(uploaded_file_id)
       os.remove(tmp_path)
     await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':f"prompt: {prompt}\nnegative_prompt: {negative_prompt}\nresolution: {resolution}", 'file_ids':file_ids, 'root_id':''})
