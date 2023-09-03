@@ -173,7 +173,7 @@ class Mattermost():
     options['sd_model_checkpoint'] = 'sd_xl_base_1.0.safetensors [31e35c80fc]'
     options['sd_vae'] = 'sdxl_vae.safetensors'
     webui_api.set_options(options)
-    result = webui_api.txt2img(prompt=prompt, negative_prompt=negative_prompt, steps=34, batch_size=count, width=width, height=height, sampler_name='DPM++ 2M Karras')
+    result = webui_api.txt2img(prompt=prompt, steps=34, batch_size=count, width=width, height=height, sampler_name='DPM++ 2M Karras')
     for image in result.images:
       tmp_path = f'/tmp/result_{time.time()}.png'
       image.save(tmp_path)
@@ -181,7 +181,7 @@ class Mattermost():
         uploaded_file_id = await bot.upload_file(post['channel_id'], {'files':(tmp_path.split('/')[2], image_file)})
         file_ids.append(uploaded_file_id)
       os.remove(tmp_path)
-    await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':f"prompt: {prompt}\nnegative_prompt: {negative_prompt}\nresolution: {resolution}", 'file_ids':file_ids, 'root_id':''})
+    await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':f"prompt: {prompt}\nresolution: {resolution}", 'file_ids':file_ids, 'root_id':''})
 
   async def get_current_weather(self, location):
     weatherapi_response = json.loads(requests.get(f"https://api.weatherapi.com/v1/current.json?key={os.environ['WEATHERAPI_KEY']}&q={location}", timeout=7).text)
