@@ -163,7 +163,7 @@ class Mattermost():
     async for part in models.chat_completion_streamed(self.instructions+[{'role':'user', 'content':message, 'name':user['username']}], model):
       yield part
 
-  async def generate_images(self, prompt, negative_prompt, count, resolution='1024x1024'):
+  async def generate_images(self, prompt, count, resolution='1024x1024'):
     bot = self.bot
     width, height = resolution.split('x')
     post = self.post

@@ -36,23 +36,14 @@ function_descriptions = [
         "prompt": {
           "type":"string",
           "description":"Convert user image request to english, in such a way that you are describing features of the picture that is requested in the message, starting from the most prominent features."
-                        " If the user's request seems to already be in this format, only pick up the negative prompts from their message and pass the prompt without modifications."
-                        " Don't use full sentences, just a few keywords, separating these aspects by commas so that each comma separated group can have multiple keywords."
-                        " Instead of commas, it's possible to use periods which separate bigger units consisting of multiple comma separated keywords or groups of keywords together. It's important to place the most important elements first!"
-                        " Keyword can also have a colon and a number after it, for example 'cat:1.5' means that the user wants cats with weight 1.5 in the picture. If the user doesn't specify a number, it's assumed to be 1 and doesn't need to be explicitly added. 1.5 is already quite a lot more."
+                        " Don't use full sentences, just a few keywords, separating these aspects by spaces or commas so that each comma separated group can have multiple space separated keywords."
+                        " Instead of commas, it's possible to use periods which separate bigger units consisting of multiple comma separated keywords or groups of keywords together."
+                        " It's important to place the most important elements first in all of these levels of groupings!"
+                        " Keyword can also have a colon and a number after it, for example 'cat:1.5' means that the user wants cats with weight 1.5 in the picture."
                         " If this weighing is used for a keyword group that has multiple members, the group should have parentheses around it in the prompt, for example 'cat:3, dog:2, (horse, cow):1.1'"
-                        " Then after describing the features, add professional photography slang terms which might be related to such a picture done professionally, for example breathtaking, award-winning, professional, highly detailed"
-                        " Don't use any kind of formatting to separate these keywords, expect commas and periods! Remember to translate everything to english!"
-        },
-        "negative_prompt": {
-          "type":"string",
-          "description":"List some features that describe what should NOT be in the generated image, based on what the user wants to see. For example if the user wants a photograph, it should not be drawn or comic style & vice versa."
-                        " In most cases people don't want anime, cartoon, graphic, text, painting, crayon, graphite, abstract glitch, blurry looking pictures unless they specifically say so. You can use these as default negative prompts usually!"
-                        " Don't use full sentences, just a few keywords, separating these aspects by commas so that each comma separated group can have multiple keywords."
-                        " Instead of commas, it's possible to use periods which separate bigger units consisting of multiple comma separated keywords or groups of keywords together. It's important to place the most important elements first!"
-                        " Keyword can also have a colon and a number after it, for example 'cat:1.5' means that the user wants cats with weight 1.5 in the picture. If the user doesn't specify a number, it's assumed to be 1 and doesn't need to be explicitly added. 1.5 is already quite a lot more."
-                        " If this weighing is used for a keyword group that has multiple members, the group should have parentheses around it in the prompt, for example 'cat:3, dog:2, (horse, cow):1.1'"
-                        " Don't use any kind of formatting to separate these keywords, expect commas and periods! Remember to translate everything to english!"
+                        " Where the user doesn't specify weight numbers, it's assumed to be 1 and mustn't be explicitly added. 1.5 is already quite a lot more, 0 is none."
+                        " If the user's request seems to already be in this format, just pass the prompt without modifications."
+                        " Don't use any kind of formatting to separate these keywords, expect what is mentioned above! Remember to translate everything to english!"
         },
         "count": {
           "type":"integer",
@@ -64,7 +55,7 @@ function_descriptions = [
           "description":"The resolution of the generated image. The first number is the width, the second number is the height. The resolution is in pixels. Try to translate user requests like 1080p to the closest resolution available."
         }
       },
-      "required": ["prompt","negative_prompt","count"]
+      "required": ["prompt","count"]
     }
   },
   {
