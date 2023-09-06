@@ -83,6 +83,11 @@ function_descriptions = [
         }
       }
     }
+  },
+  {
+    "name": "instruct_pix2pix",
+    "description": "Alter an image using.",
+    "parameters": {}
   }
 ]
 
