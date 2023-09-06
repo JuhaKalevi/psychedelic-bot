@@ -25,6 +25,7 @@ class Mattermost():
       'generate_images': self.generate_images,
       'get_current_weather': self.get_current_weather,
       'google_for_answers': self.google_for_answers,
+      'instruct_pix2pix': self.instruct_pix2pix,
       'upscale_image': self.upscale_image,
     }
     self.bot = bot
