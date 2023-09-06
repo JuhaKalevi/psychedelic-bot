@@ -195,7 +195,7 @@ class Mattermost():
       results.append(result)
     await self.bot.create_or_update_post({'channel_id':self.post['channel_id'], 'message':json.dumps(results), 'file_ids':self.file_ids, 'root_id':''})
 
-  async def instruct_pix2pix(self) -> str:
+  async def instruct_pix2pix(self):
     bot = self.bot
     file_ids = self.file_ids
     post = self.post
@@ -230,7 +230,7 @@ class Mattermost():
         for temporary_file_path in (post_file_path, processed_image_path):
           if os.path.exists(temporary_file_path):
             os.remove(temporary_file_path)
-    return await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':prompt, 'file_ids':file_ids, 'root_id':''})
+    await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':prompt, 'file_ids':file_ids, 'root_id':''})
 
   async def stream_reply_to_context(self) -> str:
     bot = self.bot
