@@ -254,11 +254,10 @@ class Mattermost():
         reply_id = await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':''.join(chunks_processed)+''.join(buffer), 'file_ids':file_ids, 'root_id':reply_to}, reply_id)
     return reply_id
 
-  async def upscale_image(self, scale:int=2) -> str:
+  async def upscale_image(self, scale=2):
     bot = self.bot
     file_ids = self.file_ids
     post = self.post
-    comment = ''
     for post_file_id in post['file_ids']:
       file_response = await bot.files.get_file(file_id=post_file_id)
       if file_response.status_code == 200:
@@ -281,7 +280,6 @@ class Mattermost():
         for temporary_file_path in (post_file_path, upscaled_image_path):
           if os.path.exists(temporary_file_path):
             os.remove(temporary_file_path)
-    return comment
 
   async def youtube_transcription(self, message:str) -> str:
     input_str = message
