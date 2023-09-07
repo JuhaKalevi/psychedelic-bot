@@ -86,7 +86,19 @@ function_descriptions = [
   },
   {
     "name": "instruct_pix2pix",
-    "description": "Alter an image using.",
+    "description": "Slightly alter an image using a local API",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "scale": {
+          "type": "number",
+        }
+      }
+    }
+  },
+  {
+    "name": "upscale_image",
+    "description": "Upscale an image using a local API",
     "parameters": {}
   }
 ]
