@@ -258,14 +258,6 @@ class Mattermost():
     bot = self.bot
     file_ids = self.file_ids
     post = self.post
-    if scale == 2:
-      upscale_width = 1024
-      upscale_height = 1024
-    elif scale == 4:
-      upscale_width = 2048
-      upscale_height = 2048
-    else:
-      return "Invalid upscale scale"
     comment = ''
     for post_file_id in post['file_ids']:
       file_response = await bot.files.get_file(file_id=post_file_id)
@@ -276,7 +268,7 @@ class Mattermost():
           post_file.write(file_response.content)
       try:
         post_file_image = PIL.Image.open(post_file_path)
-        result = webui_api.extra_single_image(post_file_image, upscaling_resize=scale, upscaling_resize_w=upscale_width, upscaling_resize_h=upscale_height, upscaler_1="LDSR")
+        result = webui_api.extra_single_image(post_file_image, upscaling_resize=scale, upscaler_1="LDSR")
         upscaled_image_path = f"upscaled_{post_file_id}.png"
         result.image.save(upscaled_image_path)
         with open(upscaled_image_path, 'rb') as image_file:
