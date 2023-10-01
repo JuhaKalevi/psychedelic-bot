@@ -97,6 +97,18 @@ function_descriptions = [
     }
   },
   {
+    "name": "store_user_preferences",
+    "description": "Store user preferences in a local database",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "english proficiency": {
+          "type": "string",
+        }
+      }
+    }
+  },
+  {
     "name": "upscale_image",
     "description": "Upscale an image using a local API",
     "parameters": {}
