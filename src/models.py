@@ -90,8 +90,8 @@ function_descriptions = [
     "parameters": {
       "type": "object",
       "properties": {
-        "scale": {
-          "type": "number",
+        "desired_changes": {
+          "type": "string"
         }
       }
     }
@@ -102,8 +102,8 @@ function_descriptions = [
     "parameters": {
       "type": "object",
       "properties": {
-        "english proficiency": {
-          "type": "string",
+        "english_proficiency": {
+          "type": "string"
         }
       }
     }
@@ -111,7 +111,14 @@ function_descriptions = [
   {
     "name": "upscale_image",
     "description": "Upscale an image using a local API",
-    "parameters": {}
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "scale": {
+          "type": "number"
+        }
+      }
+    }
   }
 ]
 
