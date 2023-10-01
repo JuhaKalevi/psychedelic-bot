@@ -41,7 +41,7 @@ function_descriptions = [
                         " It's important to place the most important elements first in all of these levels of groupings!"
                         " Parentheses are used to increase the weight of (emphasize) tokens, such as: (((red hair))). Each set of parentheses multiplies the weight by 1.05."
                         " Curly brackets can be conversely used to de-emphasize with a similar logic & multiplier."
-                        " If the user's request seems to already be in this format, just decide which part should go to the negative_prompt parameter which describes conceptual opposites of the requested image."
+                        " If the user's request seems to already be in this format, just decide which part should go to the negative_prompt parameter which describes conceptual opposites of the requested image. Then don't use those parts in this parameter!"
                         " Don't use any kind of formatting to separate these keywords, expect what is mentioned above! Remember to translate everything to english!"
         },
         "negative_prompt": {
