@@ -183,7 +183,7 @@ class Mattermost():
         uploaded_file_id = await bot.upload_file(post['channel_id'], {'files':(tmp_path.split('/')[2], image_file)})
         file_ids.append(uploaded_file_id)
       os.remove(tmp_path)
-    await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':f"prompt: {prompt}ob\nresolution: {resolution}", 'file_ids':file_ids, 'root_id':''})
+    await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':f"prompt: {prompt}\nresolution: {resolution}", 'file_ids':file_ids, 'root_id':''})
 
   async def get_current_weather(self, location):
     weatherapi_response = json.loads(requests.get(f"https://api.weatherapi.com/v1/current.json?key={os.environ['WEATHERAPI_KEY']}&q={location}", timeout=7).text)
