@@ -39,9 +39,8 @@ function_descriptions = [
                         " Don't use full sentences, just a few keywords, separating these aspects by spaces or commas so that each comma separated group can have multiple space separated keywords."
                         " Instead of commas, it's possible to use periods which separate bigger units consisting of multiple comma separated keywords or groups of keywords together."
                         " It's important to place the most important elements first in all of these levels of groupings!"
-                        " Keyword can also have a colon and a number after it, for example 'cat:1.5' means that the user wants cats with weight 1.5 in the picture."
-                        " If this weighing is used for a keyword group that has multiple members, the group should have parentheses around it in the prompt, for example 'cat:3, dog:2, (horse, cow):1.1'"
-                        " Where the user doesn't specify weight numbers, it's assumed to be 1 and mustn't be explicitly added. 1.5 is already quite a lot more, 0 is none."
+                        " Parentheses are used to increase the weight of (emphasize) tokens, such as: (((red hair))). Each set of parentheses multiplies the weight by 1.05."
+                        " Curly brackets can be conversely used to de-emphasize with a similar logic & multiplier."
                         " If the user's request seems to already be in this format, just pass the prompt without modifications."
                         " Don't use any kind of formatting to separate these keywords, expect what is mentioned above! Remember to translate everything to english!"
         },
