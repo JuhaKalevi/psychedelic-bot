@@ -41,7 +41,18 @@ function_descriptions = [
                         " It's important to place the most important elements first in all of these levels of groupings!"
                         " Parentheses are used to increase the weight of (emphasize) tokens, such as: (((red hair))). Each set of parentheses multiplies the weight by 1.05."
                         " Curly brackets can be conversely used to de-emphasize with a similar logic & multiplier."
-                        " If the user's request seems to already be in this format, just pass the prompt without modifications."
+                        " If the user's request seems to already be in this format, just decide which part should go to the negative_prompt parameter which describes conceptual opposites of the requested image."
+                        " Don't use any kind of formatting to separate these keywords, expect what is mentioned above! Remember to translate everything to english!"
+        },
+        "negative_prompt": {
+          "type":"string",
+          "description":"Convert user image request to english, in such a way that you are describing conceptually opposite features of the picture that is requested in the message, starting from the most strikingly opposite features."
+                        " Don't use full sentences, just a few keywords, separating these aspects by spaces or commas so that each comma separated group can have multiple space separated keywords."
+                        " Instead of commas, it's possible to use periods which separate bigger units consisting of multiple comma separated keywords or groups of keywords together."
+                        " It's important to place the most important elements first in all of these levels of groupings!"
+                        " Parentheses are used to increase the weight of (emphasize) tokens, such as: (((red hair))). Each set of parentheses multiplies the weight by 1.05."
+                        " Curly brackets can be conversely used to de-emphasize with a similar logic & multiplier."
+                        " The negative_prompt is used to describe the conceptual opposites of the requested image, so it can be often crafted by just replacing the most important keywords with their opposites."
                         " Don't use any kind of formatting to separate these keywords, expect what is mentioned above! Remember to translate everything to english!"
         },
         "count": {
@@ -54,7 +65,7 @@ function_descriptions = [
           "description":"The resolution of the generated image. The first number is the width, the second number is the height. The resolution is in pixels. Try to translate user requests like 1080p to the closest resolution available."
         }
       },
-      "required": ["prompt","count"]
+      "required": ["prompt","negative_prompt","count"]
     }
   },
   {
