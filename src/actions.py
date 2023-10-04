@@ -172,8 +172,7 @@ class Mattermost():
     file_ids = self.file_ids
     options = webui_api.get_options()
     options = {}
-    options['sd_model_checkpoint'] = 'sd_xl_base_1.0.safetensors [31e35c80fc]'
-    options['sd_vae'] = 'sdxl_vae.safetensors'
+    options['sd_model_checkpoint'] = 'sd_xl_base_1.0_0.9vae.safetensors [e6bb9ea85b]'
     webui_api.set_options(options)
     result = webui_api.txt2img(prompt=prompt, steps=34, batch_size=count, width=width, height=height, sampler_name='DPM++ 2M Karras')
     for image in result.images:
