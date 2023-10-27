@@ -56,8 +56,7 @@ function_descriptions = [
                         " Don't use any kind of formatting to separate these keywords, expect what is mentioned above! Remember to translate everything to english!"
         },
         "count": {
-          "type":"integer",
-          "enum":[1,2,3,4,5,6,7,8,9,10]
+          "type":"integer"
         },
         "resolution": {
           "type":"string",
@@ -65,7 +64,7 @@ function_descriptions = [
           "description":"The resolution of the generated image. The first number is the width, the second number is the height. The resolution is in pixels. Try to translate user requests like 1080p to the closest resolution available."
         }
       },
-      "required": ["prompt","negative_prompt","count"]
+      "required": ["prompt","negative_prompt"]
     }
   },
   {
