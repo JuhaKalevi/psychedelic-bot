@@ -166,7 +166,6 @@ class Mattermost():
       yield part
 
   async def generate_images(self, prompt, negative_prompt, count, resolution='1024x1024'):
-    start_time = time.time()
     bot = self.bot
     width, height = resolution.split('x')
     post = self.post
@@ -175,15 +174,16 @@ class Mattermost():
     options = {}
     options['sd_model_checkpoint'] = 'sd_xl_base_1.0_0.9vae.safetensors [e6bb9ea85b]'
     webui_api.set_options(options)
-    result = webui_api.txt2img(prompt=prompt, steps=21, batch_size=count, width=width, height=height, sampler_name='DPM++ 2M Karras', script_name='Distribute')
-    for image in result.images:
-      tmp_path = f'/tmp/result_{time.time()}.png'
-      image.save(tmp_path)
-      with open(tmp_path, 'rb') as image_file:
-        uploaded_file_id = await bot.upload_file(post['channel_id'], {'files':(tmp_path.split('/')[2], image_file)})
-        file_ids.append(uploaded_file_id)
-      os.remove(tmp_path)
-    await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':f"prompt: {prompt}\nnegative_prompt: {negative_prompt}\nresolution: {resolution}\ntime_elapsed: {start_time-time.time()}", 'file_ids':file_ids, 'root_id':''})
+    for _ in range(count):
+      result = webui_api.txt2img(prompt=prompt, negative_prompt=negative_prompt, steps=21, batch_size=1, width=width, height=height, sampler_name='DPM++ 2M Karras', script_name='Distribute')
+      for image in result.images:
+        tmp_path = f'/tmp/result_{time.time()}.png'
+        image.save(tmp_path)
+        with open(tmp_path, 'rb') as image_file:
+          uploaded_file_id = await bot.upload_file(post['channel_id'], {'files':(tmp_path.split('/')[2], image_file)})
+          file_ids.append(uploaded_file_id)
+        os.remove(tmp_path)
+      await bot.create_or_update_post({'channel_id':post['channel_id'], 'file_ids':file_ids, 'root_id':''})
 
   async def get_current_weather(self, location):
     weatherapi_response = json.loads(requests.get(f"https://api.weatherapi.com/v1/current.json?key={os.environ['WEATHERAPI_KEY']}&q={location}", timeout=7).text)
