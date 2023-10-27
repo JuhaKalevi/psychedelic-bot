@@ -175,7 +175,7 @@ class Mattermost():
     options['sd_model_checkpoint'] = 'sd_xl_base_1.0_0.9vae.safetensors [e6bb9ea85b]'
     webui_api.set_options(options)
     for _ in range(count):
-      result = webui_api.txt2img(prompt=prompt, negative_prompt=negative_prompt, steps=21, batch_size=1, width=width, height=height, sampler_name='DPM++ 2M Karras', script_name='Distribute')
+      result = webui_api.txt2img(prompt=prompt, negative_prompt=negative_prompt, steps=21, batch_size=1, width=width, height=height, sampler_name='DPM++ 2M Karras')
       for image in result.images:
         tmp_path = f'/tmp/result_{time.time()}.png'
         image.save(tmp_path)
