@@ -1,9 +1,4 @@
-.bashrc
-.cache
 .docker
-*.env
-.gitconfig
-.profile
+.env
 python-mattermost-driver
-.ssh
 venv
