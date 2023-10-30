@@ -4,5 +4,6 @@ googlesearch-python
 gradio_client
 httpx
 openai
+pylint
 tiktoken
 webuiapi
