@@ -167,11 +167,11 @@ class Mattermost():
     async for part in models.chat_completion_streamed(self.instructions+[{'role':'user', 'content':message, 'name':user['username']}], model):
       yield part
 
-  async def generate_images(self, prompt, negative_prompt, count, resolution='1024x1024'):
+  async def generate_images(self, prompt, negative_prompt='', count=1, resolution='1024x1024', sampling_steps=25):
     bot = self.bot
     width, height = resolution.split('x')
     post = self.post
-    payload = {'prompt':prompt, 'negative_prompt':negative_prompt, 'steps':25, 'batch_size':count, 'width':width, 'height':height, 'sampler_name':'DPM++ 2M Karras'}
+    payload = {'prompt':prompt, 'negative_prompt':negative_prompt, 'steps':sampling_steps, 'batch_size':count, 'width':width, 'height':height, 'sampler_name':'DPM++ 2M Karras'}
     total_images_saved = 0
     async with websockets.connect(middleware_url, max_size=100*(1<<20)) as websocket:
       await websocket.send(json.dumps(payload))
