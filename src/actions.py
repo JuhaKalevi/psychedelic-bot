@@ -10,7 +10,7 @@ import aiofiles
 import googlesearch
 import gradio_client
 import httpx
-import PIL
+from PIL import Image
 import websockets
 import requests
 import models
@@ -183,7 +183,7 @@ class Mattermost():
           break
         if r['images']:
           for img_b64 in r['images']:
-            image = PIL.Image.open(io.BytesIO(base64.b64decode(img_b64)))
+            image = Image.open(io.BytesIO(base64.b64decode(img_b64)))
             total_images_saved += 1
             timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
             tmp_path = f'/tmp/image_{total_images_saved}_{timestamp}.png'
