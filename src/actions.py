@@ -171,7 +171,6 @@ class Mattermost():
     bot = self.bot
     width, height = resolution.split('x')
     post = self.post
-    file_ids = self.file_ids
     payload = {'prompt':prompt, 'negative_prompt':negative_prompt, 'steps':25, 'batch_size':count, 'width':width, 'height':height, 'sampler_name':'DPM++ 2M Karras'}
     total_images_saved = 0
     async with websockets.connect(middleware_url, max_size=100*(1<<20)) as websocket:
@@ -190,9 +189,8 @@ class Mattermost():
             image.save(tmp_path)
             with open(tmp_path, 'rb') as image_file:
               uploaded_file_id = await bot.upload_file(post['channel_id'], {'files':(tmp_path.split('/')[2], image_file)})
-              file_ids.append(uploaded_file_id)
             os.remove(tmp_path)
-            await bot.create_or_update_post({'channel_id':post['channel_id'], 'file_ids':file_ids, 'root_id':''})
+            await bot.create_or_update_post({'channel_id':post['channel_id'], 'file_ids':[uploaded_file_id], 'root_id':''})
             if total_images_saved >= payload['batch_size']:
               await websocket.close()
               return
