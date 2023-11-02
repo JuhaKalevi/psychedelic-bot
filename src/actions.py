@@ -1,5 +1,7 @@
 import asyncio
 import base64
+import datetime
+import io
 import json
 import os
 import re
@@ -9,12 +11,12 @@ import googlesearch
 import gradio_client
 import httpx
 import PIL
+import websockets
 import requests
-import webuiapi
 import models
 
-webui_api = webuiapi.WebUIApi(host=os.environ['STABLE_DIFFUSION_WEBUI_HOST'], port=os.environ['STABLE_DIFFUSION_WEBUI_PORT'])
-webui_api.set_auth('psychedelic-bot', os.environ['STABLE_DIFFUSION_WEBUI_API_KEY'])
+middleware_credentials = base64.b64encode(f"{os.environ['MIDDLEWARE_USERNAME']}:{os.environ['MIDDLEWARE_PASSWORD']}".encode()).decode()
+middleware_url = f"ws://ai.psychedelic.fi:8007/middleman/?token={middleware_credentials}"
 
 class Mattermost():
 
@@ -170,20 +172,30 @@ class Mattermost():
     width, height = resolution.split('x')
     post = self.post
     file_ids = self.file_ids
-    options = webui_api.get_options()
-    options = {}
-    options['sd_model_checkpoint'] = 'sd_xl_base_1.0_0.9vae.safetensors [e6bb9ea85b]'
-    webui_api.set_options(options)
-    for _ in range(count):
-      result = webui_api.txt2img(prompt=prompt, negative_prompt=negative_prompt, steps=21, batch_size=1, width=width, height=height, sampler_name='DPM++ 2M Karras')
-      for image in result.images:
-        tmp_path = f'/tmp/result_{time.time()}.png'
-        image.save(tmp_path)
-        with open(tmp_path, 'rb') as image_file:
-          uploaded_file_id = await bot.upload_file(post['channel_id'], {'files':(tmp_path.split('/')[2], image_file)})
-          file_ids.append(uploaded_file_id)
-        os.remove(tmp_path)
-      await bot.create_or_update_post({'channel_id':post['channel_id'], 'file_ids':file_ids, 'root_id':''})
+    payload = {'prompt':prompt, 'negative_prompt':negative_prompt, 'steps':25, 'batch_size':count, 'width':width, 'height':height, 'sampler_name':'DPM++ 2M Karras'}
+    total_images_saved = 0
+    async with websockets.connect(middleware_url, max_size=100*(1<<20)) as websocket:
+      await websocket.send(json.dumps(payload))
+      while True:
+        response = await websocket.recv()
+        r = json.loads(response)
+        if 'completed' in r and r['completed'] is True:
+          break
+        if r['images']:
+          for img_b64 in r['images']:
+            image = PIL.Image.open(io.BytesIO(base64.b64decode(img_b64)))
+            total_images_saved += 1
+            timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+            tmp_path = f'/tmp/image_{total_images_saved}_{timestamp}.png'
+            image.save(tmp_path)
+            with open(tmp_path, 'rb') as image_file:
+              uploaded_file_id = await bot.upload_file(post['channel_id'], {'files':(tmp_path.split('/')[2], image_file)})
+              file_ids.append(uploaded_file_id)
+            os.remove(tmp_path)
+            await bot.create_or_update_post({'channel_id':post['channel_id'], 'file_ids':file_ids, 'root_id':''})
+            if total_images_saved >= payload['batch_size']:
+              await websocket.close()
+              return
 
   async def get_current_weather(self, location):
     weatherapi_response = json.loads(requests.get(f"https://api.weatherapi.com/v1/current.json?key={os.environ['WEATHERAPI_KEY']}&q={location}", timeout=7).text)
@@ -208,14 +220,11 @@ class Mattermost():
         with open(post_file_path, 'wb') as new_image:
           new_image.write(file_response.content)
       try:
-        post_file_image = PIL.Image.open(post_file_path)
-        options = webui_api.get_options()
-        options = {}
-        options['sd_model_checkpoint'] = 'instruct-pix2pix-00-22000.safetensors [fbc31a67aa]'
-        options['sd_vae'] = "None"
-        webui_api.set_options(options)
+        #post_file_image = PIL.Image.open(post_file_path)
+        #options['sd_model_checkpoint'] = 'instruct-pix2pix-00-22000.safetensors [fbc31a67aa]'
+        #options['sd_vae'] = "None"
         prompt = post['message']
-        result = webui_api.img2img(images=[post_file_image], prompt=post['message'], steps=150, seed=-1, cfg_scale=7.5, denoising_strength=1.5)
+        result = None #webui_api.img2img(images=[post_file_image], prompt=post['message'], steps=150, seed=-1, cfg_scale=7.5, denoising_strength=1.5)
         if not result:
           raise RuntimeError("API returned an invalid response")
         processed_image_path = f"processed_{post_file_id}.png"
@@ -255,6 +264,7 @@ class Mattermost():
     return reply_id
 
   async def upscale_image(self, scale=2):
+    print(scale)
     bot = self.bot
     file_ids = self.file_ids
     post = self.post
@@ -266,8 +276,10 @@ class Mattermost():
         with open(post_file_path, 'wb') as post_file:
           post_file.write(file_response.content)
       try:
-        post_file_image = PIL.Image.open(post_file_path)
-        result = webui_api.extra_single_image(post_file_image, upscaling_resize=scale, upscaler_1="LDSR")
+        #post_file_image = PIL.Image.open(post_file_path)
+        result = None #webui_api.extra_single_image(post_file_image, upscaling_resize=scale, upscaler_1="LDSR")
+        if not result:
+          raise RuntimeError("API returned an invalid response")
         upscaled_image_path = f"upscaled_{post_file_id}.png"
         result.image.save(upscaled_image_path)
         with open(upscaled_image_path, 'rb') as image_file:
