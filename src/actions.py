@@ -16,7 +16,7 @@ import requests
 import models
 
 middleware_credentials = base64.b64encode(f"{os.environ['MIDDLEWARE_USERNAME']}:{os.environ['MIDDLEWARE_PASSWORD']}".encode()).decode()
-middleware_url = f"ws://ai.psychedelic.fi:8007/middleman/?token={middleware_credentials}"
+middleware_url = f"{os.environ['MIDDLEWARE_URL']}/?token={middleware_credentials}"
 
 class Mattermost():
 
