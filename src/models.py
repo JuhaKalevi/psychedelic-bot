@@ -164,11 +164,12 @@ async def chat_completion_streamed(messages:list):
 def choose_model(msgs:list) -> str:
   tokens = count_tokens(msgs)
   if tokens < 6553:
-    return 'gpt-4-0613'
-  if tokens < 32362:
-    print('gpt-4-32k-0613')
-    return 'gpt-4-32k-0613'
-  print('gpt-4-1106-preview')
+    model = 'gpt-4'
+  elif tokens < 12288:
+    model = 'gpt-3.5-turbo-16k'
+  else:
+    model = 'gpt-4-1106-preview'
+  print(model)
   return 'gpt-4-1106-preview'
 
 def count_tokens(msg:str) -> int:
