@@ -166,7 +166,7 @@ def choose_model(msgs:list) -> str:
   if tokens < 6553:
     model = 'gpt-4-0613'
   elif tokens < 12288:
-    model = 'gpt-3.5-turbo-16k-0613'
+    model = 'gpt-3.5-turbo-1106'
   elif tokens < 126976:
     model = 'gpt-4-1106-preview'
   else:
