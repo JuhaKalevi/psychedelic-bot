@@ -111,6 +111,7 @@ class Mattermost():
     return '\n'.join(captions)
 
   async def channel_summary(self, count:int):
+    count = min(12288,count)
     self.context = await self.bot.posts.get_posts_for_channel(self.post['channel_id'], params={'per_page':count})
     await self.chat_completion_functions_stage2(self.post, 'channel_summary', {'count':count}, self.context)
 
