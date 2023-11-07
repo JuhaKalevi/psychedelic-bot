@@ -214,7 +214,7 @@ class Mattermost():
     if 'order' in self.context:
       self.context['order'].sort(key=lambda x: self.context['posts'][x]['create_at'], reverse=True)
     msgs = []
-    tokens = models.count(tokens(self.instructions))
+    tokens = models.count_tokens(self.instructions)
     for p_id in self.context['order']:
       post = self.context['posts'][p_id]
       if 'from_bot' in post['props']:
