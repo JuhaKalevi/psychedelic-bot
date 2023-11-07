@@ -149,7 +149,7 @@ class Mattermost():
       msg = {'role':role, 'content':post['message']}
       msg_tokens = models.count_tokens(msg)
       new_tokens = tokens + msg_tokens
-      if new_tokens > 126976:
+      if new_tokens > 12288:
         break
       msgs.append(msg)
       tokens = new_tokens
