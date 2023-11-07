@@ -161,7 +161,8 @@ async def chat_completion_streamed(messages:list):
   except openai_exceptions:
     return
 
-def choose_model(tokens:int) -> str:
+def choose_model(msgs:list) -> str:
+  tokens = count_tokens(msgs)
   if tokens < 6553:
     return 'gpt-4-0613'
   if tokens < 32362:
