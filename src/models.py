@@ -137,7 +137,7 @@ function_descriptions = [
 openai.api_key = environ['OPENAI_API_KEY']
 openai_exceptions = (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.ServiceUnavailableError, openai.error.Timeout)
 
-async def chat_completion(messages:list, model='gpt-4-1106-preview', functions=None):
+async def chat_completion(messages:list, model='gpt-4', functions=None):
   try:
     response = await openai.ChatCompletion.acreate(model=model, messages=messages, functions=functions)
     return response['choices'][0]['message']
@@ -145,14 +145,14 @@ async def chat_completion(messages:list, model='gpt-4-1106-preview', functions=N
     return f"OpenAI API Error: {err}"
 
 async def chat_completion_functions(messages:list, available_functions:dict):
-  response_message:dict = await chat_completion(messages, model='gpt-4-1106-preview', functions=function_descriptions)
+  response_message:dict = await chat_completion(messages, model='gpt-4-0613', functions=function_descriptions)
   if response_message.get("function_call"):
     function = response_message["function_call"]["name"]
     arguments = loads(response_message["function_call"]["arguments"])
     await available_functions[function](**arguments)
   return response_message
 
-async def chat_completion_streamed(messages:list, model='gpt-4-1106-preview'):
+async def chat_completion_streamed(messages:list, model='gpt-4'):
   try:
     async for chunk in await openai.ChatCompletion.acreate(model=model, messages=messages, stream=True):
       content = chunk["choices"][0].get("delta", {}).get("content")
@@ -164,10 +164,10 @@ async def chat_completion_streamed(messages:list, model='gpt-4-1106-preview'):
 def count_tokens(msg:str):
   return len(tiktoken.get_encoding('cl100k_base').encode(dumps(msg)))
 
-async def generate_story_from_captions(msg:str, model='gpt-4-1106-preview'):
+async def generate_story_from_captions(msg:str, model='gpt-4'):
   return await chat_completion([{'role':'user', 'content':(f"Make a consistent story based on these image captions: {msg}")}], model)
 
-async def generate_summary_from_transcription(msg:str, model='gpt-4-1106-preview'):
+async def generate_summary_from_transcription(msg:str, model='gpt-4'):
   return await chat_completion([{
     'role': 'user',
     'content': (
