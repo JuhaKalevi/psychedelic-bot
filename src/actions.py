@@ -39,6 +39,27 @@ class Mattermost():
     self.post = post
     asyncio.create_task(self.__post_handler__())
 
+  def messages_from_context(self, max_tokens=126976):
+    if 'order' in self.context:
+      self.context['order'].sort(key=lambda x: self.context['posts'][x]['create_at'], reverse=True)
+    msgs = []
+    tokens = models.count_tokens(self.instructions)
+    for p_id in self.context['order']:
+      post = self.context['posts'][p_id]
+      if 'from_bot' in post['props']:
+        role = 'assistant'
+      else:
+        role = 'user'
+      msg = {'role':role, 'content':post['message']}
+      msg_tokens = models.count_tokens(msg)
+      new_tokens = tokens + msg_tokens
+      if new_tokens > max_tokens:
+        break
+      msgs.append(msg)
+      tokens = new_tokens
+    msgs.reverse()
+    return self.instructions+msgs
+
   async def __post_handler__(self):
     bot = self.bot
     message = self.message
@@ -113,32 +134,28 @@ class Mattermost():
   async def channel_summary(self, count:int):
     self.context = await self.bot.posts.get_posts_for_channel(self.post['channel_id'], params={'per_page':count})
     msgs = self.messages_from_context()
-    await self.chat_completion_functions_stage2(self.post, 'channel_summary', {'count':len(msgs)}, msgs)
+    await self.chat_completion_functions_stage2('channel_summary', {'count':len(msgs)}, msgs)
 
-  async def chat_completion_functions_stage2(self, post:dict, function:str, arguments:dict, result:dict):
+  async def chat_completion_functions_stage2(self, function:str, arguments:dict, result:dict):
     messages = [
-      {"role": "user", "content": post['message']},
+      {"role": "user", "content": self.post['message']},
       {"role": "assistant", "content": None, "function_call": {"name": function, "arguments": json.dumps(arguments)}},
       {"role": "function", "name": function, "content": json.dumps(result)}
     ]
-    final_result = await models.chat_completion(messages, functions=models.function_descriptions)
-    await self.bot.create_or_update_post({'channel_id':post['channel_id'], 'message':final_result['content'], 'file_ids':None, 'root_id':''})
+    await self.stream_reply_to_messages(messages)
 
   async def code_analysis(self):
-    bot = self.bot
-    self.context = await bot.posts.get_thread(self.post['id'])
+    self.context = await self.bot.posts.get_thread(self.post['id'])
     files = []
     for file_path in [x for x in os.listdir() if x.endswith(('.py'))]:
       with open(file_path, 'r', encoding='utf-8') as file:
         content = file.read()
       files.append(f'\n--- BEGIN {file_path} ---\n```\n{content}\n```\n--- END {file_path} ---\n')
     self.instructions[0]['content'] += '\nThis is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic! Abstain from praising or thanking the user, be serious.'+''.join(files) + self.instructions[0]['content']
-    await bot.create_reaction(await self.stream_reply_to_messages(self.messages_from_context()), 'robot_face')
+    await self.bot.create_reaction(await self.stream_reply_to_messages(self.messages_from_context()), 'robot_face')
 
   async def generate_images(self, prompt, negative_prompt='', count=1, resolution='1024x1024', sampling_steps=25):
-    bot = self.bot
     width, height = resolution.split('x')
-    post = self.post
     payload = {'prompt':prompt, 'negative_prompt':negative_prompt, 'steps':sampling_steps, 'batch_size':count, 'width':width, 'height':height, 'sampler_name':'DPM++ 2M Karras'}
     total_images_saved = 0
     async with websockets.connect(middleware_url, max_size=100*(1<<20)) as websocket:
@@ -156,16 +173,16 @@ class Mattermost():
             tmp_path = f'/tmp/image_{total_images_saved}_{timestamp}.png'
             image.save(tmp_path)
             with open(tmp_path, 'rb') as image_file:
-              uploaded_file_id = await bot.upload_file(post['channel_id'], {'files':(tmp_path.split('/')[2], image_file)})
+              uploaded_file_id = await self.bot.upload_file(self.post['channel_id'], {'files':(tmp_path.split('/')[2], image_file)})
             os.remove(tmp_path)
-            await bot.create_or_update_post({'channel_id':post['channel_id'], 'file_ids':[uploaded_file_id], 'root_id':''})
+            await self.bot.create_or_update_post({'channel_id':self.post['channel_id'], 'file_ids':[uploaded_file_id], 'root_id':''})
             if total_images_saved >= payload['batch_size']:
               await websocket.close()
               return
 
   async def get_current_weather(self, location):
     weatherapi_response = json.loads(requests.get(f"https://api.weatherapi.com/v1/current.json?key={os.environ['WEATHERAPI_KEY']}&q={location}", timeout=7).text)
-    await self.chat_completion_functions_stage2(self.post, 'get_current_weather', {'location':location}, weatherapi_response)
+    await self.chat_completion_functions_stage2('get_current_weather', {'location':location}, weatherapi_response)
 
   async def google_for_answers(self, url=''):
     results = []
@@ -174,12 +191,9 @@ class Mattermost():
     await self.bot.create_or_update_post({'channel_id':self.post['channel_id'], 'message':json.dumps(results), 'file_ids':self.file_ids, 'root_id':''})
 
   async def instruct_pix2pix(self):
-    bot = self.bot
-    file_ids = self.file_ids
-    post = self.post
     comment = ''
-    for post_file_id in post['file_ids']:
-      file_response = await bot.files.get_file(file_id=post_file_id)
+    for post_file_id in self.post['file_ids']:
+      file_response = await self.bot.files.get_file(file_id=post_file_id)
       if file_response.status_code == 200:
         file_type = os.path.splitext(file_response.headers["Content-Disposition"])[1][1:]
         post_file_path = f'{post_file_id}.{file_type}'
@@ -189,15 +203,15 @@ class Mattermost():
         #post_file_image = PIL.Image.open(post_file_path)
         #options['sd_model_checkpoint'] = 'instruct-pix2pix-00-22000.safetensors [fbc31a67aa]'
         #options['sd_vae'] = "None"
-        prompt = post['message']
+        prompt = self.post['message']
         result = None #webui_api.img2img(images=[post_file_image], prompt=post['message'], steps=150, seed=-1, cfg_scale=7.5, denoising_strength=1.5)
         if not result:
           raise RuntimeError("API returned an invalid response")
         processed_image_path = f"processed_{post_file_id}.png"
         result.image.save(processed_image_path)
         with open(processed_image_path, 'rb') as image_file:
-          file_id = await bot.upload_file(post['channel_id'], {'files': (processed_image_path, image_file)})
-        file_ids.append(file_id)
+          file_id = await self.bot.upload_file(self.post['channel_id'], {'files': (processed_image_path, image_file)})
+        self.file_ids.append(file_id)
         comment += "Image processed successfully"
       except RuntimeError as err:
         comment += f"Error occurred while processing image: {str(err)}"
@@ -205,28 +219,7 @@ class Mattermost():
         for temporary_file_path in (post_file_path, processed_image_path):
           if os.path.exists(temporary_file_path):
             os.remove(temporary_file_path)
-    await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':prompt, 'file_ids':file_ids, 'root_id':''})
-
-  def messages_from_context(self, max_tokens=126976):
-    if 'order' in self.context:
-      self.context['order'].sort(key=lambda x: self.context['posts'][x]['create_at'], reverse=True)
-    msgs = []
-    tokens = models.count_tokens(self.instructions)
-    for p_id in self.context['order']:
-      post = self.context['posts'][p_id]
-      if 'from_bot' in post['props']:
-        role = 'assistant'
-      else:
-        role = 'user'
-      msg = {'role':role, 'content':post['message']}
-      msg_tokens = models.count_tokens(msg)
-      new_tokens = tokens + msg_tokens
-      if new_tokens > max_tokens:
-        break
-      msgs.append(msg)
-      tokens = new_tokens
-    msgs.reverse()
-    return self.instructions+msgs
+    await self.bot.create_or_update_post({'channel_id':self.post['channel_id'], 'message':prompt, 'file_ids':self.file_ids, 'root_id':''})
 
   async def stream_reply_to_messages(self, msgs, functions=None) -> str:
     reply_id = None
