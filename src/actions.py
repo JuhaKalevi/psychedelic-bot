@@ -116,12 +116,12 @@ class Mattermost():
     await self.chat_completion_functions_stage2(self.post, 'channel_summary', {'count':len(msgs)}, msgs)
 
   async def chat_completion_functions_stage2(self, post:dict, function:str, arguments:dict, result:dict):
-    print(messages)
     messages = [
       {"role": "user", "content": post['message']},
       {"role": "assistant", "content": None, "function_call": {"name": function, "arguments": json.dumps(arguments)}},
       {"role": "function", "name": function, "content": json.dumps(result)}
     ]
+    print(messages)
     final_result = await models.chat_completion(messages, functions=models.function_descriptions)
     await self.bot.create_or_update_post({'channel_id':post['channel_id'], 'message':final_result['content'], 'file_ids':None, 'root_id':''})
 
