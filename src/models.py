@@ -166,7 +166,9 @@ def choose_model(msgs:list) -> str:
   if tokens < 6553:
     return 'gpt-4-0613'
   if tokens < 32362:
+    print('gpt-4-32k-0613')
     return 'gpt-4-32k-0613'
+  print('gpt-4-1106-preview')
   return 'gpt-4-1106-preview'
 
 def count_tokens(msg:str) -> int:
