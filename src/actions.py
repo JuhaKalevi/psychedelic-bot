@@ -229,7 +229,6 @@ class Mattermost():
       msgs.append(msg)
       tokens = new_tokens
     msgs.reverse()
-    print(tokens)
     return msgs
 
   async def stream_reply_to_context(self) -> str:
