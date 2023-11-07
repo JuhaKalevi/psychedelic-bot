@@ -116,6 +116,7 @@ class Mattermost():
     await self.chat_completion_functions_stage2(self.post, 'channel_summary', {'count':len(msgs)}, msgs)
 
   async def chat_completion_functions_stage2(self, post:dict, function:str, arguments:dict, result:dict):
+    print(messages)
     messages = [
       {"role": "user", "content": post['message']},
       {"role": "assistant", "content": None, "function_call": {"name": function, "arguments": json.dumps(arguments)}},
