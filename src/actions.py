@@ -127,7 +127,7 @@ class Mattermost():
     bot = self.bot
     self.context = await bot.posts.get_thread(self.post['id'])
     files = []
-    for file_path in [x for x in os.listdir('src') if x.endswith(('.py'))]:
+    for file_path in [x for x in os.listdir() if x.endswith(('.py'))]:
       with open(file_path, 'r', encoding='utf-8') as file:
         content = file.read()
       files.append(f'\n--- BEGIN {file_path} ---\n```\n{content}\n```\n--- END {file_path} ---\n')
