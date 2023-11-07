@@ -154,10 +154,16 @@ async def chat_completion_functions(messages:list, available_functions:dict):
 
 async def chat_completion_streamed(messages:list, functions=None):
   try:
-    async for chunk in await openai.ChatCompletion.acreate(model=choose_model(messages), messages=messages, functions=functions, stream=True):
-      content = chunk["choices"][0].get("delta", {}).get("content")
-      if content:
-        yield content
+    if not functions:
+      async for chunk in await openai.ChatCompletion.acreate(model=choose_model(messages), messages=messages, stream=True):
+        content = chunk["choices"][0].get("delta", {}).get("content")
+        if content:
+          yield content
+    else:
+      async for chunk in await openai.ChatCompletion.acreate(model=choose_model(messages), messages=messages, functions=functions, stream=True):
+        content = chunk["choices"][0].get("delta", {}).get("content")
+        if content:
+          yield content
   except openai_exceptions:
     return
 
