@@ -167,9 +167,10 @@ def choose_model(msgs:list) -> str:
     model = 'gpt-4-0613'
   elif tokens < 12288:
     model = 'gpt-3.5-turbo-16k-0613'
-  else:
+  elif tokens < 126976:
     model = 'gpt-4-1106-preview'
-  print(model)
+  else:
+    model = ''
   return model
 
 def count_tokens(msg:str) -> int:
