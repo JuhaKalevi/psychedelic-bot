@@ -137,37 +137,44 @@ function_descriptions = [
 openai.api_key = environ['OPENAI_API_KEY']
 openai_exceptions = (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.ServiceUnavailableError, openai.error.Timeout)
 
-async def chat_completion(messages:list, model='gpt-4', functions=None):
+async def chat_completion(messages:list, functions=None):
   try:
-    response = await openai.ChatCompletion.acreate(model=model, messages=messages, functions=functions)
+    response = await openai.ChatCompletion.acreate(model=choose_model(messages), messages=messages, functions=functions)
     return response['choices'][0]['message']
   except openai_exceptions as err:
     return f"OpenAI API Error: {err}"
 
 async def chat_completion_functions(messages:list, available_functions:dict):
-  response_message:dict = await chat_completion(messages, model='gpt-4-0613', functions=function_descriptions)
+  response_message:dict = await chat_completion(messages, functions=function_descriptions)
   if response_message.get("function_call"):
     function = response_message["function_call"]["name"]
     arguments = loads(response_message["function_call"]["arguments"])
     await available_functions[function](**arguments)
   return response_message
 
-async def chat_completion_streamed(messages:list, model='gpt-4'):
+async def chat_completion_streamed(messages:list):
   try:
-    async for chunk in await openai.ChatCompletion.acreate(model=model, messages=messages, stream=True):
+    async for chunk in await openai.ChatCompletion.acreate(model=choose_model(messages), messages=messages, stream=True):
       content = chunk["choices"][0].get("delta", {}).get("content")
       if content:
         yield content
   except openai_exceptions:
     return
 
-def count_tokens(msg:str):
+def choose_model(tokens:int) -> str:
+  if tokens < 6553:
+    return 'gpt-4-0613'
+  elif tokens < 32362:
+    return 'gpt-4-32k-0613'
+  return 'gpt-4-1106-preview'
+
+def count_tokens(msg:str) -> int:
   return len(tiktoken.get_encoding('cl100k_base').encode(dumps(msg)))
 
-async def generate_story_from_captions(msg:str, model='gpt-4'):
-  return await chat_completion([{'role':'user', 'content':(f"Make a consistent story based on these image captions: {msg}")}], model)
+async def generate_story_from_captions(msg:str):
+  return await chat_completion([{'role':'user', 'content':(f"Make a consistent story based on these image captions: {msg}")}], 'gpt-4')
 
-async def generate_summary_from_transcription(msg:str, model='gpt-4'):
+async def generate_summary_from_transcription(msg:str):
   return await chat_completion([{
     'role': 'user',
     'content': (
@@ -177,7 +184,7 @@ async def generate_summary_from_transcription(msg:str, model='gpt-4'):
       f" Also give scoring 0-10 about the video for each of these categories: originality, difficulty, humor, boringness, creativity, artful."
       f" Transcription: {msg}"
     )
-  }], model)
+  }], 'gpt-4')
 
 async def textgen_chat_completion(message:str, history:dict) -> str:
   request = {
