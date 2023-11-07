@@ -154,6 +154,7 @@ class Mattermost():
       msgs.append(msg)
       tokens = new_tokens
     msgs.reverse()
+    print(tokens)
     async for part in models.chat_completion_streamed(self.instructions+msgs):
       yield part
 
