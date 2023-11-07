@@ -112,7 +112,7 @@ class Mattermost():
 
   async def channel_summary(self, count:int):
     self.context = await self.bot.posts.get_posts_for_channel(self.post['channel_id'], params={'per_page':count})
-    msgs = self.messages_from_context(max_tokens=6000)
+    msgs = self.messages_from_context()
     await self.chat_completion_functions_stage2(self.post, 'channel_summary', {'count':len(msgs)}, msgs)
 
   async def chat_completion_functions_stage2(self, post:dict, function:str, arguments:dict, result:dict):
