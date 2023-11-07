@@ -123,6 +123,7 @@ class Mattermost():
     ]
     print(messages)
     final_result = await models.chat_completion(messages, functions=models.function_descriptions)
+    print(final_result)
     await self.bot.create_or_update_post({'channel_id':post['channel_id'], 'message':final_result['content'], 'file_ids':None, 'root_id':''})
 
   async def code_analysis(self):
