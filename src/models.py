@@ -152,9 +152,9 @@ async def chat_completion_functions(messages:list, available_functions:dict):
     await available_functions[function](**arguments)
   return response_message
 
-async def chat_completion_streamed(messages:list):
+async def chat_completion_streamed(messages:list, functions=None):
   try:
-    async for chunk in await openai.ChatCompletion.acreate(model=choose_model(messages), messages=messages, stream=True):
+    async for chunk in await openai.ChatCompletion.acreate(model=choose_model(messages), messages=messages, functions=functions, stream=True):
       content = chunk["choices"][0].get("delta", {}).get("content")
       if content:
         yield content

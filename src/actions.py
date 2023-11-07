@@ -66,7 +66,7 @@ class Mattermost():
               return await self.code_analysis()
       for post in self.context['posts'].values():
         if bot.name_in_message(post['message']):
-          return await self.stream_reply_to_context()
+          return await self.stream_reply_to_messages(self.messages_from_context())
 
   async def captioner(self):
     bot = self.bot
@@ -133,7 +133,7 @@ class Mattermost():
         content = file.read()
       files.append(f'\n--- BEGIN {file_path} ---\n```\n{content}\n```\n--- END {file_path} ---\n')
     self.instructions[0]['content'] += '\nThis is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic! Abstain from praising or thanking the user, be serious.'+''.join(files) + self.instructions[0]['content']
-    await bot.create_reaction(await self.stream_reply_to_context(), 'robot_face')
+    await bot.create_reaction(await self.stream_reply_to_messages(self.messages_from_context()), 'robot_face')
 
   async def generate_images(self, prompt, negative_prompt='', count=1, resolution='1024x1024', sampling_steps=25):
     bot = self.bot
@@ -228,13 +228,13 @@ class Mattermost():
     msgs.reverse()
     return self.instructions+msgs
 
-  async def stream_reply_to_context(self) -> str:
+  async def stream_reply_to_messages(self, msgs, functions=None) -> str:
     reply_id = None
     buffer = []
     chunks_processed = []
     start_time = time.time()
     async with asyncio.Lock():
-      async for chunk in models.chat_completion_streamed(self.messages_from_context()):
+      async for chunk in models.chat_completion_streamed(msgs, functions=functions):
         buffer.append(chunk)
         if (time.time() - start_time) * 1000 >= 250:
           joined_chunks = ''.join(buffer)
