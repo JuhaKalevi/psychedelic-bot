@@ -112,7 +112,8 @@ class Mattermost():
 
   async def channel_summary(self, count:int):
     self.context = await self.bot.posts.get_posts_for_channel(self.post['channel_id'], params={'per_page':count})
-    await self.chat_completion_functions_stage2(self.post, 'channel_summary', {'count':count}, self.messages_from_context())
+    msgs = self.messages_from_context(max_tokens=6000)
+    await self.chat_completion_functions_stage2(self.post, 'channel_summary', {'count':len(msgs)}, msgs)
 
   async def chat_completion_functions_stage2(self, post:dict, function:str, arguments:dict, result:dict):
     messages = [
@@ -135,7 +136,7 @@ class Mattermost():
     await bot.create_reaction(await self.stream_reply_to_context(), 'robot_face')
 
   async def from_context_streamed(self):
-    async for part in models.chat_completion_streamed(self.instructions+self.messages_from_context()):
+    async for part in models.chat_completion_streamed(self.messages_from_context()):
       yield part
 
   async def generate_images(self, prompt, negative_prompt='', count=1, resolution='1024x1024', sampling_steps=25):
@@ -210,7 +211,7 @@ class Mattermost():
             os.remove(temporary_file_path)
     await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':prompt, 'file_ids':file_ids, 'root_id':''})
 
-  def messages_from_context(self):
+  def messages_from_context(self, max_tokens=126976):
     if 'order' in self.context:
       self.context['order'].sort(key=lambda x: self.context['posts'][x]['create_at'], reverse=True)
     msgs = []
@@ -224,12 +225,12 @@ class Mattermost():
       msg = {'role':role, 'content':post['message']}
       msg_tokens = models.count_tokens(msg)
       new_tokens = tokens + msg_tokens
-      if new_tokens > 126976:
+      if new_tokens > max_tokens:
         break
       msgs.append(msg)
       tokens = new_tokens
     msgs.reverse()
-    return msgs
+    return self.instructions+msgs
 
   async def stream_reply_to_context(self) -> str:
     bot = self.bot
