@@ -146,7 +146,6 @@ async def chat_completion(messages:list, functions=None):
 
 async def chat_completion_functions(messages:list, available_functions:dict):
   response_message:dict = await chat_completion(messages, functions=function_descriptions)
-  print(response_message)
   if response_message.get("function_call"):
     function = response_message["function_call"]["name"]
     arguments = loads(response_message["function_call"]["arguments"])
@@ -172,7 +171,7 @@ def choose_model(msgs:list) -> str:
     model = 'gpt-4-1106-preview'
   else:
     model = ''
-  print(f'{model}:{tokens}')
+  print(f'{model}: {tokens}')
   return model
 
 def count_tokens(msg:str) -> int:

@@ -121,9 +121,7 @@ class Mattermost():
       {"role": "assistant", "content": None, "function_call": {"name": function, "arguments": json.dumps(arguments)}},
       {"role": "function", "name": function, "content": json.dumps(result)}
     ]
-    print(messages)
     final_result = await models.chat_completion(messages, functions=models.function_descriptions)
-    print(final_result)
     await self.bot.create_or_update_post({'channel_id':post['channel_id'], 'message':final_result['content'], 'file_ids':None, 'root_id':''})
 
   async def code_analysis(self):
@@ -136,10 +134,6 @@ class Mattermost():
       files.append(f'\n--- BEGIN {file_path} ---\n```\n{content}\n```\n--- END {file_path} ---\n')
     self.instructions[0]['content'] += '\nThis is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic! Abstain from praising or thanking the user, be serious.'+''.join(files) + self.instructions[0]['content']
     await bot.create_reaction(await self.stream_reply_to_context(), 'robot_face')
-
-  async def from_context_streamed(self):
-    async for part in models.chat_completion_streamed(self.messages_from_context()):
-      yield part
 
   async def generate_images(self, prompt, negative_prompt='', count=1, resolution='1024x1024', sampling_steps=25):
     bot = self.bot
@@ -235,25 +229,21 @@ class Mattermost():
     return self.instructions+msgs
 
   async def stream_reply_to_context(self) -> str:
-    bot = self.bot
-    file_ids = self.file_ids
-    post = self.post
-    reply_to = self.reply_to
     reply_id = None
     buffer = []
     chunks_processed = []
     start_time = time.time()
     async with asyncio.Lock():
-      async for chunk in self.from_context_streamed():
+      async for chunk in models.chat_completion_streamed(self.messages_from_context()):
         buffer.append(chunk)
         if (time.time() - start_time) * 1000 >= 250:
           joined_chunks = ''.join(buffer)
-          reply_id = await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':''.join(chunks_processed)+joined_chunks, 'file_ids':file_ids, 'root_id':reply_to}, reply_id)
+          reply_id = await self.bot.create_or_update_post({'channel_id':self.post['channel_id'], 'message':''.join(chunks_processed)+joined_chunks, 'file_ids':self.file_ids, 'root_id':self.reply_to}, reply_id)
           chunks_processed.append(joined_chunks)
           buffer.clear()
           start_time = time.time()
       if buffer:
-        reply_id = await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':''.join(chunks_processed)+''.join(buffer), 'file_ids':file_ids, 'root_id':reply_to}, reply_id)
+        reply_id = await self.bot.create_or_update_post({'channel_id':self.post['channel_id'], 'message':''.join(chunks_processed)+''.join(buffer), 'file_ids':self.file_ids, 'root_id':self.reply_to}, reply_id)
     return reply_id
 
   async def upscale_image(self, scale=2):
