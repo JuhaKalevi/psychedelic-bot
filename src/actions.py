@@ -120,7 +120,7 @@ class Mattermost():
       {"role": "assistant", "content": None, "function_call": {"name": function, "arguments": json.dumps(arguments)}},
       {"role": "function", "name": function, "content": json.dumps(result)}
     ]
-    final_result = await models.chat_completion(messages, model='gpt-4-0613', functions=models.function_descriptions)
+    final_result = await models.chat_completion(messages, model='gpt-4-1106-preview', functions=models.function_descriptions)
     await self.bot.create_or_update_post({'channel_id':post['channel_id'], 'message':final_result['content'], 'file_ids':None, 'root_id':''})
 
   async def code_analysis(self):
@@ -134,7 +134,7 @@ class Mattermost():
     self.instructions[0]['content'] += '\nThis is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic! Abstain from praising or thanking the user, be serious.'+''.join(files) + self.instructions[0]['content']
     await bot.create_reaction(await self.stream_reply_to_context(), 'robot_face')
 
-  async def from_context_streamed(self, model='gpt-4'):
+  async def from_context_streamed(self, model='gpt-4-1106-preview'):
     cxt = self.context
     if 'order' in cxt:
       cxt['order'].sort(key=lambda x: cxt['posts'][x]['create_at'], reverse=True)
@@ -152,7 +152,7 @@ class Mattermost():
       msg = {'role':role, 'content':post['message']}
       msg_tokens = models.count_tokens(msg)
       new_tokens = tokens + msg_tokens
-      if limit1 < new_tokens < limit2 and model == 'gpt-4':
+      if limit1 < new_tokens < limit2 and model == 'gpt-4-1106-preview':
         model = 'gpt-3.5-turbo-16k'
       elif new_tokens > limit2:
         break
@@ -162,7 +162,7 @@ class Mattermost():
     async for part in models.chat_completion_streamed(self.instructions+msgs, model):
       yield part
 
-  async def from_message_streamed(self, message:str, model='gpt-4'):
+  async def from_message_streamed(self, message:str, model='gpt-4-1106-preview'):
     user = await self.bot.users.get_user(self.post['user_id'])
     async for part in models.chat_completion_streamed(self.instructions+[{'role':'user', 'content':message, 'name':user['username']}], model):
       yield part
