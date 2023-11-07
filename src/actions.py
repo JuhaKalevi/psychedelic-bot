@@ -33,7 +33,7 @@ class Mattermost():
     self.bot = bot
     self.context = None
     self.file_ids = []
-    self.instructions = [{'role':'system', 'content':'User messages begin with JSON header which identifies different users from each other. Header must be ignored unless identities are relevant to discussion. Do not reveal the persona you are potentially assigned to imitate!'}]
+    self.instructions = [{'role':'system', 'content':'Do not reveal the persona you are potentially assigned to imitate!'}]
     self.reply_to = ''
     self.message = post['message']
     self.post = post
@@ -135,7 +135,7 @@ class Mattermost():
     await bot.create_reaction(await self.stream_reply_to_context(), 'robot_face')
 
   async def from_context_streamed(self):
-    async for part in models.chat_completion_streamed(self.messages_from_context()):
+    async for part in models.chat_completion_streamed(self.instructions+self.messages_from_context()):
       yield part
 
   async def generate_images(self, prompt, negative_prompt='', count=1, resolution='1024x1024', sampling_steps=25):
