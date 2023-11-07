@@ -135,7 +135,7 @@ class Mattermost():
     await bot.create_reaction(await self.stream_reply_to_context(), 'robot_face')
 
   async def from_context_streamed(self):
-    async for part in models.chat_completion_streamed(self.instructions+self.messages_from_context()):
+    async for part in models.chat_completion_streamed(self.messages_from_context()):
       yield part
 
   async def generate_images(self, prompt, negative_prompt='', count=1, resolution='1024x1024', sampling_steps=25):
@@ -214,7 +214,7 @@ class Mattermost():
     if 'order' in self.context:
       self.context['order'].sort(key=lambda x: self.context['posts'][x]['create_at'], reverse=True)
     msgs = []
-    tokens = 0
+    tokens = models.count(tokens(self.instructions))
     for p_id in self.context['order']:
       post = self.context['posts'][p_id]
       if 'from_bot' in post['props']:
