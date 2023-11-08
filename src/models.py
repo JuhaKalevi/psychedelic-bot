@@ -148,8 +148,8 @@ async def chat_completion_functions(messages:list, available_functions:dict):
   response_message = await chat_completion(messages, functions=function_descriptions)
   try:
     response_message = loads(response_message)
-  except (TypeError, ValueError):
-    print(f"Error: {response_message}")
+  except (TypeError, ValueError) as err:
+    print(f"Error: {response_message} {err}")
     return
   if response_message.get("function_call"):
     function = response_message["function_call"]["name"]
