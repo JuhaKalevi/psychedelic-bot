@@ -127,7 +127,7 @@ class Mattermost():
           img_byte = temp_file.read()
         remove(f'/tmp/{post_file_path}')
         base64_image = base64.b64encode(img_byte).decode("utf-8")
-        content.append({f"data:image/{file_type};base64,{base64_image}"})
+        content.append({'type':'image_url','image_url':f'data:image/{file_type};base64,{base64_image}'})
     print(content)
     await self.stream_reply_to_messages([{'role':'user', 'content':json.dumps(content)}], model='gpt-4-vision-preview')
 
