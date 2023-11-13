@@ -5,7 +5,11 @@ import openai.error
 function_descriptions = [
   {
     "name":"analyze_images",
-    "description":"Analyze images using a local API"
+    "description":"Analyze images using a local API",
+    "parameters": {
+      "type": "object",
+      "properties": {}
+    }
   },
   {
     "name": "channel_summary",
