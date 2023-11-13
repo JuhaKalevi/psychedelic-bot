@@ -4,7 +4,7 @@ import openai.error
 
 function_descriptions = [
   {
-    "name:":"analyze_images",
+    "name":"analyze_images",
     "description":"Analyze images using a local API"
   },
   {
@@ -142,14 +142,14 @@ openai_exceptions = (openai.error.APIConnectionError, openai.error.APIError, ope
 async def chat_completion_functions(messages:list, available_functions:dict):
   try:
     response = await openai.ChatCompletion.acreate(messages=messages, functions=function_descriptions, model='gpt-4-1106-preview')
+    response_message = response['choices'][0]['message']
+    if response_message.get("function_call"):
+      function = response_message["function_call"]["name"]
+      arguments = loads(response_message["function_call"]["arguments"])
+      await available_functions[function](**arguments)
+    return response_message
   except openai_exceptions as err:
     print(f"OpenAI API Error: {err}")
-  response_message = response['choices'][0]['message']
-  if response_message.get("function_call"):
-    function = response_message["function_call"]["name"]
-    arguments = loads(response_message["function_call"]["arguments"])
-    await available_functions[function](**arguments)
-  return response_message
 
 async def chat_completion_streamed(messages:list, functions=None, model='gpt-4-1106-preview'):
   try:
