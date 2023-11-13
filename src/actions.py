@@ -86,13 +86,13 @@ class Mattermost():
     msgs.reverse()
     return self.instructions+msgs
 
-  async def stream_reply_to_messages(self, msgs:list, functions=None) -> str:
+  async def stream_reply_to_messages(self, msgs:list, functions=None, model='gpt-4-1106-preview') -> str:
     reply_id = None
     buffer = []
     chunks_processed = []
     start_time = time()
     async with Lock():
-      async for chunk in chat_completion_streamed(msgs, functions=functions):
+      async for chunk in chat_completion_streamed(msgs, functions=functions, model=model):
         buffer.append(chunk)
         if (time() - start_time) * 1000 >= 250:
           joined_chunks = ''.join(buffer)
@@ -129,7 +129,6 @@ class Mattermost():
         base64_image = base64.b64encode(img_byte).decode("utf-8")
         msgs[0]['content'].append({f"data:image/{file_type};base64,{base64_image}"})
     await self.generic_stage2('analyze_images', {}, msgs)
-
 
   async def channel_summary(self, count:int):
     self.context = await self.bot.posts.get_posts_for_channel(self.post['channel_id'], params={'per_page':count})
