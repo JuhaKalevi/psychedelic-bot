@@ -128,6 +128,7 @@ class Mattermost():
         remove(f'/tmp/{post_file_path}')
         base64_image = base64.b64encode(img_byte).decode("utf-8")
         content.append({f"data:image/{file_type};base64,{base64_image}"})
+    print(content)
     await self.stream_reply_to_messages([{'role':'user', 'content':json.dumps(content)}], model='gpt-4-vision-preview')
 
   async def channel_summary(self, count:int):
