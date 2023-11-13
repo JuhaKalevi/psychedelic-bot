@@ -165,6 +165,8 @@ async def chat_completion_streamed(messages:list, functions=None):
     return
 
 def choose_model(msgs:list) -> str:
+  if environ['MATTERMOST_BOT_NAME'] == '@devbot':
+    return 'gpt-4-1106-preview'
   tokens = count_tokens(msgs)
   if tokens < 6553:
     model = 'gpt-4-0613'
