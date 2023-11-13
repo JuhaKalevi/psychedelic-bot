@@ -1,6 +1,6 @@
 from json import loads
 from os import environ
-import openai.error
+import openai
 
 function_descriptions = [
   {
@@ -141,18 +141,17 @@ function_descriptions = [
 ]
 
 openai.api_key = environ['OPENAI_API_KEY']
-openai_exceptions = (openai.error.APIConnectionError, openai.error.APIError, openai.error.AuthenticationError, openai.error.InvalidRequestError, openai.error.PermissionError, openai.error.RateLimitError, openai.error.ServiceUnavailableError, openai.error.Timeout)
 
 async def chat_completion_functions(messages:list, available_functions:dict):
   try:
-    response = await openai.ChatCompletion.acreate(messages=messages, functions=function_descriptions, model='gpt-4-1106-preview')
+    response = await openai.chat.completions.create(messages=messages, functions=function_descriptions, model='gpt-4-1106-preview')
     response_message = response['choices'][0]['message']
     if response_message.get("function_call"):
       function = response_message["function_call"]["name"]
       arguments = loads(response_message["function_call"]["arguments"])
       await available_functions[function](**arguments)
     return response_message
-  except openai_exceptions as err:
+  except openai.APIError as err:
     print(f"OpenAI API Error: {err}")
 
 async def chat_completion_streamed(messages:list, functions=None, model='gpt-4-1106-preview'):
@@ -160,9 +159,9 @@ async def chat_completion_streamed(messages:list, functions=None, model='gpt-4-1
     kwargs = {"messages":messages, "model":model, "stream":True}
     if functions:
       kwargs["functions"] = functions
-    async for chunk in await openai.ChatCompletion.acreate(**kwargs):
+    async for chunk in await openai.chat.completions.create(**kwargs):
       content = chunk["choices"][0].get("delta", {}).get("content")
       if content:
         yield content
-  except openai_exceptions as err:
+  except openai.APIError as err:
     print(f"OpenAI API Error: {err}")
