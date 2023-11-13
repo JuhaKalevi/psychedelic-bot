@@ -128,7 +128,7 @@ class Mattermost():
         remove(f'/tmp/{post_file_path}')
         base64_image = base64.b64encode(img_byte).decode("utf-8")
         msgs[0]['content'].append({f"data:image/{file_type};base64,{base64_image}"})
-    await self.generic_stage2('analyze_images', {}, msgs)
+    await self.stream_reply_to_messages(msgs, model='gpt-4-vision-preview')
 
   async def channel_summary(self, count:int):
     self.context = await self.bot.posts.get_posts_for_channel(self.post['channel_id'], params={'per_page':count})
