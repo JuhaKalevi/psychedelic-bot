@@ -115,7 +115,7 @@ class Mattermost():
     await self.stream_reply_to_messages(messages)
 
   async def analyze_images(self):
-    msgs = [{'role':'user', 'content':[{'type':'text','text':self.post['message']}]}]
+    content = [{'type':'text','text':self.post['message']}]
     for post_file_id in self.post['file_ids']:
       file_response = await self.bot.files.get_file(file_id=post_file_id)
       if file_response.status_code == 200:
@@ -127,8 +127,8 @@ class Mattermost():
           img_byte = temp_file.read()
         remove(f'/tmp/{post_file_path}')
         base64_image = base64.b64encode(img_byte).decode("utf-8")
-        msgs[0]['content'].append({f"data:image/{file_type};base64,{base64_image}"})
-    await self.stream_reply_to_messages(msgs, model='gpt-4-vision-preview')
+        content.append({f"data:image/{file_type};base64,{base64_image}"})
+    await self.stream_reply_to_messages([{'role':'user', 'content':content}], model='gpt-4-vision-preview')
 
   async def channel_summary(self, count:int):
     self.context = await self.bot.posts.get_posts_for_channel(self.post['channel_id'], params={'per_page':count})
