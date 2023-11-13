@@ -50,7 +50,7 @@ class Mattermost():
     if (bot.name_in_message(message)) and post['root_id'] == "":
       msgs = self.instructions + [{"role":"user", "content":message}]
       res = await chat_completion_functions(msgs, self.available_functions)
-      if res.content:
+      if res.get('content'):
         await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':res['content'], 'file_ids':self.file_ids, 'root_id':post['id']})
       return
     self.context = await bot.posts.get_thread(post['id'])
