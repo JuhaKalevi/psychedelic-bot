@@ -106,11 +106,11 @@ class Mattermost():
 
 # Functions used by function calling logic begin here
 
-  async def generic_stage2(self, function:str, arguments:dict, result:dict):
+  async def generic_stage2(self, function:str, arguments:dict, content:dict):
     messages = [
       {"role": "user", "content": self.post['message']},
       {"role": "assistant", "content": None, "function_call": {"name": function, "arguments": json.dumps(arguments)}},
-      {"role": "function", "name": function, "content": json.dumps(result)}
+      {"role": "function", "name": function, "content": json.dumps(content)}
     ]
     await self.stream_reply_to_messages(messages)
 
@@ -128,7 +128,7 @@ class Mattermost():
         remove(f'/tmp/{post_file_path}')
         base64_image = base64.b64encode(img_byte).decode("utf-8")
         content.append({f"data:image/{file_type};base64,{base64_image}"})
-    await self.stream_reply_to_messages([{'role':'user', 'content':content}], model='gpt-4-vision-preview')
+    await self.stream_reply_to_messages([{'role':'user', 'content':json.dumps(content)}], model='gpt-4-vision-preview')
 
   async def channel_summary(self, count:int):
     self.context = await self.bot.posts.get_posts_for_channel(self.post['channel_id'], params={'per_page':count})
