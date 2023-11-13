@@ -144,8 +144,9 @@ client = AsyncOpenAI()
 async def chat_completion_functions(messages:list, available_functions:dict):
   try:
     completion = await client.chat.completions.create(messages=messages, functions=function_descriptions, model='gpt-4-1106-preview')
+    completion = dict(completion)
     response_message = completion.choices[0].message
-    if dict(completion).get("function_call"):
+    if completion.get("function_call"):
       function = response_message["function_call"]["name"]
       arguments = loads(response_message["function_call"]["arguments"])
       await available_functions[function](**arguments)
