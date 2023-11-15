@@ -87,6 +87,7 @@ class Mattermost():
     return self.instructions+msgs
 
   async def stream_reply_to_messages(self, msgs:list, functions=None, model='gpt-4-1106-preview') -> str:
+    print(msgs)
     reply_id = None
     buffer = []
     chunks_processed = []
