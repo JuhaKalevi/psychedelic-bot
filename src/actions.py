@@ -116,6 +116,7 @@ class Mattermost():
     await self.stream_reply_to_messages(messages)
 
   async def analyze_images(self):
+    print('analyze_images')
     content = [{'type':'text','text':self.post['message']}]
     for post_file_id in self.post['file_ids']:
       file_response = await self.bot.files.get_file(file_id=post_file_id)
