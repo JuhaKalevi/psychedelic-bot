@@ -1,3 +1,4 @@
+from json import loads
 from openai import APIError, AsyncOpenAI
 
 function_descriptions = [
@@ -146,7 +147,7 @@ async def chat_completion_functions(messages:list, available_functions:dict):
     response_message = completion.choices[0].message
     if dict(response_message).get("function_call"):
       function = response_message.function_call.name
-      arguments = dict(response_message.function_call.arguments)
+      arguments = loads(response_message.function_call.arguments)
       await available_functions[function](**arguments)
     return dict(response_message)
   except APIError as err:
