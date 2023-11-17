@@ -94,7 +94,7 @@ class Mattermost():
     async with Lock():
       async for chunk in chat_completion_streamed(msgs, functions=functions, model=model):
         buffer.append(chunk)
-        if (time() - start_time) * 1000 >= 250:
+        if (time() - start_time) * 1000 >= 5000:
           joined_chunks = ''.join(buffer)
           reply_id = await self.bot.create_or_update_post({'channel_id':self.post['channel_id'], 'message':''.join(chunks_processed)+joined_chunks, 'file_ids':self.file_ids, 'root_id':self.reply_to}, reply_id)
           chunks_processed.append(joined_chunks)
