@@ -155,12 +155,14 @@ async def chat_completion_functions(messages:list, available_functions:dict):
   except APIError as err:
     print(f"OpenAI API Error: {err}")
 
-async def chat_completion_streamed(messages:list, functions=None, model='gpt-4-1106-preview'):
+async def chat_completion_streamed(messages:list, functions=None, model='gpt-4-1106-preview', max_tokens=None):
   print(f'chat_completion_streamed: tokens:{count_tokens(messages)}, functions:{functions}, model:{model}')
   try:
     kwargs = {"messages":messages, "model":model, "stream":True}
     if functions:
       kwargs["functions"] = functions
+    if max_tokens:
+      kwargs["max_tokens"] = max_tokens
     async for part in await client.chat.completions.create(**kwargs):
       content = part.choices[0].delta.content or ""
       yield content

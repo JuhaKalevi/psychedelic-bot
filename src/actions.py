@@ -86,15 +86,15 @@ class Mattermost():
     msgs.reverse()
     return self.instructions+msgs
 
-  async def stream_reply_to_messages(self, msgs:list, functions=None, model='gpt-4-1106-preview') -> str:
+  async def stream_reply_to_messages(self, msgs:list, functions=None, model='gpt-4-1106-preview', max_tokens=None) -> str:
     reply_id = None
     buffer = []
     chunks_processed = []
     start_time = time()
     async with Lock():
-      async for chunk in chat_completion_streamed(msgs, functions=functions, model=model):
+      async for chunk in chat_completion_streamed(msgs, functions=functions, model=model, max_tokens=max_tokens):
         buffer.append(chunk)
-        if (time() - start_time) * 1000 >= 5000:
+        if (time() - start_time) * 1000 >= 500:
           joined_chunks = ''.join(buffer)
           reply_id = await self.bot.create_or_update_post({'channel_id':self.post['channel_id'], 'message':''.join(chunks_processed)+joined_chunks, 'file_ids':self.file_ids, 'root_id':self.reply_to}, reply_id)
           chunks_processed.append(joined_chunks)
@@ -128,7 +128,7 @@ class Mattermost():
         remove(f'/tmp/{post_file_path}')
         base64_image = base64.b64encode(img_byte).decode("utf-8")
         content.append({'type':'image_url','image_url':{'url':f'data:image/{file_type};base64,{base64_image}','detail':'low'}})
-    await self.stream_reply_to_messages([{'role':'user', 'content':content}], model='gpt-4-vision-preview')
+    await self.stream_reply_to_messages([{'role':'user', 'content':content}], model='gpt-4-vision-preview', max_tokens=420)
 
   async def channel_summary(self, count:int):
     self.context = await self.bot.posts.get_posts_for_channel(self.post['channel_id'], params={'per_page':count})
