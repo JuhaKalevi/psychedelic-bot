@@ -5,7 +5,7 @@ from helpers import count_tokens
 function_descriptions = [
   {
     "name":"analyze_images",
-    "description":"Analyze images using a local API",
+    "description":"Analyze images using a local API. Don't worry if you don't seem to have an image at this stage, the function will find it for you! If the users seems to be refering to an image you can assume it exists.",
     "parameters": {
       "type": "object",
       "properties": {}
