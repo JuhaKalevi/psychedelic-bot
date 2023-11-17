@@ -145,8 +145,8 @@ async def chat_completion_functions(messages:list, available_functions:dict):
     completion = await client.chat.completions.create(messages=messages, functions=function_descriptions, model='gpt-4-1106-preview')
     response_message = completion.choices[0].message
     if dict(response_message).get("function_call"):
-      function = response_message["function_call"]["name"]
-      arguments = dict(response_message["function_call"]["arguments"])
+      function = response_message.function_call.name
+      arguments = response_message.function_call.arguments
       await available_functions[function](**arguments)
     return dict(response_message)
   except APIError as err:
