@@ -151,7 +151,7 @@ async def chat_completion_functions(messages:list, available_functions:dict):
       await available_functions[function](**arguments)
     return dict(response_message)
   except APIError as err:
-    print(f"OpenAI API Error: {err}")
+    print(f"chat_completion_functions - OpenAI API Error: {err}")
 
 async def chat_completion_streamed(messages:list, functions=None, model='gpt-4-1106-preview'):
   try:
@@ -162,4 +162,4 @@ async def chat_completion_streamed(messages:list, functions=None, model='gpt-4-1
       content = part.choices[0].delta.content or ""
       yield content
   except APIError as err:
-    print(f"OpenAI API Error: {err}")
+    print(f"chat_completion_streamed - OpenAI API Error: {err}")
