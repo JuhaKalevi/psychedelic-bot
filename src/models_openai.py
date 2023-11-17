@@ -1,5 +1,6 @@
 from json import loads
 from openai import APIError, AsyncOpenAI
+from helpers import count_tokens
 
 function_descriptions = [
   {
@@ -142,6 +143,7 @@ function_descriptions = [
 client = AsyncOpenAI()
 
 async def chat_completion_functions(messages:list, available_functions:dict):
+  print(f'chat_completion_functions: tokens:{count_tokens(messages)}, available_functions:{available_functions}')
   try:
     completion = await client.chat.completions.create(messages=messages, functions=function_descriptions, model='gpt-4-1106-preview')
     response_message = completion.choices[0].message
@@ -151,9 +153,10 @@ async def chat_completion_functions(messages:list, available_functions:dict):
       await available_functions[function](**arguments)
     return dict(response_message)
   except APIError as err:
-    print(f"chat_completion_functions - OpenAI API Error: {err}")
+    print(f"OpenAI API Error: {err}")
 
 async def chat_completion_streamed(messages:list, functions=None, model='gpt-4-1106-preview'):
+  print(f'chat_completion_streamed: tokens:{count_tokens(messages)}, functions:{functions}, model:{model}')
   try:
     kwargs = {"messages":messages, "model":model, "stream":True}
     if functions:
@@ -162,4 +165,4 @@ async def chat_completion_streamed(messages:list, functions=None, model='gpt-4-1
       content = part.choices[0].delta.content or ""
       yield content
   except APIError as err:
-    print(f"chat_completion_streamed - OpenAI API Error: {err}")
+    print(f"OpenAI API Error: {err}")
