@@ -145,7 +145,7 @@ async def chat_completion_functions(messages:list, available_functions:dict):
   try:
     funcs_stub = []
     for f in function_descriptions:
-      funcs_stub[f['name']] = {"name":f['name'],"description":"","parameters":{"type":"object","properties":{}}}
+      funcs_stub.append({"name":f['name'],"description":"","parameters":{"type":"object","properties":{}}})
     print(len(function_descriptions), len(funcs_stub))
     completion = await client.chat.completions.create(messages=messages, functions=function_descriptions, model='gpt-4-1106-preview')
     response_message = completion.choices[0].message
