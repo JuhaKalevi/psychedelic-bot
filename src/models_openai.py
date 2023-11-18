@@ -143,7 +143,7 @@ client = AsyncOpenAI()
 
 async def chat_completion_functions(messages:list, available_functions:dict):
   try:
-    funcs = [f for f in function_descriptions if f in available_functions.keys()]
+    funcs = [f for f in function_descriptions if f in available_functions]
     for f in funcs:
       f['description'] = ''
       f['parameters'] = {"type": "object","properties": {}}
