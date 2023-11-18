@@ -1,6 +1,5 @@
 from json import loads
 from openai import APIError, AsyncOpenAI
-from helpers import count_tokens
 
 function_descriptions = [
   {
