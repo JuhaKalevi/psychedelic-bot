@@ -1,5 +1,6 @@
 from json import dumps,loads
 from openai import APIError, AsyncOpenAI
+from helpers import count_tokens
 
 function_descriptions = [
   {
@@ -147,7 +148,8 @@ async def chat_completion_functions(messages:list, available_functions:dict):
     funcs_stub = []
     for f in funcs:
       funcs_stub.append({"name":f['name'],'description':'','parameters':{'type':'object','properties':{}}})
-    print(len(dumps(funcs)), len(dumps(funcs_stub)))
+    print(f'funcs: {count_tokens(dumps(funcs))} tokens')
+    print(f'funcs_stub: {count_tokens(dumps(funcs_stub))} tokens')
     completion = await client.chat.completions.create(messages=messages, functions=funcs, model='gpt-4-1106-preview')
     response_message = completion.choices[0].message
     if dict(response_message).get("function_call"):
