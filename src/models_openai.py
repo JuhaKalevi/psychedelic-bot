@@ -143,7 +143,6 @@ function_descriptions = [
 client = AsyncOpenAI()
 
 async def chat_completion_functions(messages:list, available_functions:dict):
-  print(f'chat_completion_functions: tokens:{count_tokens(messages)}, available_functions:{available_functions}')
   try:
     completion = await client.chat.completions.create(messages=messages, functions=function_descriptions, model='gpt-4-1106-preview')
     response_message = completion.choices[0].message
@@ -156,7 +155,6 @@ async def chat_completion_functions(messages:list, available_functions:dict):
     print(f"OpenAI API Error: {err}")
 
 async def chat_completion_streamed(messages:list, functions=None, model='gpt-4-1106-preview', max_tokens=None):
-  print(f'chat_completion_streamed: tokens:{count_tokens(messages)}, functions:{functions}, model:{model}')
   try:
     kwargs = {"messages":messages, "model":model, "stream":True}
     if functions:
