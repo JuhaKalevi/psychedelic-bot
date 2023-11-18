@@ -2,14 +2,12 @@ from json import dumps,loads
 from openai import APIError, AsyncOpenAI
 from helpers import count_tokens
 
-function_descriptions = [
+empty_params = {'type':'object','properties':{}}
+funcs = [
   {
     "name":"analyze_images",
     "description":"Analyze images using a local API. Don't worry if you don't seem to have an image at this stage, the function will find it for you! If the users seems to be refering to an image you can assume it exists.",
-    "parameters": {
-      "type": "object",
-      "properties": {}
-    }
+    "parameters": empty_params
   },
   {
     "name": "channel_summary",
@@ -27,11 +25,8 @@ function_descriptions = [
   },
   {
     "name": "code_analysis",
-    "description": "Analyze code files that are automatically readable by your function. That's your chatbot code!",
-    "parameters": {
-      "type": "object",
-      "properties": {}
-    }
+    "description": "Analyze your source code files that are automatically readable later in this function. Nothing can be provided by the user, this only reads the source code you are currently running.",
+    "parameters": empty_params
   },
   {
     "name": "generate_images",
@@ -142,20 +137,20 @@ function_descriptions = [
 
 client = AsyncOpenAI()
 
-async def chat_completion_functions(messages:list, available_functions:dict):
+async def chat_completion_functions(msgs:list, funcs_available:dict):
   try:
-    funcs = [f for f in function_descriptions if f['name'] in available_functions.keys()]
+    funcs_described = [f for f in funcs_described if f['name'] in funcs_available.keys()]
     funcs_stub = []
-    for f in funcs:
-      funcs_stub.append({"name":f['name'],'description':'','parameters':{'type':'object','properties':{}}})
-    print(f'funcs: {count_tokens(dumps(funcs))} tokens')
+    for f in funcs_described:
+      funcs_stub.append({"name":f['name'],'description':'','parameters':empty_params})
+    print(f'funcs: {count_tokens(dumps(funcs_described))} tokens')
     print(f'funcs_stub: {count_tokens(dumps(funcs_stub))} tokens')
-    completion = await client.chat.completions.create(messages=messages, functions=funcs, model='gpt-4-1106-preview')
+    completion = await client.chat.completions.create(messages=msgs, functions=funcs_described, model='gpt-4-1106-preview')
     response_message = completion.choices[0].message
     if dict(response_message).get("function_call"):
       function = response_message.function_call.name
       arguments = loads(response_message.function_call.arguments)
-      await available_functions[function](**arguments)
+      await funcs_available[function](**arguments)
     return dict(response_message)
   except APIError as err:
     print(f"OpenAI API Error: {err}")
