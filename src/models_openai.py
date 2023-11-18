@@ -90,7 +90,7 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
       {
         'name': 'choose_function',
         'description': 'This function should be selected if a normal text response is more appropriate than any other listed function.',
-        'params': {
+        'parameters': {
           'type': 'object',
           'properties': {
             'chosen_function': {
