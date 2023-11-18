@@ -1,4 +1,4 @@
-from json import loads
+from json import dumps,loads
 from openai import APIError, AsyncOpenAI
 
 function_descriptions = [
@@ -146,7 +146,7 @@ async def chat_completion_functions(messages:list, available_functions:dict):
     funcs_stub = []
     for f in function_descriptions:
       funcs_stub.append({"name":f['name'],"description":"","parameters":{"type":"object","properties":{}}})
-    print(len(function_descriptions), len(funcs_stub))
+    print(len(dumps(function_descriptions)), len(dumps(funcs_stub)))
     completion = await client.chat.completions.create(messages=messages, functions=function_descriptions, model='gpt-4-1106-preview')
     response_message = completion.choices[0].message
     if dict(response_message).get("function_call"):
