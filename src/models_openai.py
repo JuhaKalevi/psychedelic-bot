@@ -139,13 +139,13 @@ client = AsyncOpenAI()
 
 async def chat_completion_functions(msgs:list, funcs_available:dict):
   try:
-    funcs_described = [f for f in funcs_described if f['name'] in funcs_available.keys()]
+    funcs_usable = [f for f in funcs if f['name'] in funcs_available.keys()]
     funcs_stub = []
-    for f in funcs_described:
+    for f in funcs_usable:
       funcs_stub.append({"name":f['name'],'description':'','parameters':empty_params})
-    print(f'funcs: {count_tokens(dumps(funcs_described))} tokens')
+    print(f'funcs: {count_tokens(dumps(funcs_usable))} tokens')
     print(f'funcs_stub: {count_tokens(dumps(funcs_stub))} tokens')
-    completion = await client.chat.completions.create(messages=msgs, functions=funcs_described, model='gpt-4-1106-preview')
+    completion = await client.chat.completions.create(messages=msgs, functions=funcs_usable, model='gpt-4-1106-preview')
     response_message = completion.choices[0].message
     if dict(response_message).get("function_call"):
       function = response_message.function_call.name
