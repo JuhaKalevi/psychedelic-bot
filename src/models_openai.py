@@ -144,7 +144,7 @@ client = AsyncOpenAI()
 async def chat_completion_functions(messages:list, available_functions:dict):
   try:
     funcs_stub = []
-    for f in function_descriptions:
+    for f in [f for f in function_descriptions if f['name'] in available_functions.keys()]:
       funcs_stub.append({"name":f['name'],"description":"","parameters":{"type":"object","properties":{}}})
     print(len(dumps(function_descriptions)), len(dumps(funcs_stub)))
     completion = await client.chat.completions.create(messages=messages, functions=function_descriptions, model='gpt-4-1106-preview')
