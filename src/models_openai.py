@@ -91,7 +91,7 @@ client = AsyncOpenAI()
 
 async def chat_completion_functions(msgs:list, f_avail:dict):
   f_coarse = []
-  for f in [f['name'] for f in f_detailed if f['name'] in f_avail.keys()]:
+  for f in [f for f in f_detailed if f['name'] in f_avail.keys()]:
     f_coarse.append({'name':f['name'],'description':f['description'],'parameters':empty_params})
     print(f_coarse)
   try:
