@@ -9,7 +9,7 @@ empty_params = {'type':'object','properties':{}}
 f_detailed = [
   {
     'name': 'no_function',
-    'description': "This function is called when no other function is called. It's used to provide default behavior for the bot.",
+    'description': "This function is called when no other function is called. It's used to provide default behavior for the bot. Select this function when another function isn't explicitly or implicitly called.",
     'parameters': empty_params
   },
   {
