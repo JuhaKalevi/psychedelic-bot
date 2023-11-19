@@ -6,7 +6,7 @@ IMGGEN_GROUPS = "Instead of commas, it's possible to use periods which separate 
 IMGGEN_WEIGHT = "Parentheses are used to increase the weight of (emphasize) tokens, such as: (((red hair))). Each set of parentheses multiplies the weight by 1.05. Convert adjectives like 'barely', 'slightly', 'very' or 'extremely' to this format!. Curly brackets can be conversely used to de-emphasize with a similar logic & multiplier."
 IMGGEN_REMIND = "Don't use any kind of formatting to separate these keywords, expect what is mentioned above! Remember to translate everything to english!"
 empty_params = {'type':'object','properties':{}}
-funcs = [
+f_detailed = [
   {
     'name': 'analyze_images',
     'description': "Analyze images using a local API. Don't worry if you don't seem to have an image at this stage, the function will find it for you! If the users seems to be refering to an image you can assume it exists.",
@@ -85,32 +85,40 @@ funcs = [
 client = AsyncOpenAI()
 
 async def chat_completion_functions(msgs:list, f_avail:dict):
-  try:
-    funcs_coarse = [
-      {
-        'name': 'choose_function',
-        'description': 'This function should be selected if a normal text response is more appropriate than any other listed function.',
-        'parameters': {
-          'type': 'object',
-          'properties': {
-            'chosen_function': {
-              'type':'string',
-              'enum': ['default_function_text_response'] + [f['name'] for f in funcs if f['name'] in f_avail.keys()]
-            }
-          },
-          'required': ['chosen_function']
-        }
+  f_coarse = [
+    {
+      'name': 'choose_function',
+      'description': 'This function is the first stage of function call logic. More detailed description of the chosen function is given in the next stage.',
+      'parameters': {
+        'type': 'object',
+        'properties': {
+          'chosen_function': {
+            'type':'string',
+            'enum': ['reply_to_channel','reply_to_message'] + [f['name'] for f in f_detailed if f['name'] in f_avail.keys()]
+          }
+        },
+        'required': ['chosen_function']
       }
-    ]
-    completion = await client.chat.completions.create(messages=msgs, functions=funcs_coarse, model='gpt-4-1106-preview')
-    response_message = completion.choices[0].message
-    if dict(response_message).get("function_call"):
-      function = response_message.function_call.name
-      arguments = loads(response_message.function_call.arguments)
-      await f_avail[function](**arguments)
-    return dict(response_message)
+    }
+  ]
+  try:
+    f_choice_completion = await client.chat.completions.create(messages=msgs, functions=f_coarse, function_call={'name':'choose_function'}, model='gpt-4-1106-preview')
   except APIError as err:
     print(f"OpenAI API Error: {err}")
+  f_choice_msg = f_choice_completion.choices[0].message
+  f_choice = f_choice_msg.function_call.arguments.chosen_function
+  f_description = [f for f in f_detailed if f['name'] == f_choice]
+  if f_description[0]['parameters'] != empty_params:
+    try:
+      f_args_completion = await client.chat.completions.create(messages=msgs, functions=f_description, function_call={'name':f_choice}, model='gpt-4-1106-preview')
+    except APIError as err:
+      print(f"OpenAI API Error: {err}")
+    function_args_msg = f_args_completion.choices[0].message
+    arguments = loads(function_args_msg.function_call.arguments)
+    await f_avail[f_choice](**arguments)
+    return dict(function_args_msg)
+  await f_avail[f_choice]()
+  return dict(f_choice_msg)
 
 async def chat_completion_streamed(messages:list, functions=None, model='gpt-4-1106-preview', max_tokens=None):
   try:
