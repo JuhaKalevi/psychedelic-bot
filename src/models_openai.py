@@ -9,7 +9,7 @@ empty_params = {'type':'object','properties':{}}
 f_detailed = [
   {
     'name': 'no_function',
-    'description': "This function is called when no other function is called. It's used to provide default behavior for the bot. Select this function when another function isn't explicitly or implicitly called.",
+    'description': "This function is called when no other function is called. It's used to provide default text response behavior for the bot. Select this function when another function isn't explicitly or implicitly called.",
     'parameters': empty_params
   },
   {
@@ -121,8 +121,9 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
       print(f"OpenAI API Error: {err}")
     function_args_msg = f_args_completion.choices[0].message
     arguments = loads(function_args_msg.function_call.arguments)
-    return await f_avail[f_choice](**arguments)
-  return await f_avail[f_choice]()
+    await f_avail[f_choice](**arguments)
+  else:
+    await f_avail[f_choice]()
 
 async def chat_completion_streamed(messages:list, functions=None, model='gpt-4-1106-preview', max_tokens=None):
   try:
