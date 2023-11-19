@@ -35,7 +35,7 @@ f_detailed = [
   },
   {
     'name': 'generate_images',
-    'description': "Generate images from the user message using a local API",
+    'description': "Generate images from the user message using a local API. Dont't use this function unless the message specifically asks for it!",
     'parameters': {
       'type': 'object',
       'properties': {
