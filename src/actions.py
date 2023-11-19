@@ -47,23 +47,12 @@ class Mattermost():
       self.instructions[0]['content'] += f" {channel['purpose']}"
     bot_user = await bot.users.get_user('me')
     bot.user_id = bot_user['id']
-    if (bot.name_in_message(message)) and post['root_id'] == "":
-      msgs = self.instructions + [{"role":"user", "content":message}]
-      res = await chat_completion_functions(msgs, self.available_functions)
-      if res.get('content'):
-        await bot.create_or_update_post({'channel_id':post['channel_id'], 'message':res['content'], 'file_ids':self.file_ids, 'root_id':post['id']})
-      return
+    msgs = self.instructions + [{"role":"user", "content":message}]
     self.context = await bot.posts.get_thread(post['id'])
     self.reply_to = post['root_id']
-    async with Lock():
-      for post in self.context['posts'].values():
-        if post['metadata'].get('reactions'):
-          for reaction in post['metadata']['reactions']:
-            if reaction['emoji_name'] == 'robot_face' and reaction['user_id'] == bot.user_id:
-              return await self.code_analysis()
-      for post in self.context['posts'].values():
-        if bot.name_in_message(post['message']):
-          return await self.stream_reply_to_messages(self.messages_from_context())
+    for post in self.context['posts'].values():
+      if bot.name_in_message(post['message']):
+        await chat_completion_functions(msgs, self.available_functions)
 
   def messages_from_context(self, max_tokens=126976):
     if 'order' in self.context:
@@ -86,7 +75,22 @@ class Mattermost():
     msgs.reverse()
     return self.instructions+msgs
 
-  async def stream_reply_to_messages(self, msgs:list, functions=None, model='gpt-4-1106-preview', max_tokens=None) -> str:
+# This fallback function is called when no other function is used, it can still force trigger other functions if specific emoji reactions are seen on the context
+
+  async def no_function(self):
+    async with Lock():
+      for post in self.context['posts'].values():
+        if post['metadata'].get('reactions'):
+          for reaction in post['metadata']['reactions']:
+            if reaction['emoji_name'] == 'robot_face' and reaction['user_id'] == self.bot.user_id:
+              await self.code_analysis()
+              return
+      for post in self.context['posts'].values():
+        if self.bot.name_in_message(post['message']):
+          await self.stream_reply(self.messages_from_context())
+          return
+
+  async def stream_reply(self, msgs:list, functions=None, model='gpt-4-1106-preview', max_tokens=None) -> str:
     reply_id = None
     buffer = []
     chunks_processed = []
@@ -106,13 +110,13 @@ class Mattermost():
 
 # Functions used by function calling logic begin here
 
-  async def generic_stage2(self, function:str, arguments:dict, content:dict):
+  async def generic(self, function:str, arguments:dict, content:dict):
     messages = [
       {"role": "user", "content": self.post['message']},
       {"role": "assistant", "content": None, "function_call": {"name": function, "arguments": json.dumps(arguments)}},
       {"role": "function", "name": function, "content": json.dumps(content)}
     ]
-    await self.stream_reply_to_messages(messages)
+    await self.stream_reply(messages)
 
   async def analyze_images(self):
     content = [{'type':'text','text':self.post['message']}]
@@ -128,12 +132,12 @@ class Mattermost():
         remove(f'/tmp/{post_file_path}')
         base64_image = base64.b64encode(img_byte).decode("utf-8")
         content.append({'type':'image_url','image_url':{'url':f'data:image/{file_type};base64,{base64_image}','detail':'high'}})
-    await self.stream_reply_to_messages([{'role':'user', 'content':content}], model='gpt-4-vision-preview', max_tokens=2048)
+    await self.stream_reply([{'role':'user', 'content':content}], model='gpt-4-vision-preview', max_tokens=2048)
 
   async def channel_summary(self, count:int):
     self.context = await self.bot.posts.get_posts_for_channel(self.post['channel_id'], params={'per_page':count})
     msgs = self.messages_from_context()
-    await self.generic_stage2('channel_summary', {'count':len(msgs)}, msgs)
+    await self.generic('channel_summary', {'count':len(msgs)}, msgs)
 
   async def code_analysis(self):
     self.context = await self.bot.posts.get_thread(self.post['id'])
@@ -143,7 +147,7 @@ class Mattermost():
         content = file.read()
       files.append(f'\n--- BEGIN {file_path} ---\n```\n{content}\n```\n--- END {file_path} ---\n')
     self.instructions[0]['content'] += '\nThis is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic! Abstain from praising or thanking the user, be serious.'+''.join(files) + self.instructions[0]['content']
-    await self.bot.create_reaction(await self.stream_reply_to_messages(self.messages_from_context()), 'robot_face')
+    await self.bot.create_reaction(await self.stream_reply(self.messages_from_context()), 'robot_face')
 
   async def generate_images(self, prompt:str, negative_prompt='', count=1, resolution='1024x1024', sampling_steps=25):
     width, height = resolution.split('x')
@@ -173,7 +177,7 @@ class Mattermost():
 
   async def get_current_weather(self, location:str):
     weatherapi_response = json.loads(requests.get(f"https://api.weatherapi.com/v1/current.json?key={environ['WEATHERAPI_KEY']}&q={location}", timeout=7).text)
-    await self.generic_stage2('get_current_weather', {'location':location}, weatherapi_response)
+    await self.generic('get_current_weather', {'location':location}, weatherapi_response)
 
   async def google_for_answers(self, url=''):
     results = []

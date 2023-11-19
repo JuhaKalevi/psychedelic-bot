@@ -8,6 +8,11 @@ IMGGEN_REMIND = "Don't use any kind of formatting to separate these keywords, ex
 empty_params = {'type':'object','properties':{}}
 f_detailed = [
   {
+    'name': 'no_function',
+    'description': "This function is called when no other function is called. It's used to provide default behavior for the bot.",
+    'parameters': empty_params
+  },
+  {
     'name': 'analyze_images',
     'description': "Analyze images using a local API. Don't worry if you don't seem to have an image at this stage, the function will find it for you! If the users seems to be refering to an image you can assume it exists.",
     'parameters': empty_params
@@ -94,7 +99,7 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
         'properties': {
           'chosen_function': {
             'type':'string',
-            'enum': ['reply_to_channel','reply_to_message'] + [f['name'] for f in f_detailed if f['name'] in f_avail.keys()]
+            'enum': [f['name'] for f in f_detailed if f['name'] in f_avail.keys()]
           }
         },
         'required': ['chosen_function']
@@ -107,7 +112,7 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
     print(f"OpenAI API Error: {err}")
   f_choice_msg = f_choice_completion.choices[0].message
   f_choice = loads(f_choice_msg.function_call.arguments)['chosen_function']
-  if f_choice in ('reply_to_channel','reply_to_message'):
+  if f_choice == 'no_function':
     return dict(f_choice_msg)
   f_description = [f for f in f_detailed if f['name'] == f_choice]
   if f_description[0]['parameters'] != empty_params:
