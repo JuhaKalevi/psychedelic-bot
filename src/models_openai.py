@@ -1,4 +1,3 @@
-from json import loads
 from openai import APIError, AsyncOpenAI
 
 IMGGEN_PROMPT = "Don't use full sentences, just a few keywords, separating these aspects by spaces or commas so that each comma separated group can have multiple space separated keywords."
