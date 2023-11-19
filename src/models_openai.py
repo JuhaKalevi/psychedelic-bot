@@ -93,7 +93,7 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
   f_coarse = []
   for f in [f for f in f_detailed if f['name'] in f_avail.keys()]:
     f_coarse.append({'name':f['name'],'description':f['description'],'parameters':empty_params})
-    print(f_coarse)
+  print(f_coarse)
   try:
     f_choice_completion = await client.chat.completions.create(messages=msgs, functions=f_coarse, model='gpt-4-1106-preview')
   except APIError as err:
