@@ -100,7 +100,7 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
     print(f"OpenAI API Error: {err}")
   f_choice_msg = f_choice_completion.choices[0].message
   print(f_choice_msg)
-  f_choice = loads(f_choice_msg.function_call.arguments)['chosen_function']
+  f_choice = f_choice_msg.function_call.name
   print(f"Chosen function: {f_choice}")
   f_description = [f for f in f_detailed if f['name'] == f_choice]
   if f_description[0]['parameters'] != empty_params:
@@ -109,7 +109,7 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
     except APIError as err:
       print(f"OpenAI API Error: {err}")
     function_args_msg = f_args_completion.choices[0].message
-    arguments = loads(function_args_msg.function_call.arguments)
+    arguments = function_args_msg.function_call.arguments
     await f_avail[f_choice](**arguments)
   else:
     await f_avail[f_choice]()
