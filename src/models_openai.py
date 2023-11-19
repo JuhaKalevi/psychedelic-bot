@@ -112,8 +112,6 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
     print(f"OpenAI API Error: {err}")
   f_choice_msg = f_choice_completion.choices[0].message
   f_choice = loads(f_choice_msg.function_call.arguments)['chosen_function']
-  if f_choice == 'no_function':
-    return
   f_description = [f for f in f_detailed if f['name'] == f_choice]
   if f_description[0]['parameters'] != empty_params:
     try:
@@ -122,10 +120,8 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
       print(f"OpenAI API Error: {err}")
     function_args_msg = f_args_completion.choices[0].message
     arguments = loads(function_args_msg.function_call.arguments)
-    await f_avail[f_choice](**arguments)
-    return
-  await f_avail[f_choice]()
-  return
+    return await f_avail[f_choice](**arguments)
+  return await f_avail[f_choice]()
 
 async def chat_completion_streamed(messages:list, functions=None, model='gpt-4-1106-preview', max_tokens=None):
   try:
