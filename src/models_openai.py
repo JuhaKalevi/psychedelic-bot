@@ -93,7 +93,7 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
   f_coarse = [
     {
       'name': 'choose_function',
-      'description': 'This function is the first stage of function call logic. More detailed description of the chosen function is given in the next stage.',
+      'description': 'This function is the first stage of function call logic. More detailed description of the chosen function is given in the next stage. Possible responses are the names of the functions that are actually available to be called.',
       'parameters': {
         'type': 'object',
         'properties': {
