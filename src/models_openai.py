@@ -90,24 +90,11 @@ f_detailed = [
 client = AsyncOpenAI()
 
 async def chat_completion_functions(msgs:list, f_avail:dict):
-  f_coarse = [
-    {
-      'name': 'choose_function',
-      'description': 'This function is the first stage of function call logic. More detailed description of the chosen function is given in the next stage. Possible responses are the names of the functions that are actually available to be called.',
-      'parameters': {
-        'type': 'object',
-        'properties': {
-          'chosen_function': {
-            'type':'string',
-            'enum': [f['name'] for f in f_detailed if f['name'] in f_avail.keys()]
-          }
-        },
-        'required': ['chosen_function']
-      }
-    }
-  ]
+  f_coarse = []
+  for f in [f['name'] for f in f_detailed if f['name'] in f_avail.keys()]:
+    f_coarse.append({'name':f['name'],'description':f['description'],'parameters':empty_params})
   try:
-    f_choice_completion = await client.chat.completions.create(messages=msgs, functions=f_coarse, function_call={'name':'choose_function'}, model='gpt-4-1106-preview')
+    f_choice_completion = await client.chat.completions.create(messages=msgs, functions=f_coarse, model='gpt-4-1106-preview')
   except APIError as err:
     print(f"OpenAI API Error: {err}")
   f_choice_msg = f_choice_completion.choices[0].message
