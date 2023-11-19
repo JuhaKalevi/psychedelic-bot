@@ -106,7 +106,7 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
   except APIError as err:
     print(f"OpenAI API Error: {err}")
   f_choice_msg = f_choice_completion.choices[0].message
-  f_choice = f_choice_msg.function_call.arguments.chosen_function
+  f_choice = loads(f_choice_msg.function_call.arguments)['chosen_function']
   f_description = [f for f in f_detailed if f['name'] == f_choice]
   if f_description[0]['parameters'] != empty_params:
     try:
