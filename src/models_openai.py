@@ -7,7 +7,7 @@ IMGGEN_REMIND = "Don't use any kind of formatting to separate these keywords, ex
 empty_params = {'type':'object','properties':{}}
 f_detailed = [
   {
-    'name': 'no_function',
+    'name': 'default_funcion',
     'description': "This function is called when no other function is called. It's used to provide default text response behavior for the bot. Select this function when another function isn't explicitly called.",
     'parameters': empty_params
   },
@@ -98,8 +98,12 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
   except APIError as err:
     print(f"OpenAI API Error: {err}")
   f_choice_msg = f_choice_completion.choices[0].message
-  print(f_choice_msg)
-  f_choice = f_choice_msg.function_call.name
+  if f_choice_msg.function_call is None and f_choice_msg.content:
+    return f_choice_msg.content
+  if f_choice_msg.function_call:
+    f_choice = f_choice_msg.function_call.name
+  else:
+    f_choice = 'default_function'
   print(f"Chosen function: {f_choice}")
   f_description = [f for f in f_detailed if f['name'] == f_choice]
   if f_description[0]['parameters'] != empty_params:

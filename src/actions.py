@@ -20,13 +20,14 @@ class Mattermost():
 
   def __init__(self, bot, post:dict):
     self.available_functions = {
-      'no_function': self.default_function,
+      'default_funcion': self.default_function,
       'analyze_images': self.analyze_images,
       'channel_summary': self.channel_summary,
       'code_analysis': self.code_analysis,
       'generate_images': self.generate_images,
       'get_current_weather': self.get_current_weather,
-      'google_for_answers': self.google_for_answers
+      'google_for_answers': self.google_for_answers,
+      'stream_reply': self.stream_reply,
     }
     self.bot = bot
     self.context = None
@@ -53,7 +54,9 @@ class Mattermost():
     self.reply_to = post['root_id']
     for post in self.context['posts'].values():
       if bot.name_in_message(post['message']):
-        return await chat_completion_functions(msgs, self.available_functions)
+        content = await chat_completion_functions(msgs, self.available_functions)
+        if content:
+          await self.bot.create_or_update_post({'channel_id':self.post['channel_id'], 'message':content, 'file_ids':self.file_ids, 'root_id':self.reply_to})
 
   def messages_from_context(self, max_tokens=126976):
     if 'order' in self.context:
@@ -78,7 +81,8 @@ class Mattermost():
 
 # This fallback function is called when no other function is used, it can still force trigger other functions if specific emoji reactions are seen on the context
 
-  async def default_function(self):
+  async def default_function(self, msgs=None):
+    msgs = self.messages_from_context()
     async with Lock():
       for post in self.context['posts'].values():
         if post['metadata'].get('reactions'):
@@ -88,7 +92,7 @@ class Mattermost():
               return
       for post in self.context['posts'].values():
         if self.bot.name_in_message(post['message']):
-          await self.stream_reply(self.messages_from_context())
+          await self.stream_reply(msgs)
           return
 
   async def stream_reply(self, msgs:list, functions=None, model='gpt-4-1106-preview', max_tokens=None) -> str:
