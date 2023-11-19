@@ -20,6 +20,7 @@ class Mattermost():
 
   def __init__(self, bot, post:dict):
     self.available_functions = {
+      'no_function': self.default_function,
       'analyze_images': self.analyze_images,
       'channel_summary': self.channel_summary,
       'code_analysis': self.code_analysis,
@@ -77,7 +78,7 @@ class Mattermost():
 
 # This fallback function is called when no other function is used, it can still force trigger other functions if specific emoji reactions are seen on the context
 
-  async def no_function(self):
+  async def default_function(self):
     async with Lock():
       for post in self.context['posts'].values():
         if post['metadata'].get('reactions'):
