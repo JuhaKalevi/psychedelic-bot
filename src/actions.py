@@ -121,19 +121,20 @@ class Mattermost():
     if 'order' in self.context:
       self.context['order'].sort(key=lambda x: self.context['posts'][x]['create_at'], reverse=True)
     content = [{'type':'text','text':self.post['message']}]
-    for post_file_id in [self.context['posts'][p_id]['file_ids'] for p_id in self.context['order'] if 'file_ids' in self.context['posts'][p_id]]:
-      print(post_file_id)
-      file_response = await self.bot.files.get_file(file_id=post_file_id)
-      if file_response.status_code == 200:
-        file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
-        post_file_path = f'{post_file_id}.{file_type}'
-        async with aiofiles.open(f'/tmp/{post_file_path}', 'wb') as post_file:
-          await post_file.write(file_response.content)
-        with open(f'/tmp/{post_file_path}', 'rb') as temp_file:
-          img_byte = temp_file.read()
-        remove(f'/tmp/{post_file_path}')
-        base64_image = base64.b64encode(img_byte).decode("utf-8")
-        content.append({'type':'image_url','image_url':{'url':f'data:image/{file_type};base64,{base64_image}','detail':'high'}})
+    for post_file_ids in [self.context['posts'][p_id]['file_ids'] for p_id in self.context['order'] if 'file_ids' in self.context['posts'][p_id]]:
+      for post_file_id in post_file_ids:
+        print(post_file_id)
+        file_response = await self.bot.files.get_file(file_id=post_file_id)
+        if file_response.status_code == 200:
+          file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
+          post_file_path = f'{post_file_id}.{file_type}'
+          async with aiofiles.open(f'/tmp/{post_file_path}', 'wb') as post_file:
+            await post_file.write(file_response.content)
+          with open(f'/tmp/{post_file_path}', 'rb') as temp_file:
+            img_byte = temp_file.read()
+          remove(f'/tmp/{post_file_path}')
+          base64_image = base64.b64encode(img_byte).decode("utf-8")
+          content.append({'type':'image_url','image_url':{'url':f'data:image/{file_type};base64,{base64_image}','detail':'high'}})
     await self.stream_reply([{'role':'user', 'content':content}], model='gpt-4-vision-preview', max_tokens=2048)
 
   async def channel_summary(self, count:int):
