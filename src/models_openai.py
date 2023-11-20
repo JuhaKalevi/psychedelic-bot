@@ -1,4 +1,5 @@
 from openai import APIError, AsyncOpenAI
+from helpers import count_tokens
 
 IMGGEN_PROMPT = "Don't use full sentences, just a few keywords, separating these aspects by spaces or commas so that each comma separated group can have multiple space separated keywords."
 IMGGEN_GROUPS = "Instead of commas, it's possible to use periods which separate bigger units consisting of multiple comma separated keywords or groups of keywords together. It's important to place the most important elements first in all of these levels of groupings!"
@@ -92,7 +93,7 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
   f_coarse = []
   for f in [f for f in f_detailed if f['name'] in f_avail.keys()]:
     f_coarse.append({'name':f['name'],'description':f['description'],'parameters':empty_params})
-  print(f_coarse)
+  print(f'coarse function descriptions: {count_tokens(f_coarse)} tokens')
   try:
     f_choice_completion = await client.chat.completions.create(messages=msgs, functions=f_coarse, model='gpt-4-1106-preview')
   except APIError as err:
