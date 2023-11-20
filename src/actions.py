@@ -122,6 +122,7 @@ class Mattermost():
       self.context['order'].sort(key=lambda x: self.context['posts'][x]['create_at'], reverse=True)
     content = [{'type':'text','text':self.post['message']}]
     for post_file_id in [self.context['posts'][p_id]['file_ids'] for p_id in self.context['order'] if 'file_ids' in self.context['posts'][p_id]]:
+      print(post_file_id)
       file_response = await self.bot.files.get_file(file_id=post_file_id)
       if file_response.status_code == 200:
         file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
