@@ -79,22 +79,6 @@ class Mattermost():
     msgs.reverse()
     return self.instructions+msgs
 
-# This fallback function is called when no other function is used, it can still force trigger other functions if specific emoji reactions are seen on the context
-
-  async def default_function(self, msgs=None):
-    msgs = self.messages_from_context()
-    async with Lock():
-      for post in self.context['posts'].values():
-        if post['metadata'].get('reactions'):
-          for reaction in post['metadata']['reactions']:
-            if reaction['emoji_name'] == 'robot_face' and reaction['user_id'] == self.bot.user_id:
-              await self.code_analysis()
-              return
-      for post in self.context['posts'].values():
-        if self.bot.name_in_message(post['message']):
-          await self.stream_reply(msgs)
-          return
-
   async def stream_reply(self, msgs:list, functions=None, model='gpt-4-1106-preview', max_tokens=None) -> str:
     reply_id = None
     buffer = []
@@ -113,9 +97,17 @@ class Mattermost():
         reply_id = await self.bot.create_or_update_post({'channel_id':self.post['channel_id'], 'message':''.join(chunks_processed)+''.join(buffer), 'file_ids':self.file_ids, 'root_id':self.reply_to}, reply_id)
     return reply_id
 
-# Functions used by function calling logic begin here
+  async def default_function(self, msgs=None):
+    '''Default function that can be called when a normal text response suffices'''
+    msgs = self.messages_from_context()
+    async with Lock():
+      for post in self.context['posts'].values():
+        if self.bot.name_in_message(post['message']):
+          await self.stream_reply(msgs)
+          return
 
   async def generic(self, function:str, arguments:dict, content:dict):
+    '''Generic function call that can be used with some simpler functions'''
     messages = [
       {"role": "user", "content": self.post['message']},
       {"role": "assistant", "content": None, "function_call": {"name": function, "arguments": json.dumps(arguments)}},
@@ -123,7 +115,10 @@ class Mattermost():
     ]
     await self.stream_reply(messages)
 
-  async def analyze_images(self):
+  async def analyze_images(self, past_posts:int=10):
+    '''Analyze images in the post and reply with a description of the image'''
+    self.context = await self.bot.posts.get_posts_for_channel(self.post['channel_id'], params={'per_page':past_posts})
+    print(self.context)
     content = [{'type':'text','text':self.post['message']}]
     for post_file_id in self.post['file_ids']:
       file_response = await self.bot.files.get_file(file_id=post_file_id)
@@ -145,6 +140,7 @@ class Mattermost():
     await self.generic('channel_summary', {'count':len(msgs)}, msgs)
 
   async def code_analysis(self):
+    '''Inserts all these source files to the context so they can be analyzed. This is a hacky way to do it, but it works.'''
     self.context = await self.bot.posts.get_thread(self.post['id'])
     files = []
     for file_path in [x for x in listdir() if x.endswith(('.py'))]:
@@ -152,7 +148,7 @@ class Mattermost():
         content = file.read()
       files.append(f'\n--- BEGIN {file_path} ---\n```\n{content}\n```\n--- END {file_path} ---\n')
     self.instructions[0]['content'] += '\nThis is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic! Abstain from praising or thanking the user, be serious.'+''.join(files) + self.instructions[0]['content']
-    await self.bot.create_reaction(await self.stream_reply(self.messages_from_context()), 'robot_face')
+    await self.stream_reply(self.messages_from_context())
 
   async def generate_images(self, prompt:str, negative_prompt='', count=1, resolution='1024x1024', sampling_steps=25):
     width, height = resolution.split('x')
