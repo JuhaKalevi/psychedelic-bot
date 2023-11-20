@@ -115,9 +115,9 @@ class Mattermost():
     ]
     await self.stream_reply(messages)
 
-  async def analyze_images(self, past_posts:int=10):
+  async def analyze_images(self, past_posts:int=1):
     '''Analyze images in the post and reply with a description of the image'''
-    self.context = await self.bot.posts.get_posts_for_channel(self.post['channel_id'], params={'per_page':past_posts})
+    self.context = await self.bot.posts.get_posts_for_channel(self.post['channel_id'], params={'per_page':1+past_posts})
     if 'order' in self.context:
       self.context['order'].sort(key=lambda x: self.context['posts'][x]['create_at'], reverse=True)
     content = [{'type':'text','text':self.post['message']}]
