@@ -118,9 +118,10 @@ class Mattermost():
   async def analyze_images(self, past_posts:int=10):
     '''Analyze images in the post and reply with a description of the image'''
     self.context = await self.bot.posts.get_posts_for_channel(self.post['channel_id'], params={'per_page':past_posts})
-    print(self.messages_from_context())
+    if 'order' in self.context:
+      self.context['order'].sort(key=lambda x: self.context['posts'][x]['create_at'], reverse=True)
     content = [{'type':'text','text':self.post['message']}]
-    for post_file_id in self.post['file_ids']:
+    for post_file_id in [self.post['file_ids']] + [self.context['posts'][p_id]['file_ids'] for p_id in self.context['order'] if 'file_ids' in self.context['posts'][p_id]]:
       file_response = await self.bot.files.get_file(file_id=post_file_id)
       if file_response.status_code == 200:
         file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
