@@ -93,7 +93,7 @@ client = AsyncOpenAI()
 async def chat_completion_functions(msgs:list, f_avail:dict):
   f_coarse = []
   for f in [f for f in f_detailed if f['name'] in f_avail.keys()]:
-    f_coarse.append({'name':f['name'],'description':f['description'],'parameters':empty_params})
+    f_coarse.append({'name':f['name'],'description':'','parameters':empty_params})
   print(f'coarse function descriptions: {count_tokens(f_coarse)} tokens')
   try:
     f_choice_completion = await client.chat.completions.create(messages=msgs, functions=f_coarse, model='gpt-4-1106-preview')
