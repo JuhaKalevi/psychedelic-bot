@@ -1,3 +1,4 @@
+from json import loads
 from openai import APIError, AsyncOpenAI
 from helpers import count_tokens
 
@@ -113,7 +114,7 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
     except APIError as err:
       print(f"OpenAI API Error: {err}")
     function_args_msg = f_args_completion.choices[0].message
-    arguments = function_args_msg.function_call.arguments
+    arguments = loads(function_args_msg.function_call.arguments)
     await f_avail[f_choice](**arguments)
   else:
     await f_avail[f_choice]()
