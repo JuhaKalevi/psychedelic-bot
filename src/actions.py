@@ -54,7 +54,7 @@ class Mattermost():
     self.reply_to = post['root_id']
     for post in self.context['posts'].values():
       if bot.name_in_message(post['message']):
-        return await chat_completion_functions(msgs, self.available_functions)
+        return await chat_completion_functions(self.messages_from_context(12288), self.available_functions, post['root_id'])
 
   def messages_from_context(self, max_tokens=126976):
     if 'order' in self.context:
