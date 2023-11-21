@@ -49,12 +49,11 @@ class Mattermost():
       self.instructions[0]['content'] += f" {channel['purpose']}"
     bot_user = await bot.users.get_user('me')
     bot.user_id = bot_user['id']
-    msgs = self.instructions + [{"role":"user", "content":message}]
     self.context = await bot.posts.get_thread(post['id'])
     self.reply_to = post['root_id']
     for post in self.context['posts'].values():
       if bot.name_in_message(post['message']):
-        return await chat_completion_functions(self.messages_from_context(12288), self.available_functions, post['root_id'])
+        return await chat_completion_functions(self.messages_from_context(max_tokens=12288), self.available_functions, post['root_id'])
 
   def messages_from_context(self, max_tokens=126976):
     if 'order' in self.context:
