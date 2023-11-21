@@ -39,21 +39,18 @@ class Mattermost():
     create_task(self.__post_handler__())
 
   async def __post_handler__(self):
-    bot = self.bot
-    message = self.message
-    post = self.post
-    channel = await bot.channels.get_channel(post['channel_id'])
+    channel = await self.bot.channels.get_channel(post['channel_id'])
     if channel['type'] == 'G':
       self.instructions[0]['content'] += f" {channel['header']}"
     else:
       self.instructions[0]['content'] += f" {channel['purpose']}"
-    bot_user = await bot.users.get_user('me')
-    bot.user_id = bot_user['id']
-    self.context = await bot.posts.get_thread(post['id'])
+    bot_user = await self.bot.users.get_user('me')
+    self.bot.user_id = bot_user['id']
+    self.context = await self.bot.posts.get_thread(post['id'])
     self.reply_to = post['root_id']
     for post in self.context['posts'].values():
-      if bot.name_in_message(post['message']):
-        return await chat_completion_functions(self.messages_from_context(max_tokens=12288), self.available_functions, post['root_id'])
+      if self.bot.name_in_message(post['message']):
+        return await chat_completion_functions(self.messages_from_context(max_tokens=12288), self.available_functions)
 
   def messages_from_context(self, max_tokens=126976):
     if 'order' in self.context:
