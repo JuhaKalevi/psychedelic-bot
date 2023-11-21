@@ -101,11 +101,12 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
     print(f"OpenAI API Error: {err}")
   f_choice_msg = f_choice_completion.choices[0].message
   if f_choice_msg.function_call is None and f_choice_msg.content:
-    return f_choice_msg.content
-  if f_choice_msg.function_call:
+    f_choice = 'text_response_default'
+  elif f_choice_msg.function_call:
     f_choice = f_choice_msg.function_call.name
   else:
-    f_choice = 'default_function'
+    print('WARNING: chat_completion_functions: no function choice made!')
+    return
   print(f"Chosen function: {f_choice}")
   f_description = [f for f in f_detailed if f['name'] == f_choice]
   if f_description[0]['parameters'] != empty_params:
