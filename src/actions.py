@@ -20,7 +20,7 @@ class Mattermost():
 
   def __init__(self, bot, post:dict):
     self.available_functions = {
-      'default_funcion': self.default_function,
+      'text_response_default': self.text_response_default,
       'analyze_images': self.analyze_images,
       'channel_summary': self.channel_summary,
       'code_analysis': self.code_analysis,
@@ -97,7 +97,7 @@ class Mattermost():
         reply_id = await self.bot.create_or_update_post({'channel_id':self.post['channel_id'], 'message':''.join(chunks_processed)+''.join(buffer), 'file_ids':self.file_ids, 'root_id':self.reply_to}, reply_id)
     return reply_id
 
-  async def default_function(self, msgs=None):
+  async def text_response_default(self, msgs=None):
     '''Default function that can be called when a normal text response suffices'''
     msgs = self.messages_from_context()
     async with Lock():

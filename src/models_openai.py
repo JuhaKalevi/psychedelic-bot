@@ -9,7 +9,7 @@ IMGGEN_REMIND = "Don't use any kind of formatting to separate these keywords, ex
 empty_params = {'type':'object','properties':{}}
 f_detailed = [
   {
-    'name': 'default_funcion',
+    'name': 'text_response_default',
     'description': "This function is called when no other function is called. It's used to provide default text response behavior for the bot. Select this function when another function isn't explicitly called.",
     'parameters': empty_params
   },
@@ -96,7 +96,7 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
     f_coarse.append({'name':f['name'],'description':'','parameters':empty_params})
   print(f'coarse function descriptions: {count_tokens(f_coarse)} tokens')
   try:
-    f_choice_completion = await client.chat.completions.create(messages=msgs, functions=f_coarse, model='gpt-4-1106-preview')
+    f_choice_completion = await client.chat.completions.create(messages=msgs, functions=f_coarse, model='gpt-3.5-turbo-1106')
   except APIError as err:
     print(f"OpenAI API Error: {err}")
   f_choice_msg = f_choice_completion.choices[0].message
