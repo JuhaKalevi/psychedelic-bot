@@ -33,7 +33,6 @@ class Mattermost():
     self.context = None
     self.file_ids = []
     self.instructions = [{'role':'system', 'content':'Do not reveal the persona you are potentially assigned to imitate!'}]
-    self.reply_to = ''
     self.message = post['message']
     self.post = post
     create_task(self.__post_handler__())
@@ -47,7 +46,6 @@ class Mattermost():
     bot_user = await self.bot.users.get_user('me')
     self.bot.user_id = bot_user['id']
     self.context = await self.bot.posts.get_thread(self.post['id'])
-    self.reply_to = self.post['root_id']
     for self.post in self.context['posts'].values():
       if self.bot.name_in_message(self.post['message']):
         return await chat_completion_functions(self.messages_from_context(max_tokens=12288), self.available_functions)
@@ -75,9 +73,9 @@ class Mattermost():
 
   async def stream_reply(self, msgs:list, functions=None, model='gpt-4-1106-preview', max_tokens=None) -> str:
     if self.post['root_id'] == '':
-      self.reply_to = self.post['id']
+      reply_to = self.post['id']
     else:
-      self.reply_to = self.post['root_id']
+      reply_to = self.post['root_id']
     reply_id = None
     buffer = []
     chunks_processed = []
@@ -87,12 +85,12 @@ class Mattermost():
         buffer.append(chunk)
         if (time() - start_time) * 1000 >= 500:
           joined_chunks = ''.join(buffer)
-          reply_id = await self.bot.create_or_update_post({'channel_id':self.post['channel_id'], 'message':''.join(chunks_processed)+joined_chunks, 'file_ids':self.file_ids, 'root_id':self.reply_to}, reply_id)
+          reply_id = await self.bot.create_or_update_post({'channel_id':self.post['channel_id'], 'message':''.join(chunks_processed)+joined_chunks, 'file_ids':self.file_ids, 'root_id':reply_to}, reply_id)
           chunks_processed.append(joined_chunks)
           buffer.clear()
           start_time = time()
       if buffer:
-        reply_id = await self.bot.create_or_update_post({'channel_id':self.post['channel_id'], 'message':''.join(chunks_processed)+''.join(buffer), 'file_ids':self.file_ids, 'root_id':self.reply_to}, reply_id)
+        reply_id = await self.bot.create_or_update_post({'channel_id':self.post['channel_id'], 'message':''.join(chunks_processed)+''.join(buffer), 'file_ids':self.file_ids, 'root_id':reply_to}, reply_id)
     return reply_id
 
   async def text_response_default(self, msgs=None):
