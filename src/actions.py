@@ -75,7 +75,7 @@ class Mattermost():
 
   async def stream_reply(self, msgs:list, functions=None, model='gpt-4-1106-preview', max_tokens=None) -> str:
     if self.post['root_id'] == '':
-      self.repy_to = self.post['id']
+      self.reply_to = self.post['id']
     else:
       self.reply_to = self.post['root_id']
     reply_id = None
