@@ -113,9 +113,9 @@ class Mattermost():
     ]
     await self.stream_reply(messages)
 
-  async def analyze_images(self, past_posts:int=1):
+  async def analyze_images(self, past_images:int=1):
     '''Analyze images in the post and reply with a description of the image'''
-    self.context = await self.bot.posts.get_thread(self.post['channel_id'], params={'per_page':1+past_posts})
+    self.context = await self.bot.posts.get_thread(self.post['id'])
     if 'order' in self.context:
       self.context['order'].sort(key=lambda x: self.context['posts'][x]['create_at'], reverse=True)
     content = [{'type':'text','text':self.post['message']}]
@@ -133,6 +133,8 @@ class Mattermost():
           remove(f'/tmp/{post_file_path}')
           base64_image = base64.b64encode(img_byte).decode("utf-8")
           content.append({'type':'image_url','image_url':{'url':f'data:image/{file_type};base64,{base64_image}','detail':'high'}})
+      if len(content) > past_images:
+        break
     await self.stream_reply([{'role':'user', 'content':content}], model='gpt-4-vision-preview', max_tokens=2048)
 
   async def channel_summary(self, count:int):

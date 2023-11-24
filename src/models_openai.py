@@ -16,7 +16,12 @@ f_detailed = [
   {
     'name': 'analyze_images',
     'description': "Analyze images using a local API. Don't worry if you don't seem to have an image at this stage, the function will find it for you! If the users seems to be refering to an image you can assume it exists.",
-    'parameters': empty_params
+    'parameters': {
+      'type': 'object',
+      'properties': {
+        'count': {'type': 'integer','description': "How many previous images to analyze?"}
+      }
+    }
   },
   {
     'name': 'channel_summary',
