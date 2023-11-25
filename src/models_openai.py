@@ -95,6 +95,7 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
   except APIError as err:
     print(f"OpenAI API Error: {err}")
   f_choice_msg = f_choice_completion.choices[0].message
+  print(f"f_choice_msg.content: {f_choice_msg.content}")
   if f_choice_msg.function_call is None and f_choice_msg.content:
     f_choice = 'text_response_default'
   elif f_choice_msg.function_call:
