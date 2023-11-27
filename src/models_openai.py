@@ -110,7 +110,6 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
   print(f'f_coarse: {count_tokens(f_coarse)} tokens')
   delta = ''
   async for r in await client.chat.completions.create(messages=msgs, functions=f_choose+f_coarse, function_call={'name':'choose_function'}, model='gpt-3.5-turbo-1106', stream=True):
-    print(dict(r.choices[0].delta))
     if r.choices[0].delta.function_call:
       delta += r.choices[0].delta.function_call.arguments
     else:
