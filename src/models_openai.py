@@ -42,7 +42,7 @@ f_detailed = [
   },
   {
     'name': 'generate_images',
-    'description': "Generate images from the user message using a local API. Dont't use this function unless the message specifically asks for it!",
+    'description': "Generate images from the user message using a local API. Don't use this function unless the message specifically asks for it!",
     'parameters': {
       'type': 'object',
       'properties': {
@@ -121,14 +121,11 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
     await f_avail[f_choice]()
 
 async def chat_completion_streamed(messages:list, functions=None, model='gpt-4-1106-preview', max_tokens=None):
-  try:
-    kwargs = {"messages":messages, "model":model, "stream":True}
-    if functions:
-      kwargs["functions"] = functions
-    if max_tokens:
-      kwargs["max_tokens"] = max_tokens
-    async for part in await client.chat.completions.create(**kwargs):
-      content = part.choices[0].delta.content or ""
-      yield content
-  except APIError as err:
-    print(f"OpenAI API Error: {err}")
+  kwargs = {"messages":messages, "model":model, "stream":True}
+  if functions:
+    kwargs["functions"] = functions
+  if max_tokens:
+    kwargs["max_tokens"] = max_tokens
+  async for part in await client.chat.completions.create(**kwargs):
+    content = part.choices[0].delta.content or ""
+    yield content
