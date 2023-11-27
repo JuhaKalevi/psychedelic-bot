@@ -95,7 +95,7 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
             'enum': list(f_avail),
           }
         },
-        'required': ['location']
+        'required': ['function_name']
       }
     }
   ]
