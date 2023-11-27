@@ -82,7 +82,6 @@ f_detailed = [
 client = AsyncOpenAI(timeout=Timeout(180.0, read=10.0, write=10.0, connect=5.0))
 
 async def chat_completion_functions(msgs:list, f_avail:dict):
-  f_avail_names = [f for f in f_detailed if f['name'] in f_avail.keys()]
   f_choose = [
     {
       'name': 'choose_function',
@@ -93,7 +92,7 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
           'funcion_name': {
             'type': 'string',
             'description': "This parameter decides which function is actually called in the next stage.",
-            'enum': f_avail_names,
+            'enum': f_avail.keys(),
           }
         },
         'required': ['location']
@@ -101,7 +100,7 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
     }
   ]
   f_coarse = []
-  for f in f_avail_names:
+  for f in [f for f in f_detailed if f['name'] in f_avail.keys()]:
     f_coarse.append({'name':f['name'],'description':f['description'],'parameters':empty_params})
   print(f'f_coarse: {count_tokens(f_coarse)} tokens')
   f_choice_completion = await client.chat.completions.create(messages=msgs, functions=f_choose+f_coarse, function_call={'name':'choose_function'}, model='gpt-3.5-turbo-1106')
