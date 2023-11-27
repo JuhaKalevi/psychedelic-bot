@@ -92,7 +92,7 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
           'funcion_name': {
             'type': 'string',
             'description': "This parameter decides which function is actually called in the next stage.",
-            'enum': f_avail.keys(),
+            'enum': list(f_avail),
           }
         },
         'required': ['location']
