@@ -36,7 +36,7 @@ f_detailed = [
     }
   },
   {
-    'name': 'code_analysis',
+    'name': 'self_code_analysis',
     'description': "Analyze your source code files that are automatically readable later in this function. Nothing can be provided by the user, this only reads the source code you are currently running.",
     'parameters': empty_params
   },

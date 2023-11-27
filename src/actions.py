@@ -23,11 +23,10 @@ class Mattermost():
       'text_response_default': self.text_response_default,
       'analyze_images': self.analyze_images,
       'channel_summary': self.channel_summary,
-      'code_analysis': self.code_analysis,
       'generate_images': self.generate_images,
       'get_current_weather': self.get_current_weather,
       'google_for_answers': self.google_for_answers,
-      'stream_reply': self.stream_reply,
+      'self_code_analysis': self.self_code_analysis,
     }
     self.bot = bot
     self.context = None
@@ -140,17 +139,6 @@ class Mattermost():
     msgs = self.messages_from_context()
     await self.generic('channel_summary', {'count':len(msgs)}, msgs)
 
-  async def code_analysis(self):
-    '''Inserts all these source files to the context so they can be analyzed. This is a hacky way to do it, but it works.'''
-    self.context = await self.bot.posts.get_thread(self.post['id'])
-    files = []
-    for file_path in [x for x in listdir() if x.endswith(('.py'))]:
-      with open(file_path, 'r', encoding='utf-8') as file:
-        content = file.read()
-      files.append(f'\n--- BEGIN {file_path} ---\n```\n{content}\n```\n--- END {file_path} ---\n')
-    self.instructions[0]['content'] += '\nThis is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic! Abstain from praising or thanking the user, be serious.'+''.join(files) + self.instructions[0]['content']
-    await self.stream_reply(self.messages_from_context())
-
   async def generate_images(self, prompt:str, negative_prompt='', count=1, resolution='1024x1024', sampling_steps=25):
     width, height = resolution.split('x')
     payload = {'prompt':prompt, 'negative_prompt':negative_prompt, 'steps':sampling_steps, 'batch_size':count, 'width':width, 'height':height, 'sampler_name':'DPM++ 2M Karras'}
@@ -186,3 +174,14 @@ class Mattermost():
     for result in googlesearch.search(url, num_results=2):
       results.append(result)
     await self.bot.create_or_update_post({'channel_id':self.post['channel_id'], 'message':json.dumps(results), 'file_ids':self.file_ids, 'root_id':''})
+
+  async def self_code_analysis(self):
+    '''Inserts all these source files to the context so they can be analyzed. This is a hacky way to do it, but it works.'''
+    self.context = await self.bot.posts.get_thread(self.post['id'])
+    files = []
+    for file_path in [x for x in listdir() if x.endswith(('.py'))]:
+      with open(file_path, 'r', encoding='utf-8') as file:
+        content = file.read()
+      files.append(f'\n--- BEGIN {file_path} ---\n```\n{content}\n```\n--- END {file_path} ---\n')
+    self.instructions[0]['content'] += '\nThis is your code. Abstain from posting parts of your code unless discussing changes to them. Use 2 spaces for indentation and try to keep it minimalistic! Abstain from praising or thanking the user, be serious.'+''.join(files) + self.instructions[0]['content']
+    await self.stream_reply(self.messages_from_context())
