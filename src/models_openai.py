@@ -1,6 +1,6 @@
 from json import loads
 from httpx import Timeout
-from openai import APIError, AsyncOpenAI
+from openai import AsyncOpenAI
 from helpers import count_tokens
 
 IMGGEN_PROMPT = "Don't use full sentences, just a few keywords, separating these aspects by spaces or commas so that each comma separated group can have multiple space separated keywords."
@@ -108,8 +108,12 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
   for f in [f for f in f_detailed if f['name'] in f_avail.keys()]:
     f_coarse.append({'name':f['name'],'parameters':empty_params})
   print(f'f_coarse: {count_tokens(f_coarse)} tokens')
-  f_choice_completion = await client.chat.completions.create(messages=msgs, functions=f_choose+f_coarse, function_call={'name':'choose_function'}, model='gpt-3.5-turbo-1106')
-  f_choice = loads(f_choice_completion.choices[0].message.function_call.arguments)['function_name']
+  for r in await client.chat.completions.create(messages=msgs, functions=f_choose+f_coarse, function_call={'name':'choose_function'}, model='gpt-3.5-turbo-1106', stream=True):
+    delta = r.choices[0].delta
+    if 'function_call' in delta and 'arguments' in delta.function_call:
+      f_choice = delta.function_call["name"]
+    if r.choices[0].finish_reason == "function_call":
+      break
   f_description = [f for f in f_detailed if f['name'] == f_choice]
   print(f'f_detailed ({f_choice}): {count_tokens(f_description)} tokens')
   if f_description[0]['parameters'] != empty_params:
