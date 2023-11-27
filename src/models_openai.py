@@ -1,4 +1,5 @@
 from json import loads
+from httpx import Timeout
 from openai import APIError, AsyncOpenAI
 from helpers import count_tokens
 
@@ -83,7 +84,7 @@ f_detailed = [
   }
 ]
 
-client = AsyncOpenAI()
+client = AsyncOpenAI(timeout=Timeout(180.0, read=10.0, write=10.0, connect=5.0))
 
 async def chat_completion_functions(msgs:list, f_avail:dict):
   f_coarse = []
