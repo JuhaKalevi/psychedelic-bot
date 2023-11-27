@@ -10,11 +10,6 @@ IMGGEN_REMIND = "Don't use any kind of formatting to separate these keywords, ex
 empty_params = {'type':'object','properties':{}}
 f_detailed = [
   {
-    'name': 'text_response_default',
-    'description': "This function is called when no other function is called. It's used to provide default text response behavior for the bot. Select this function when another function isn't explicitly called.",
-    'parameters': empty_params
-  },
-  {
     'name': 'analyze_images',
     'description': "Analyze images using a local API. Don't worry if you don't seem to have an image at this stage, the function will find it for you! If the users seems to be refering to an image you can assume it exists.",
     'parameters': {
@@ -87,30 +82,34 @@ f_detailed = [
 client = AsyncOpenAI(timeout=Timeout(180.0, read=10.0, write=10.0, connect=5.0))
 
 async def chat_completion_functions(msgs:list, f_avail:dict):
+  f_avail_names = [f for f in f_detailed if f['name'] in f_avail.keys()]
+  f_choose = [
+    {
+      'name': 'choose_function',
+      'description': "This function is used to select which of the actual functions should be called.",
+      'parameters': {
+        'type': 'object',
+        'properties': {
+          'funcion_name': {
+            'type': 'string',
+            'description': "This parameter decides which function is actually called in the next stage.",
+            'enum': f_avail_names,
+          }
+        },
+        'required': ['location']
+      }
+    }
+  ]
   f_coarse = []
-  for f in [f for f in f_detailed if f['name'] in f_avail.keys()]:
-    f_coarse.append({'name':f['name'],'description':'','parameters':empty_params})
-  print(f'coarse function descriptions: {count_tokens(f_coarse)} tokens')
-  try:
-    f_choice_completion = await client.chat.completions.create(messages=msgs, functions=f_coarse, model='gpt-3.5-turbo-1106')
-  except APIError as err:
-    print(f"OpenAI API Error: {err}")
-  f_choice_msg = f_choice_completion.choices[0].message
-  print(f"f_choice_msg.content: {f_choice_msg.content}")
-  if f_choice_msg.function_call is None and f_choice_msg.content:
-    f_choice = 'text_response_default'
-  elif f_choice_msg.function_call:
-    f_choice = f_choice_msg.function_call.name
-  else:
-    print('WARNING: chat_completion_functions: no function choice made!')
-    return
-  print(f"Chosen function: {f_choice}")
+  for f in f_avail_names:
+    f_coarse.append({'name':f['name'],'description':f['description'],'parameters':empty_params})
+  print(f'f_coarse: {count_tokens(f_coarse)} tokens')
+  f_choice_completion = await client.chat.completions.create(messages=msgs, functions=f_choose+f_coarse, function_call={'name':'choose_function'}, model='gpt-3.5-turbo-1106')
+  f_choice = loads(f_choice_completion.choices[0].message.function_call.arguments)['function_name']
+  print(f'f_choice: {f_choice}')
   f_description = [f for f in f_detailed if f['name'] == f_choice]
   if f_description[0]['parameters'] != empty_params:
-    try:
-      f_args_completion = await client.chat.completions.create(messages=msgs, functions=f_description, function_call={'name':f_choice}, model='gpt-4-1106-preview')
-    except APIError as err:
-      print(f"OpenAI API Error: {err}")
+    f_args_completion = await client.chat.completions.create(messages=msgs, functions=f_description, function_call={'name':f_choice}, model='gpt-4-1106-preview')
     function_args_msg = f_args_completion.choices[0].message
     arguments = loads(function_args_msg.function_call.arguments)
     await f_avail[f_choice](**arguments)
