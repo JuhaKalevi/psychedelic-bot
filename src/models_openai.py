@@ -10,6 +10,11 @@ IMGGEN_REMIND = "Don't use any kind of formatting to separate these keywords, ex
 empty_params = {'type':'object','properties':{}}
 f_detailed = [
   {
+    'name': 'text_response_default',
+    'description': "This function is called when no other function is called. It's used to provide default text response behavior for the bot. Select this function when another function isn't explicitly called.",
+    'parameters': empty_params
+  },
+  {
     'name': 'analyze_images',
     'description': "Analyze images using a local API. Don't worry if you don't seem to have an image at this stage, the function will find it for you! If the users seems to be refering to an image you can assume it exists.",
     'parameters': {
