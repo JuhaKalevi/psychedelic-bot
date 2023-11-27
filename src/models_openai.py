@@ -97,7 +97,7 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
           'function_name': {
             'type': 'string',
             'description': "This parameter decides which function is actually called in the next stage.",
-            'enum': list(f_avail),
+            'enum': [f for f in list(f_avail) if f != 'choose_function'],
           }
         },
         'required': ['function_name']
