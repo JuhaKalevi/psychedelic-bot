@@ -89,7 +89,7 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
       'parameters': {
         'type': 'object',
         'properties': {
-          'funcion_name': {
+          'function_name': {
             'type': 'string',
             'description': "This parameter decides which function is actually called in the next stage.",
             'enum': list(f_avail),
@@ -104,7 +104,6 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
     f_coarse.append({'name':f['name'],'description':f['description'],'parameters':empty_params})
   print(f'f_coarse: {count_tokens(f_coarse)} tokens')
   f_choice_completion = await client.chat.completions.create(messages=msgs, functions=f_choose+f_coarse, function_call={'name':'choose_function'}, model='gpt-3.5-turbo-1106')
-  print(dict(f_choice_completion))
   f_choice = loads(f_choice_completion.choices[0].message.function_call.arguments)['function_name']
   print(f'f_choice: {f_choice}')
   f_description = [f for f in f_detailed if f['name'] == f_choice]
