@@ -91,14 +91,9 @@ class Mattermost():
         reply_id = await self.bot.create_or_update_post({'channel_id':self.post['channel_id'], 'message':''.join(chunks_processed)+''.join(buffer), 'file_ids':self.file_ids, 'root_id':reply_to}, reply_id)
     return reply_id
 
-  async def text_response_default(self, msgs=None):
+  async def text_response_default(self):
     '''Default function that can be called when a normal text response suffices'''
-    msgs = self.messages_from_context()
-    async with Lock():
-      for post in self.context['posts'].values():
-        if self.bot.name_in_message(post['message']):
-          await self.stream_reply(msgs)
-          return
+    await self.stream_reply(self.messages_from_context())
 
   async def generic(self, function:str, arguments:dict, content:dict):
     '''Generic function call that can be used with some simpler functions'''
