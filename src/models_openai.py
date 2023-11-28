@@ -18,7 +18,7 @@ f_detailed = [
       'type': 'object',
       'properties': {
         'count_images': {'type': 'integer','description': "How many previous images to analyze?"},
-        'count_images': {'type': 'integer','description': "How many previous posts to analyze?"}
+        'count_posts': {'type': 'integer','description': "How many previous posts to analyze?"}
       }
     }
   },
