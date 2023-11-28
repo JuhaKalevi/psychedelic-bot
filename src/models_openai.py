@@ -33,7 +33,7 @@ f_detailed = [
     }
   },
   {
-    'name': 'self_code_analysis',
+    'name': 'instant_self_code_analysis',
     'parameters': empty_params
   },
   {

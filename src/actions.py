@@ -26,7 +26,7 @@ class Mattermost():
       'generate_images': self.generate_images,
       'get_current_weather': self.get_current_weather,
       'google_for_answers': self.google_for_answers,
-      'self_code_analysis': self.self_code_analysis,
+      'instant_self_code_analysis': self.instant_self_code_analysis,
     }
     self.bot = bot
     self.context = None
@@ -170,7 +170,7 @@ class Mattermost():
       results.append(result)
     await self.bot.create_or_update_post({'channel_id':self.post['channel_id'], 'message':json.dumps(results), 'file_ids':self.file_ids, 'root_id':''})
 
-  async def self_code_analysis(self):
+  async def instant_self_code_analysis(self):
     '''Inserts all these source files to the context so they can be analyzed. This is a hacky way to do it, but it works.'''
     self.context = await self.bot.posts.get_thread(self.post['id'])
     files = []
