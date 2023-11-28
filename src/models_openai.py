@@ -119,10 +119,10 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
   else:
     await f_avail[f_choice]()
 
-async def chat_completion(messages:list, model='gpt-4-1106-preview', max_tokens=None):
-  kwargs = {"messages":messages, "model":model, "stream":True}
+async def chat_completion(msgs, model='gpt-4-1106-preview', max_tokens=None):
+  kwargs = {"messages":msgs, "model":model, "stream":True}
   if max_tokens:
     kwargs["max_tokens"] = max_tokens
+  print(f'chat_completion: msgs:{count_tokens(msgs)}')
   async for part in await client.chat.completions.create(**kwargs):
-    content = part.choices[0].delta.content or ""
-    yield content
+    yield part.choices[0].delta.content or ""
