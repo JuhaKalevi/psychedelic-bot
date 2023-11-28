@@ -93,7 +93,7 @@ class Mattermost():
 
   async def text_response_default(self):
     '''Default function that can be called when a normal text response suffices'''
-    self.instructions[0]['content'] += f"You have these functions available: {self.available_functions.keys()}"
+    self.instructions[0]['content'] += f"You have these functions available: {[f for f in self.available_functions.keys() if f != 'text_response_default']}"
     await self.stream_reply(self.messages_from_context())
 
   async def generic(self, function:str, arguments:dict, content:dict):
