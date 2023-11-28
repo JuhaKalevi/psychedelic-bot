@@ -25,7 +25,6 @@ class Mattermost():
       'channel_summary': self.channel_summary,
       'generate_images': self.generate_images,
       'get_current_weather': self.get_current_weather,
-      'google_for_answers': self.google_for_answers,
       'instant_self_code_analysis': self.instant_self_code_analysis,
     }
     self.bot = bot
