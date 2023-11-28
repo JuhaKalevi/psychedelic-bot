@@ -69,7 +69,7 @@ class Mattermost():
     msgs.reverse()
     return self.instructions+msgs
 
-  async def stream_reply(self, msgs:list, functions=None, model='gpt-4-1106-preview', max_tokens=None) -> str:
+  async def stream_reply(self, msgs:list, model='gpt-4-1106-preview', max_tokens=None) -> str:
     if self.post['root_id'] == '':
       reply_to = self.post['id']
     else:
@@ -79,7 +79,7 @@ class Mattermost():
     chunks_processed = []
     start_time = time()
     async with Lock():
-      async for chunk in chat_completion_streamed(msgs, functions=functions, model=model, max_tokens=max_tokens):
+      async for chunk in chat_completion_streamed(msgs, functions=None, model=model, max_tokens=max_tokens):
         buffer.append(chunk)
         if (time() - start_time) * 1000 >= 500:
           joined_chunks = ''.join(buffer)
