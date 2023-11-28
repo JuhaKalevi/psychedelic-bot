@@ -104,30 +104,38 @@ class Mattermost():
     ]
     await self.stream_reply(messages)
 
-  async def analyze_images(self, count=0):
+  async def analyze_images(self, count_images=0, count_posts=0):
     '''Analyze images in a channel or thread and reply with a description of the image'''
     if self.post['root_id'] == '':
-      self.context = await self.bot.posts.get_posts_for_channel(self.post['channel_id'], params={'per_page':count+1})
+      self.context = await self.bot.posts.get_posts_for_channel(self.post['channel_id'], params={'per_page':count_posts+1})
     else:
       self.context = await self.bot.posts.get_thread(self.post['id'])
     if 'order' in self.context:
       self.context['order'].sort(key=lambda x: self.context['posts'][x]['create_at'], reverse=True)
     content = [{'type':'text','text':self.post['message']}]
-    for post_file_ids in [self.context['posts'][p_id]['file_ids'] for p_id in self.context['order'] if 'file_ids' in self.context['posts'][p_id]]:
-      for post_file_id in post_file_ids:
-        print(post_file_id)
-        file_response = await self.bot.files.get_file(file_id=post_file_id)
-        if file_response.status_code == 200:
-          file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
-          post_file_path = f'{post_file_id}.{file_type}'
-          async with aiofiles.open(f'/tmp/{post_file_path}', 'wb') as post_file:
-            await post_file.write(file_response.content)
-          with open(f'/tmp/{post_file_path}', 'rb') as temp_file:
-            img_byte = temp_file.read()
-          remove(f'/tmp/{post_file_path}')
-          base64_image = base64.b64encode(img_byte).decode("utf-8")
-          content.append({'type':'image_url','image_url':{'url':f'data:image/{file_type};base64,{base64_image}','detail':'high'}})
-      if len(content) > count:
+    images = 0
+    posts_checked = 0
+    for post_id in self.context['order']:
+      post = self.context['posts'][post_id]
+      if 'file_ids' in post:
+        for post_file_id in post['file_ids']:
+          print(post_file_id)
+          file_response = await self.bot.files.get_file(file_id=post_file_id)
+          if file_response.status_code == 200:
+            file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
+            post_file_path = f'{post_file_id}.{file_type}'
+            async with aiofiles.open(f'/tmp/{post_file_path}', 'wb') as post_file:
+              await post_file.write(file_response.content)
+            with open(f'/tmp/{post_file_path}', 'rb') as temp_file:
+              img_byte = temp_file.read()
+            remove(f'/tmp/{post_file_path}')
+            base64_image = base64.b64encode(img_byte).decode("utf-8")
+            content.append({'type':'image_url','image_url':{'url':f'data:image/{file_type};base64,{base64_image}','detail':'high'}})
+            images += 1
+          if count_images and images >= count_images:
+            break
+      posts_checked += 1
+      if (count_images and images >= count_images) or (count_posts and posts_checked >= count_posts):
         break
     await self.stream_reply([{'role':'user', 'content':content}], model='gpt-4-vision-preview', max_tokens=2048)
 
