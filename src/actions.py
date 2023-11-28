@@ -79,7 +79,7 @@ class Mattermost():
     chunks_processed = []
     start_time = time()
     async with Lock():
-      async for chunk in chat_completion(msgs, functions=None, model=model, max_tokens=max_tokens):
+      async for chunk in chat_completion(msgs, model=model, max_tokens=max_tokens):
         buffer.append(chunk)
         if (time() - start_time) * 1000 >= 500:
           joined_chunks = ''.join(buffer)
