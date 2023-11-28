@@ -11,7 +11,7 @@ from PIL import Image
 import websockets
 import requests
 from helpers import count_tokens
-from models_openai import chat_completion_functions, chat_completion_streamed
+from models_openai import chat_completion_functions, chat_completion
 
 middleware_credentials = base64.b64encode(f"{environ['MIDDLEWARE_USERNAME']}:{environ['MIDDLEWARE_PASSWORD']}".encode()).decode()
 middleware_url = f"{environ['MIDDLEWARE_URL']}/?token={middleware_credentials}"
@@ -79,7 +79,7 @@ class Mattermost():
     chunks_processed = []
     start_time = time()
     async with Lock():
-      async for chunk in chat_completion_streamed(msgs, functions=None, model=model, max_tokens=max_tokens):
+      async for chunk in chat_completion(msgs, functions=None, model=model, max_tokens=max_tokens):
         buffer.append(chunk)
         if (time() - start_time) * 1000 >= 500:
           joined_chunks = ''.join(buffer)
