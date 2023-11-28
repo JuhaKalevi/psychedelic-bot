@@ -11,12 +11,10 @@ empty_params = {'type':'object','properties':{}}
 f_detailed = [
   {
     'name': 'text_response_default',
-    'description': "This function is called when no other function is called. It's used to provide default text response behavior for the bot. Select this function when another function isn't explicitly called.",
     'parameters': empty_params
   },
   {
     'name': 'analyze_images',
-    'description': "Analyze images using a local API. Don't worry if you don't seem to have an image at this stage, the function will find it for you! If the users seems to be refering to an image you can assume it exists.",
     'parameters': {
       'type': 'object',
       'properties': {
@@ -26,7 +24,6 @@ f_detailed = [
   },
   {
     'name': 'channel_summary',
-    'description': "Summarize previous discussions in a larger context (user calls it channel or discussion or just 'here')",
     'parameters': {
       'type': 'object',
       'properties': {
@@ -37,12 +34,10 @@ f_detailed = [
   },
   {
     'name': 'self_code_analysis',
-    'description': "Analyze your source code files that are automatically readable later in this function. Nothing can be provided by the user, this only reads the source code you are currently running.",
     'parameters': empty_params
   },
   {
     'name': 'generate_images',
-    'description': "Generate images from the user message using a local API. Don't use this function unless the message specifically asks for it!",
     'parameters': {
       'type': 'object',
       'properties': {
@@ -73,7 +68,6 @@ f_detailed = [
   },
   {
     'name': 'get_current_weather',
-    'description': "Get the current weather in a given location",
     'parameters': {
       'type': 'object',
       'properties': {
