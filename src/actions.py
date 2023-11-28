@@ -108,7 +108,11 @@ class Mattermost():
     '''Analyze images in a channel or thread and reply with a description of the image'''
     print(f'analyze_images: count_images:{count_images} count_posts:{count_posts}')
     if self.post['root_id'] == '':
-      self.context = await self.bot.posts.get_posts_for_channel(self.post['channel_id'], params={'per_page':count_posts+1})
+      if count_posts == 0:
+        per_page = 200
+      else:
+        per_page = count_posts+1
+      self.context = await self.bot.posts.get_posts_for_channel(self.post['channel_id'], params={'per_page':per_page})
     else:
       self.context = await self.bot.posts.get_thread(self.post['id'])
     if 'order' in self.context:
