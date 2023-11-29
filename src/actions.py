@@ -23,7 +23,7 @@ class Mattermost():
       'text_response_default': self.text_response_default,
       'analyze_images': self.analyze_images,
       'channel_summary': self.channel_summary,
-      'generate_images': self.generate_images,
+      'generate_images_from_message': self.generate_images_from_message,
       'get_current_weather': self.get_current_weather,
       'instant_self_code_analysis': self.instant_self_code_analysis,
     }
@@ -149,7 +149,7 @@ class Mattermost():
     msgs = self.messages_from_context()
     await self.generic('channel_summary', {'count':len(msgs)}, msgs)
 
-  async def generate_images(self, prompt:str, negative_prompt='', count=1, resolution='1024x1024', sampling_steps=25):
+  async def generate_images_from_message(self, prompt:str, negative_prompt='', count=1, resolution='1024x1024', sampling_steps=25):
     width, height = resolution.split('x')
     payload = {'prompt':prompt, 'negative_prompt':negative_prompt, 'steps':sampling_steps, 'batch_size':count, 'width':width, 'height':height, 'sampler_name':'DPM++ 2M Karras'}
     total_images_saved = 0

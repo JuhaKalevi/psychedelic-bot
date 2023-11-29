@@ -37,7 +37,7 @@ f_detailed = [
     'parameters': empty_params
   },
   {
-    'name': 'generate_images',
+    'name': 'generate_images_from_message',
     'parameters': {
       'type': 'object',
       'properties': {
