@@ -30,7 +30,7 @@ class Mattermost():
     self.bot = bot
     self.context = None
     self.file_ids = []
-    self.instructions = [{'role':'system', 'content':f"Current time is {ctime()}."}]
+    self.instructions = [{'role':'system', 'content':f"Current time is {ctime()}. Don't mention that you are an AI, everybody knows it!"}]
     self.message = post['message']
     self.post = post
     create_task(self.__post_handler__())
