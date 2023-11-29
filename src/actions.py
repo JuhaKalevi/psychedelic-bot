@@ -164,12 +164,10 @@ class Mattermost():
           for img_b64 in r['images']:
             image = Image.open(io.BytesIO(base64.b64decode(img_b64)))
             total_images_saved += 1
-            timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-            tmp_path = f'/tmp/image_{total_images_saved}_{timestamp}.png'
-            image.save(tmp_path)
-            with open(tmp_path, 'rb') as image_file:
-              uploaded_file_id = await self.bot.upload_file(self.post['channel_id'], {'files':(tmp_path.split('/')[2], image_file)})
-            remove(tmp_path)
+            with io.BytesIO() as output:
+              image.save(output, format="PNG")
+              output.seek(0)
+              uploaded_file_id = await self.bot.upload_file(self.post['channel_id'], {'files':(f'/tmp/image_{total_images_saved}_{datetime.datetime.now().strftime("%Y%m%d-%H%M%S")}.png', output)})
             await self.bot.create_or_update_post({'channel_id':self.post['channel_id'], 'file_ids':[uploaded_file_id], 'root_id':''})
             if total_images_saved >= payload['batch_size']:
               await websocket.close()
