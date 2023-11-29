@@ -4,12 +4,12 @@ import datetime
 import io
 import json
 from os import environ, path, listdir, remove
-from time import time
+from time import ctime, time
 import aiofiles
 import googlesearch
 from PIL import Image
-import websockets
 import requests
+import websockets
 from helpers import count_tokens
 from models_openai import chat_completion_functions, chat_completion
 
@@ -30,7 +30,7 @@ class Mattermost():
     self.bot = bot
     self.context = None
     self.file_ids = []
-    self.instructions = [{'role':'system', 'content':'Do not reveal the persona you are potentially assigned to imitate!'}]
+    self.instructions = [{'role':'system', 'content':f"Current time is {ctime()}."}]
     self.message = post['message']
     self.post = post
     create_task(self.__post_handler__())
