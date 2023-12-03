@@ -6,48 +6,38 @@ import json
 from os import environ, path, listdir, remove
 from time import ctime, time
 import aiofiles
-import googlesearch
 from PIL import Image
 import requests
 import websockets
+import discord
 from helpers import count_tokens
 from models_openai import chat_completion_functions, chat_completion
 
 middleware_credentials = base64.b64encode(f"{environ['MIDDLEWARE_USERNAME']}:{environ['MIDDLEWARE_PASSWORD']}".encode()).decode()
 middleware_url = f"{environ['MIDDLEWARE_URL']}/?token={middleware_credentials}"
 
-class Mattermost():
+class PsychedelicBotGeneric():
 
-  def __init__(self, bot, post:dict):
+  def __init__(self, bot, post:discord.Message):
     self.available_functions = {
       'text_response_default': self.text_response_default,
-      'analyze_images': self.analyze_images,
-      'channel_summary': self.channel_summary,
-      'generate_images_from_message': self.generate_images_from_message,
-      'get_current_weather': self.get_current_weather,
-      'instant_self_code_analysis': self.instant_self_code_analysis,
     }
     self.bot = bot
-    self.context = None
+    self.context = {'order':[], 'posts':{}}
     self.file_ids = []
     self.instructions = [{'role':'system', 'content':f"Current time is {ctime()}. Don't mention that you are an AI, everybody knows it!"}]
-    self.message = post['message']
     self.post = post
     create_task(self.__post_handler__())
 
   async def __post_handler__(self):
-    channel = await self.bot.channels.get_channel(self.post['channel_id'])
-    if channel['type'] == 'G':
-      self.instructions[0]['content'] += f" {channel['header']}"
-    else:
-      self.instructions[0]['content'] += f" {channel['purpose']}"
-    bot_user = await self.bot.users.get_user('me')
-    self.bot.user_id = bot_user['id']
-    self.context = await self.bot.posts.get_thread(self.post['id'])
-    if channel['type'] == 'D' or (len(self.context['posts'].values()) == 1 and next(iter(self.context['posts'].values()))['user_id'] == self.bot.user_id) or any(self.bot.name_in_message(post['message']) for post in self.context['posts'].values()):
+    async for message in self.post.channel.history(limit=10):
+      print(message.content)
+      self.context['order'].append(message.id)
+      self.context['posts'][message.id] = {'message':message.content, 'create_at':message.created_at, 'props':{'from_bot':message.author.bot}}
+    if any(self.bot.name_in_message(post['message']) for post in self.context['posts'].values()):
       return await chat_completion_functions(self.messages_from_context(max_tokens=12288), self.available_functions)
 
-  def messages_from_context(self, max_tokens=126976):
+  def messages_from_context(self, max_tokens=12288):
     if 'order' in self.context:
       self.context['order'].sort(key=lambda x: self.context['posts'][x]['create_at'], reverse=True)
     msgs = []
@@ -68,27 +58,42 @@ class Mattermost():
     msgs.reverse()
     return self.instructions+msgs
 
-  async def stream_reply(self, msgs:list, model='gpt-4-1106-preview', max_tokens=None) -> str:
-    if self.post['root_id'] == '':
-      reply_to = self.post['id']
+  async def stream_reply(self, msgs:list, model='gpt-3.5-turbo-16k', max_tokens=None) -> str:
+    print('stream_reply')
+    if self.post.reference:
+      reply_to = self.post.reference.message_id
     else:
-      reply_to = self.post['root_id']
-    reply_id = None
+      reply_to = None
+    message:discord.Message = None
     buffer = []
+    content = ''
     chunks_processed = []
     start_time = time()
     async with Lock():
       async for chunk in chat_completion(msgs, model=model, max_tokens=max_tokens):
+        if not chunk:
+          continue
         buffer.append(chunk)
-        if (time() - start_time) * 1000 >= 500:
+        if (time() - start_time) * 1000 >= 1337:
           joined_chunks = ''.join(buffer)
-          reply_id = await self.bot.create_or_update_post({'channel_id':self.post['channel_id'], 'message':''.join(chunks_processed)+joined_chunks, 'file_ids':self.file_ids, 'root_id':reply_to}, reply_id)
+          content = ''.join(chunks_processed)+joined_chunks
+          if message:
+            message = await message.edit(content=content)
+          elif reply_to:
+            message = await self.post.channel.send(content=content, reference=discord.MessageReference(message_id=reply_to, channel_id=self.post.channel.id))
+          else:
+            message = await self.post.channel.send(content=content)
           chunks_processed.append(joined_chunks)
           buffer.clear()
           start_time = time()
       if buffer:
-        reply_id = await self.bot.create_or_update_post({'channel_id':self.post['channel_id'], 'message':''.join(chunks_processed)+''.join(buffer), 'file_ids':self.file_ids, 'root_id':reply_to}, reply_id)
-    return reply_id
+        content = ''.join(chunks_processed)+''.join(buffer)
+        if message:
+          message = await message.edit(content=content)
+        elif reply_to:
+          await self.post.channel.send(content=content, reference=discord.MessageReference(message_id=reply_to, channel_id=self.post.channel.id))
+        else:
+          await self.post.channel.send(content=content)
 
   async def text_response_default(self):
     '''Default function that can be called when a normal text response suffices'''
@@ -145,7 +150,7 @@ class Mattermost():
     await self.stream_reply([{'role':'user', 'content':content}], model='gpt-4-vision-preview', max_tokens=2048)
 
   async def channel_summary(self, count:int):
-    self.context = await self.bot.posts.get_posts_for_channel(self.post['channel_id'], params={'per_page':count})
+    self.context = await self.post.for_channel(self.post['channel_id'], params={'per_page':count})
     msgs = self.messages_from_context()
     await self.generic('channel_summary', {'count':len(msgs)}, msgs)
 
@@ -176,12 +181,6 @@ class Mattermost():
   async def get_current_weather(self, location:str):
     weatherapi_response = json.loads(requests.get(f"https://api.weatherapi.com/v1/current.json?key={environ['WEATHERAPI_KEY']}&q={location}", timeout=7).text)
     await self.generic('get_current_weather', {'location':location}, weatherapi_response)
-
-  async def google_for_answers(self, url=''):
-    results = []
-    for result in googlesearch.search(url, num_results=2):
-      results.append(result)
-    await self.bot.create_or_update_post({'channel_id':self.post['channel_id'], 'message':json.dumps(results), 'file_ids':self.file_ids, 'root_id':''})
 
   async def instant_self_code_analysis(self):
     '''Inserts all these source files to the context so they can be analyzed. This is a hacky way to do it, but it works.'''
