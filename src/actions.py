@@ -9,7 +9,7 @@ import aiofiles
 from PIL import Image
 import requests
 import websockets
-import discord
+from discord import ChannelType, Client, Message, MessageReference
 from helpers import count_tokens
 from models_openai import chat_completion_functions, chat_completion
 
@@ -18,11 +18,12 @@ middleware_url = f"{environ['MIDDLEWARE_URL']}/?token={middleware_credentials}"
 
 class PsychedelicBotGeneric():
 
-  def __init__(self, bot:discord.Client, post:discord.Message):
+  def __init__(self, bot:Client, post:Message):
     self.available_functions = {
       'text_response_default': self.text_response_default,
     }
     self.bot = bot
+    self.context:list[Message] = []
     self.file_ids = []
     self.instructions = [{'role':'system', 'content':f"Current time is {ctime()}. Don't mention that you are an AI, everybody knows it! Your name is {environ['DISCORD_BOT_NAME']} or {environ['DISCORD_BOT_ID']}."}]
     self.post = post
@@ -31,9 +32,9 @@ class PsychedelicBotGeneric():
   async def __post_handler__(self):
     self.channel = await self.bot.fetch_channel(self.post.channel.id)
     self.context = [m async for m in self.channel.history()]
-    if self.channel.type == discord.ChannelType.text:
+    if self.channel.type == ChannelType.text:
       self.channel = await self.channel.create_thread(name=round(time()*1000), message=self.post)
-    elif self.channel.type == discord.ChannelType.public_thread:
+    elif self.channel.type == ChannelType.public_thread:
       self.context.append(self.post)
     if any(self.bot.user.mentioned_in(msg) for msg in self.context):
       return await chat_completion_functions(self.messages_from_context(max_tokens=12288), self.available_functions)
@@ -41,17 +42,17 @@ class PsychedelicBotGeneric():
   def messages_from_context(self, max_tokens=12288):
     msgs = []
     tokens = count_tokens(self.instructions)
-    for json in self.context:
-      if json.author.bot:
+    for msg_json in self.context:
+      if msg_json.author.bot:
         role = 'assistant'
       else:
         role = 'user'
-      json = {'role':role, 'content':json.content}
-      msg_tokens = count_tokens(json)
+      msg_json = {'role':role, 'content':msg_json.content}
+      msg_tokens = count_tokens(msg_json)
       new_tokens = tokens + msg_tokens
       if new_tokens > max_tokens:
         break
-      msgs.append(json)
+      msgs.append(msg_json)
       tokens = new_tokens
     msgs.reverse()
     return self.instructions+msgs
@@ -61,7 +62,7 @@ class PsychedelicBotGeneric():
       reply_to = self.post.reference.message_id
     else:
       reply_to = None
-    message:discord.Message = None
+    message:Message = None
     buffer = []
     content = ''
     chunks_processed = []
@@ -77,7 +78,7 @@ class PsychedelicBotGeneric():
           if message:
             message = await message.edit(content=content)
           elif reply_to:
-            message = await self.channel.send(content=content, reference=discord.MessageReference(message_id=reply_to, channel_id=self.post.channel.id))
+            message = await self.channel.send(content=content, reference=MessageReference(message_id=reply_to, channel_id=self.post.channel.id))
           else:
             message = await self.channel.send(content=content)
           chunks_processed.append(joined_chunks)
@@ -88,7 +89,7 @@ class PsychedelicBotGeneric():
         if message:
           message = await message.edit(content=content)
         elif reply_to:
-          await self.post.channel.send(content=content, reference=discord.MessageReference(message_id=reply_to, channel_id=self.post.channel.id))
+          await self.post.channel.send(content=content, reference=MessageReference(message_id=reply_to, channel_id=self.post.channel.id))
         else:
           await self.post.channel.send(content=content)
 
