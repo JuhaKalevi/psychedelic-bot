@@ -1,5 +1,6 @@
 aiofiles
 asyncio
+discord
 googlesearch-python
 gradio_client
 httpx
