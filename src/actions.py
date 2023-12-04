@@ -30,10 +30,10 @@ class PsychedelicBotGeneric():
     create_task(self.__post_handler__())
 
   async def __post_handler__(self):
-    channel = await self.bot.fetch_channel(self.post.channel.id)
-    if channel.type == discord.ChannelType.text:
-      channel = await channel.create_thread(name=f'{self.post.author.name} {round(time()*1000)}', message=self.post)
-    async for message in self.post.channel.history():
+    self.channel = await self.bot.fetch_channel(self.post.channel.id)
+    if self.channel.type == discord.ChannelType.text:
+      self.channel = await self.channel.create_thread(name=round(time()*1000), message=self.post)
+    async for message in self.channel.history():
       self.context['order'].append(message.id)
       self.context['posts'][message.id] = {'message':message.content, 'create_at':message.created_at, 'props':{'from_bot':message.author.bot}}
     if any(environ['DISCORD_BOT_NAME'] in post['message'] for post in self.context['posts'].values()):
@@ -81,9 +81,9 @@ class PsychedelicBotGeneric():
           if message:
             message = await message.edit(content=content)
           elif reply_to:
-            message = await self.post.channel.send(content=content, reference=discord.MessageReference(message_id=reply_to, channel_id=self.post.channel.id))
+            message = await self.channel.send(content=content, reference=discord.MessageReference(message_id=reply_to, channel_id=self.post.channel.id))
           else:
-            message = await self.post.channel.send(content=content)
+            message = await self.channel.send(content=content)
           chunks_processed.append(joined_chunks)
           buffer.clear()
           start_time = time()
