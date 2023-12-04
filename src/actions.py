@@ -18,7 +18,7 @@ middleware_url = f"{environ['MIDDLEWARE_URL']}/?token={middleware_credentials}"
 
 class PsychedelicBotGeneric():
 
-  def __init__(self, bot, post:discord.Message):
+  def __init__(self, bot:discord.Client, post:discord.Message):
     self.available_functions = {
       'text_response_default': self.text_response_default,
     }
@@ -30,11 +30,11 @@ class PsychedelicBotGeneric():
     create_task(self.__post_handler__())
 
   async def __post_handler__(self):
-    print(self.bot.get_partial_messageable(self.post.channel.id))
+    print(self.bot.get_channel(self.post.channel.id))
     async for message in self.post.channel.history(limit=10):
       self.context['order'].append(message.id)
       self.context['posts'][message.id] = {'message':message.content, 'create_at':message.created_at, 'props':{'from_bot':message.author.bot}}
-    if any(self.bot.name in post['message'] for post in self.context['posts'].values()):
+    if any(environ['DISCORD_BOT_NAME'] in post['message'] for post in self.context['posts'].values()):
       return await chat_completion_functions(self.messages_from_context(max_tokens=12288), self.available_functions)
 
   def messages_from_context(self, max_tokens=12288):
