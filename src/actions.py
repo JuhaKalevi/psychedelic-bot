@@ -31,7 +31,6 @@ class PsychedelicBotGeneric():
 
   async def __post_handler__(self):
     async for message in self.post.channel.history(limit=10):
-      print(message.content)
       self.context['order'].append(message.id)
       self.context['posts'][message.id] = {'message':message.content, 'create_at':message.created_at, 'props':{'from_bot':message.author.bot}}
     if any(self.bot.name_in_message(post['message']) for post in self.context['posts'].values()):
@@ -59,7 +58,6 @@ class PsychedelicBotGeneric():
     return self.instructions+msgs
 
   async def stream_reply(self, msgs:list, model='gpt-3.5-turbo-16k', max_tokens=None) -> str:
-    print('stream_reply')
     if self.post.reference:
       reply_to = self.post.reference.message_id
     else:
