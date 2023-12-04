@@ -30,8 +30,7 @@ class PsychedelicBotGeneric():
     create_task(self.__post_handler__())
 
   async def __post_handler__(self):
-    print(self.post.channel)
-    print(self.post.channel.type)
+    print(self.bot.get_partial_message(self.post.channel.id))
     async for message in self.post.channel.history(limit=10):
       self.context['order'].append(message.id)
       self.context['posts'][message.id] = {'message':message.content, 'create_at':message.created_at, 'props':{'from_bot':message.author.bot}}
