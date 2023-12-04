@@ -1,4 +1,3 @@
-from json import loads
 from os import environ
 import discord
 import actions
