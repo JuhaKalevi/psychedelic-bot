@@ -34,6 +34,7 @@ class PsychedelicBotGeneric():
     if self.channel.type == discord.ChannelType.text:
       self.channel = await self.channel.create_thread(name=round(time()*1000), message=self.post)
     async for message in self.channel.history():
+      print(message.content)
       self.context['order'].append(message.id)
       self.context['posts'][message.id] = {'message':message.content, 'create_at':message.created_at, 'props':{'from_bot':message.author.bot}}
     if any(environ['DISCORD_BOT_NAME'] in post['message'] for post in self.context['posts'].values()):
