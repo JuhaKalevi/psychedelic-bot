@@ -9,9 +9,6 @@ class PsychedelicBot(discord.Client):
     self.user_id = ''
     super().__init__(intents=intents)
 
-  def name_in_message(self, message:str):
-    return self.name in message or self.name == '@bot' and '@chatgpt' in message
-
   async def on_message(self, message:discord.Message):
     if not message.author.bot:
       actions.PsychedelicBotGeneric(self, message)

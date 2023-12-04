@@ -33,7 +33,7 @@ class PsychedelicBotGeneric():
     async for message in self.post.channel.history(limit=10):
       self.context['order'].append(message.id)
       self.context['posts'][message.id] = {'message':message.content, 'create_at':message.created_at, 'props':{'from_bot':message.author.bot}}
-    if any(self.bot.name_in_message(post['message']) for post in self.context['posts'].values()):
+    if any(self.bot.name in post['message'] for post in self.context['posts'].values()):
       return await chat_completion_functions(self.messages_from_context(max_tokens=12288), self.available_functions)
 
   def messages_from_context(self, max_tokens=12288):
