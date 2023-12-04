@@ -78,9 +78,8 @@ f_detailed = [
   }
 ]
 
-client = AsyncOpenAI()
-
 async def chat_completion_functions(msgs:list, f_avail:dict):
+  client = AsyncOpenAI()
   f_choose = [
     {
       'name': 'choose_function',
@@ -123,6 +122,7 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
     print(f'{f_choice}:{err}')
 
 async def chat_completion(msgs, model='gpt-4-1106-preview', max_tokens=None):
+  client = AsyncOpenAI()
   kwargs = {'messages':msgs, 'model':model, 'stream':True, 'temperature':2, 'top_p':0.95}
   if max_tokens:
     kwargs["max_tokens"] = max_tokens
