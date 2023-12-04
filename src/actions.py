@@ -25,7 +25,7 @@ class PsychedelicBotGeneric():
     self.bot = bot
     self.context = {'order':[], 'posts':{}}
     self.file_ids = []
-    self.instructions = [{'role':'system', 'content':f"Current time is {ctime()}. Don't mention that you are an AI, everybody knows it!"}]
+    self.instructions = [{'role':'system', 'content':f"Current time is {ctime()}. Don't mention that you are an AI, everybody knows it! Your name is {environ['DISCORD_BOT_NAME']} or {environ['DISCORD_BOT_ID']}."}]
     self.post = post
     create_task(self.__post_handler__())
 
