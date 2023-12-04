@@ -23,7 +23,6 @@ class PsychedelicBotGeneric():
       'text_response_default': self.text_response_default,
     }
     self.bot = bot
-    self.context = {'order':[], 'posts':{}}
     self.file_ids = []
     self.instructions = [{'role':'system', 'content':f"Current time is {ctime()}. Don't mention that you are an AI, everybody knows it! Your name is {environ['DISCORD_BOT_NAME']} or {environ['DISCORD_BOT_ID']}."}]
     self.post = post
@@ -31,35 +30,28 @@ class PsychedelicBotGeneric():
 
   async def __post_handler__(self):
     self.channel = await self.bot.fetch_channel(self.post.channel.id)
-    history = [m async for m in self.channel.history()]
+    self.context = [m async for m in self.channel.history()]
     if self.channel.type == discord.ChannelType.text:
       self.channel = await self.channel.create_thread(name=round(time()*1000), message=self.post)
     elif self.channel.type == discord.ChannelType.public_thread:
-      history.append(self.post)
-    for message in history:
-      print(message.content)
-      self.context['order'].append(message.id)
-      self.context['posts'][message.id] = {'message':message.content, 'create_at':message.created_at, 'props':{'from_bot':message.author.bot}}
-    if any(environ['DISCORD_BOT_NAME'] in post['message'] for post in self.context['posts'].values()):
+      self.context.append(self.post)
+    if any(self.bot.user.mentioned_in(msg) for msg in self.context):
       return await chat_completion_functions(self.messages_from_context(max_tokens=12288), self.available_functions)
 
   def messages_from_context(self, max_tokens=12288):
-    if 'order' in self.context:
-      self.context['order'].sort(key=lambda x: self.context['posts'][x]['create_at'], reverse=True)
     msgs = []
     tokens = count_tokens(self.instructions)
-    for p_id in self.context['order']:
-      post = self.context['posts'][p_id]
-      if 'from_bot' in post['props']:
+    for json in self.context:
+      if json.author.bot:
         role = 'assistant'
       else:
         role = 'user'
-      msg = {'role':role, 'content':post['message']}
-      msg_tokens = count_tokens(msg)
+      json = {'role':role, 'content':json.content}
+      msg_tokens = count_tokens(json)
       new_tokens = tokens + msg_tokens
       if new_tokens > max_tokens:
         break
-      msgs.append(msg)
+      msgs.append(json)
       tokens = new_tokens
     msgs.reverse()
     return self.instructions+msgs
