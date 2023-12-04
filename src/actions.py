@@ -30,6 +30,7 @@ class PsychedelicBotGeneric():
     create_task(self.__post_handler__())
 
   async def __post_handler__(self):
+    print(self.post.channel)
     print(self.post.channel.type)
     async for message in self.post.channel.history(limit=10):
       self.context['order'].append(message.id)
