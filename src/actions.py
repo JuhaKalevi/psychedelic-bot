@@ -14,12 +14,13 @@ class Actions(ABC):
 
   def __init__(self, client, functions:dict):
     self.client = client
-    self.available_functions = functions + {
+    self.available_functions = {
       'text_response_default': self.text_response_default,
       'channel_summary': self.channel_summary,
       'get_current_weather': self.get_current_weather,
       'instant_self_code_analysis': self.instant_self_code_analysis,
     }
+    self.available_functions.update(functions)
     self.instructions = [{'role':'system', 'content':f"{system_instruction}"}]
     self.content = ''
     create_task(self.__post_handler__())
