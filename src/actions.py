@@ -54,7 +54,7 @@ class Actions(ABC):
         content = file.read()
       files.append(f'\n--- BEGIN {file_path} ---\n```\n{content}\n```\n--- END {file_path} ---\n')
     self.instructions[0]['content'] = f"\nThis is your code. Abstain from posting parts of your code unless discussing changes to them. Use PEP-8 but 2 spaces for indentation, try to keep it minimalistic; don't use comments at all! Abstain from praising or thanking the user, be serious.{''.join(files)}{self.instructions[0]['content']}"
-    await self.stream_reply(self.messages_from_context())
+    await self.stream_reply(await self.messages_from_context())
 
   @abstractmethod
   async def messages_from_context(self, count:int=None, max_tokens:int=None) -> list[dict[str, str]]:
