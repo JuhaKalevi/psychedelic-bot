@@ -1,7 +1,6 @@
 aiofiles
 asyncio
-googlesearch-python
-gradio_client
+discord
 httpx
 openai
 pylint
