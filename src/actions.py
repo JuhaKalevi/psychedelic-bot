@@ -67,4 +67,4 @@ class Actions(ABC):
   async def text_response_default(self):
     '''Default function that can be called when a normal text response suffices'''
     self.instructions[0]['content'] += f" You have these functions available: {[f for f in self.available_functions if f != 'text_response_default']}"
-    await self.stream_reply(self.messages_from_context())
+    await self.stream_reply(await self.messages_from_context())
