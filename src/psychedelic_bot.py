@@ -1,5 +1,6 @@
-import discord_client
-import mattermost_client
+from threading import Thread
+from discord_client import DiscordClient
+from mattermost_client import MattermostClient
 
-discord_client.DiscordClient()
-mattermost_client.MattermostClient()
+Thread(target=DiscordClient).start()
+MattermostClient()
