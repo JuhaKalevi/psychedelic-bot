@@ -3,8 +3,8 @@ from threading import Thread
 from discord_client import DiscordClient
 from mattermost_client import MattermostClient
 
-if environ['DISCORD_TOKEN']:
+if environ.get('DISCORD_TOKEN'):
   Thread(target=DiscordClient).start()
 
-if environ['MATTERMOST_TOKEN']:
+if environ.get('MATTERMOST_TOKEN'):
   MattermostClient()
