@@ -89,11 +89,16 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
         'properties': {
           'function_name': {
             'type': 'string',
-            'description': "This parameter decides which function is actually called in the next stage.",
-            'enum': [f for f in list(f_avail) if f != 'choose_function'],
+            'description': "Decides which function is actually called in the next stage.",
+            'enum': list(f_avail)
+          },
+          'required_context': {
+            'type': 'string',
+            'description': "How many previous posts should be used to decide which function to call? This includes your own posts as well.",
+            'enum': [1,2,3,4]
           }
         },
-        'required': ['function_name']
+        'required': ['function_name','required_context']
       }
     }
   ]
@@ -107,8 +112,12 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
       delta += r.choices[0].delta.function_call.arguments
     else:
       f_choice = loads(delta)['function_name']
+      print(f'f_choice:{f_choice}')
+      p_count = loads(delta)['required_context']
+      print(f'p_count:{p_count}')
+      msgs = msgs[-p_count:]
       break
-  f_description = [f for f in f_detailed if f['name'] == f_choice]
+  f_description = next(([f] for f in f_detailed if f['name'] == f_choice), [])
   try:
     if f_description[0]['parameters'] != empty_params:
       print(f'{f_choice}:{count_tokens(f_description)} msgs:{count_tokens(msgs)}')
