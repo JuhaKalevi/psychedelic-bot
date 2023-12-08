@@ -116,6 +116,7 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
       p_count = int(loads(delta)['required_context'])
       print(f'p_count:{p_count}')
       msgs = msgs[-p_count:]
+      print(msgs)
       break
   f_description = next(([f] for f in f_detailed if f['name'] == f_choice), [])
   try:
