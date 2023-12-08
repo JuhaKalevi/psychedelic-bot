@@ -113,7 +113,7 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
     else:
       f_choice = loads(delta)['function_name']
       print(f'f_choice:{f_choice}')
-      p_count = loads(delta)['required_context']
+      p_count = int(loads(delta)['required_context'])
       print(f'p_count:{p_count}')
       msgs = msgs[-p_count:]
       break
