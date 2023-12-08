@@ -103,7 +103,7 @@ async def chat_completion_choices(msgs:list, f_avail:dict, f_choose:list, choice
     f_coarse.append({'name':f['name'],'parameters':empty_params})
   print(f'f_choose:{count_tokens(f_choose+f_coarse)} msgs:{count_tokens(msgs)}')
   delta = ''
-  print((f_choose+f_coarse))
+  print(messages=msgs, functions=f_choose+f_coarse, function_call=f_choose[0]['name'], model=model, stream=True)
   async for r in await client.chat.completions.create(messages=msgs, functions=f_choose+f_coarse, function_call=f_choose[0]['name'], model=model, stream=True):
     if r.choices[0].delta.function_call:
       delta += r.choices[0].delta.function_call.arguments
