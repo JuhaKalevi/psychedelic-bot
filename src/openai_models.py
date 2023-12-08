@@ -23,7 +23,7 @@ f_detailed = [
     }
   },
   {
-    'name': 'outside_context_summary',
+    'name': 'outside_context_lookup',
     'parameters': {
       'type': 'object',
       'properties': {
