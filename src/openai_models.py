@@ -23,7 +23,7 @@ f_detailed = [
     }
   },
   {
-    'name': 'channel_summary',
+    'name': 'outside_context_summary',
     'parameters': {
       'type': 'object',
       'properties': {
