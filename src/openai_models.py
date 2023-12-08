@@ -7,6 +7,24 @@ IMGGEN_GROUPS = "Instead of commas, it's possible to use periods which separate 
 IMGGEN_WEIGHT = "Parentheses are used to increase the weight of (emphasize) tokens, such as: (((red hair))). Each set of parentheses multiplies the weight by 1.05. Convert adjectives like 'barely', 'slightly', 'very' or 'extremely' to this format!. Curly brackets can be conversely used to de-emphasize with a similar logic & multiplier."
 IMGGEN_REMIND = "Don't use any kind of formatting to separate these keywords, expect what is mentioned above! Remember to translate everything to english!"
 empty_params = {'type':'object','properties':{}}
+
+f_estimate_required_context = [
+  {
+    'name': 'estimate_required_context',
+    'parameters': {
+      'type': 'object',
+      'properties': {
+        'required_context': {
+          'type': 'string',
+          'description': "How many previous posts should be used to decide which function to call? This includes your own posts as well.",
+          'enum': [1,2,3,4]
+        }
+      },
+      'required': ['required_context']
+    }
+  }
+]
+
 f_detailed = [
   {
     'name': 'text_response_default',
@@ -78,6 +96,21 @@ f_detailed = [
   }
 ]
 
+async def chat_completion_choices(msgs:list, f_avail:dict, f_choose:list, choice:str, model:str):
+  client = AsyncOpenAI()
+  f_coarse = []
+  for f in [f for f in f_detailed if f['name'] in f_avail.keys()]:
+    f_coarse.append({'name':f['name'],'parameters':empty_params})
+  print(f'f_choose:{count_tokens(f_choose+f_coarse)} msgs:{count_tokens(msgs)}')
+  delta = ''
+  async for r in await client.chat.completions.create(messages=msgs, functions=f_choose+f_coarse, function_call=f_choose[0]['name'], model=model, stream=True):
+    if r.choices[0].delta.function_call:
+      delta += r.choices[0].delta.function_call.arguments
+    else:
+      f_decision = loads(delta)[choice]
+      print(f'{choice}:{f_decision}')
+      return f_decision
+
 async def chat_completion_functions(msgs:list, f_avail:dict):
   client = AsyncOpenAI()
   f_choose = [
@@ -91,33 +124,14 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
             'type': 'string',
             'description': "Decides which function is actually called in the next stage.",
             'enum': list(f_avail)
-          },
-          'required_context': {
-            'type': 'string',
-            'description': "How many previous posts should be used to decide which function to call? This includes your own posts as well.",
-            'enum': [1,2,3,4]
           }
         },
-        'required': ['function_name','required_context']
+        'required': ['function_name']
       }
     }
   ]
-  f_coarse = []
-  for f in [f for f in f_detailed if f['name'] in f_avail.keys()]:
-    f_coarse.append({'name':f['name'],'parameters':empty_params})
-  print(f'f_choose:{count_tokens(f_choose+f_coarse)} msgs:{count_tokens(msgs)}')
-  delta = ''
-  async for r in await client.chat.completions.create(messages=msgs, functions=f_choose+f_coarse, function_call={'name':'choose_function'}, model='gpt-3.5-turbo-16k', stream=True):
-    if r.choices[0].delta.function_call:
-      delta += r.choices[0].delta.function_call.arguments
-    else:
-      f_choice = loads(delta)['function_name']
-      print(f'f_choice:{f_choice}')
-      p_count = int(loads(delta)['required_context'])
-      print(f'p_count:{p_count}')
-      msgs = msgs[-p_count:]
-      print(msgs)
-      break
+  f_required_context = await chat_completion_choices(msgs[-1:], f_avail, f_estimate_required_context, 'function_name', 'gpt-4-1106-preview')
+  f_choice = await chat_completion_choices(msgs[-f_required_context:], f_avail, f_choose, 'function_name', 'gpt-4-1106-preview')
   f_description = next(([f] for f in f_detailed if f['name'] == f_choice), [])
   try:
     if f_description[0]['parameters'] != empty_params:
