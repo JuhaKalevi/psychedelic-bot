@@ -9,7 +9,8 @@ from openai_models import chat_completion_functions, chat_completion
 class DiscordActions(Actions):
 
   def __init__(self, client:discord.Client, message:discord.Message) -> None:
-    super().__init__(client, {})
+    super().__init__({})
+    self.client = client
     self.context:list[discord.Message] = []
     self.file_ids = []
     self.instructions[0]['content'] += f" Your name is {environ['DISCORD_BOT_NAME']} or {environ['DISCORD_BOT_ID']}."

@@ -12,8 +12,7 @@ system_instruction = {'role':'system', 'content':f"Current time is {ctime()}. Do
 
 class Actions(ABC):
 
-  def __init__(self, client, functions:dict):
-    self.client = client
+  def __init__(self, functions:dict):
     self.available_functions = {
       'text_response_default': self.text_response_default,
       'channel_summary': self.channel_summary,

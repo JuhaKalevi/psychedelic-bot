@@ -8,17 +8,19 @@ import base64
 import aiofiles
 import websockets
 from PIL import Image
+import mattermostdriver
 from actions import middleware_url, Actions
 from helpers import count_tokens
 from openai_models import chat_completion_functions, chat_completion
 
 class MattermostActions(Actions):
 
-  def __init__(self, client, post:dict):
-    super().__init__(client, {
+  def __init__(self, client:mattermostdriver.AsyncDriver, post:dict):
+    super().__init__({
       'analyze_images': self.analyze_images,
       'generate_images_from_message': self.generate_images_from_message,
     })
+    self.client = client
     self.context = None
     self.file_ids = []
     self.post = post
@@ -38,7 +40,7 @@ class MattermostActions(Actions):
 
   async def messages_from_context(self, count=None, max_tokens=126976):
     if count:
-      self.context = await self.client.posts.for_channel(self.post['channel_id'], params={'per_page':count})
+      self.context = await self.client.posts.get_posts_for_channel(self.post['channel_id'], params={'per_page':count})
     if 'order' in self.context:
       self.context['order'].sort(key=lambda x: self.context['posts'][x]['create_at'], reverse=True)
     msgs = []
