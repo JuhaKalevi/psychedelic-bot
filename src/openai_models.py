@@ -130,7 +130,7 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
       }
     }
   ]
-  f_required_context = await chat_completion_choices(msgs[-1:], f_avail, f_estimate_required_context, 'function_name', 'gpt-4-1106-preview')
+  f_required_context = await chat_completion_choices(msgs[-1:], f_avail, f_estimate_required_context, 'estimate_required_context', 'gpt-4-1106-preview')
   f_choice = await chat_completion_choices(msgs[-f_required_context:], f_avail, f_choose, 'function_name', 'gpt-4-1106-preview')
   f_description = next(([f] for f in f_detailed if f['name'] == f_choice), [])
   try:
