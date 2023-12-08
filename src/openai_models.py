@@ -15,7 +15,7 @@ f_estimate_required_context = [
       'type': 'object',
       'properties': {
         'required_context': {
-          'type': 'string',
+          'type': 'integer',
           'description': "How many previous posts should be used to decide which function to call? This includes your own posts as well.",
           'enum': [1,2,3,4]
         }
