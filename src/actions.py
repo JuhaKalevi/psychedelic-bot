@@ -47,7 +47,7 @@ class Actions(ABC):
     await self.generic('get_current_weather', {'location':location}, loads(requests.get(f"https://api.weatherapi.com/v1/current.json?key={environ['WEATHERAPI_KEY']}&q={location}",timeout=7).text))
 
   async def instant_self_code_analysis(self):
-    '''Inserts all these source files to the context so they can be analyzed. This is a hacky way to do it, but it works.'''
+    '''Inserts all these source files to the context so they can be analyzed. This is a hacky way to do it, but it works. Note that as this function inserts the files in the current context, this just isn't a background task but you can answer it immediately.'''
     files = []
     for file_path in [x for x in listdir() if x.endswith(('.py'))]:
       with open(file_path, 'r', encoding='utf-8') as file:
