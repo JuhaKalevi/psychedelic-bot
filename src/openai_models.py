@@ -45,6 +45,7 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
         f_avail = {f: f_avail[f] for f in f_avail if f in [fdict['name'] for fdict in f_img+f_default]}
       elif f_required_context['modality'] == 'text':
         f_avail = {f: f_avail[f] for f in f_avail if f in [fdict['name'] for fdict in f_default+f_txt]}
+      print(f'f_avail:{f_avail}')
       f_choice = await chat_completion_choices(msgs[-int(f_required_context['posts']):], f_avail, f_choose, ['function_name'], 'gpt-4-1106-preview')
       f_choice = f_choice['function_name']
       if f_required_context['modality'] == 'image':
@@ -62,7 +63,7 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
     else:
       await f_avail['text_response_default']()
   except IndexError as err:
-    print(f'{f_choice}: ERROR: {err} f_avail:{f_avail}')
+    print(f'{f_choice}: ERROR: {err}')
 
 async def chat_completion(msgs, model='gpt-4-1106-preview', max_tokens=None):
   client = AsyncOpenAI()
