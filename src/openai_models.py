@@ -62,7 +62,7 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
     else:
       await f_avail['text_response_default']()
   except IndexError as err:
-    print(f'{f_choice}:{err}')
+    print(f'{f_choice}: ERROR: {err}' ('f_avail:{f_avail}'))
 
 async def chat_completion(msgs, model='gpt-4-1106-preview', max_tokens=None):
   client = AsyncOpenAI()
