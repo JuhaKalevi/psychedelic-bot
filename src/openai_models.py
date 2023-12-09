@@ -29,7 +29,6 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
         'properties': {
           'function_name': {
             'type': 'string',
-            'description': "Image functions must be explicitly requested to be executed!",
             'enum': list(f_avail)
           }
         },
@@ -70,6 +69,5 @@ async def chat_completion(msgs, model='gpt-4-1106-preview', max_tokens=None):
   kwargs = {'messages':msgs, 'model':model, 'stream':True, 'temperature':0.5, 'top_p':0.5}
   if max_tokens:
     kwargs["max_tokens"] = max_tokens
-  print(f'chat_completion: msgs:{count_tokens(msgs)}')
   async for part in await client.chat.completions.create(**kwargs):
     yield part.choices[0].delta.content or ""

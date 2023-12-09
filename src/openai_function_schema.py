@@ -19,7 +19,6 @@ f_estimate_required_context = [
         },
         'posts': {
           'type': 'integer',
-          'description': "See more posts (including your own previous replies) to decide next action. Choose 0 if asked about functions or no explicit action suggested, unless the message is an obvious reply! For such cases choose 1 or higher, and for otherwise vague or too short messages you can consider 2 or higher! With image modality, never select 0, it would be invalid.",
           'enum': [0,1,2,3,4]
         }
       },
@@ -34,8 +33,8 @@ f_img = [
     'parameters': {
       'type': 'object',
       'properties': {
-        'count_images': {'type': 'integer','description': "How many previous images to analyze?"},
-        'count_posts': {'type': 'integer','description': "How many previous posts to analyze?"}
+        'count_images': {'type': 'integer'},
+        'count_posts': {'type': 'integer'}
       }
     }
   },
@@ -62,7 +61,7 @@ f_img = [
         'resolution': {
           'type': 'string',
           'enum': ['1024x1024','1152x896','896x1152','1216x832','832x1216','1344x768','768x1344','1536x640','640x1536'],
-          'description': "The resolution of the generated image. The first number is the width, the second number is the height. The resolution is in pixels. Try to translate user requests like 1080p to the closest resolution available."
+          'description': "Resolution of generated image. First number is width, second number is height. Try to translate user requests like 1080p or portrait/landscape to the closest resolution available."
         },
         'sampling_steps': {'type':'integer'}
       },
@@ -77,14 +76,14 @@ f_txt = [
     'parameters': {
       'type': 'object',
       'properties': {
-        'location': {'type':'string','description': "The city and state, e.g. San Francisco, CA"}
+        'location': {'type':'string'}
       },
       'required': ['location']
     }
   },
   {
     'name': 'instant_self_code_analysis',
-    'description': "Read your own code temporarily into the context in order to analyze it.",
+    'description': "Read your own code temporarily into the context in order to analyze it. This is NOT a background task!",
     'parameters': empty_params
   },
   {
@@ -92,7 +91,7 @@ f_txt = [
     'parameters': {
       'type': 'object',
       'properties': {
-        'count': {'type': 'integer','description': "How many previous posts to summarize?"}
+        'count': {'type':'integer'}
       },
       'required': ['count']
     }
