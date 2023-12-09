@@ -11,7 +11,7 @@ async def chat_completion_choices(msgs:list, f_avail:dict, f_choose:list, decisi
     f_coarse.append({'name':f['name'],'parameters':empty_params})
   print(f"{f_stage}:{count_tokens(f_choose+f_coarse+msgs)}")
   delta = ''
-  async for r in await client.chat.completions.create(messages=msgs, functions=f_choose+f_coarse, function_call={'name':f_stage}, model='gpt-3.5-turbo-16k', stream=True, temperature=2, top_p=0.98):
+  async for r in await client.chat.completions.create(messages=msgs, functions=f_choose+f_coarse, function_call={'name':f_stage}, model='gpt-3.5-turbo-16k', stream=True, temperature=0.5, top_p=0.5):
     if r.choices[0].delta.function_call:
       delta += r.choices[0].delta.function_call.arguments
     else:
@@ -65,7 +65,7 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
 
 async def chat_completion(msgs, model='gpt-4-1106-preview', max_tokens=None):
   client = AsyncOpenAI()
-  kwargs = {'messages':msgs, 'model':model, 'stream':True, 'temperature':2, 'top_p':0.98}
+  kwargs = {'messages':msgs, 'model':model, 'stream':True, 'temperature':0.5, 'top_p':0.5}
   if max_tokens:
     kwargs["max_tokens"] = max_tokens
   print(f'chat_completion: msgs:{count_tokens(msgs)}')
