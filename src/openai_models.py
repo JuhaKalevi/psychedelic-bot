@@ -116,13 +116,13 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
   f_choose = [
     {
       'name': 'choose_function',
-      'description': "Select which actual function to be call. If a function is mentioned, the default assumption is still to not call it, unless execution is explicitly requested. Always use text_response_default if uncertain!",
+      'description': "Select which actual function to be call. Rely on text_response_default if uncertain!",
       'parameters': {
         'type': 'object',
         'properties': {
           'function_name': {
             'type': 'string',
-            'description': "Decides which function is actually called in the next stage.",
+            'description': "Rely on text_response_default if uncertain! Only if some other function is explicitly requested to be executed, not merely mentioned, should they be even considered.",
             'enum': list(f_avail)
           }
         },
