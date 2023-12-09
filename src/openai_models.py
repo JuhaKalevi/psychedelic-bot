@@ -16,8 +16,8 @@ f_estimate_required_context = [
       'properties': {
         'required_context': {
           'type': 'integer',
-          'description': "How many previous posts should be used to decide which function to call? This includes your own posts as well.",
-          'enum': [1,2,3,4]
+          'description': "See N posts (incl yours) to decide next action. 0 if asked about functions or no explicit action requested!",
+          'enum': [0,1,2,3,4]
         }
       },
       'required': ['required_context']
@@ -129,18 +129,21 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
       }
     }
   ]
-  f_required_context = await chat_completion_choices(msgs[-1:], {}, f_estimate_required_context, 'required_context')
-  f_choice = await chat_completion_choices(msgs[-int(f_required_context):], f_avail, f_choose, 'function_name')
-  f_description = next(([f] for f in f_detailed if f['name'] == f_choice), [])
   try:
-    if f_description[0]['parameters'] != empty_params:
-      print(f'{f_choice}:{count_tokens(f_description)} msgs:{count_tokens(msgs)}')
-      f_args_completion = await client.chat.completions.create(messages=msgs, functions=f_description, function_call={'name':f_choice}, model='gpt-4-1106-preview')
-      function_args_msg = f_args_completion.choices[0].message
-      arguments = loads(function_args_msg.function_call.arguments)
-      await f_avail[f_choice](**arguments)
+    f_required_context = await chat_completion_choices(msgs[-1:], {}, f_estimate_required_context, 'required_context')
+    if f_required_context:
+      f_choice = await chat_completion_choices(msgs[-int(f_required_context):], f_avail, f_choose, 'function_name')
+      f_description = next(([f] for f in f_detailed if f['name'] == f_choice), [])
+      if f_description[0]['parameters'] != empty_params:
+        print(f'{f_choice}:{count_tokens(f_description)} msgs:{count_tokens(msgs)}')
+        f_args_completion = await client.chat.completions.create(messages=msgs, functions=f_description, function_call={'name':f_choice}, model='gpt-4-1106-preview')
+        function_args_msg = f_args_completion.choices[0].message
+        arguments = loads(function_args_msg.function_call.arguments)
+        await f_avail[f_choice](**arguments)
+      else:
+        await f_avail[f_choice]()
     else:
-      await f_avail[f_choice]()
+      await f_avail['text_response_default']()
   except IndexError as err:
     print(f'{f_choice}:{err}')
 
