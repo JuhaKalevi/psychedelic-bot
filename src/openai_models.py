@@ -37,7 +37,7 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
     }
   ]
   try:
-    f_required_context = await chat_completion_choices(msgs[-1:], {}, f_estimate_required_context, ['modality','posts'], 'gpt-3.5-turbo-1106')
+    f_required_context = await chat_completion_choices(msgs[-1:], {}, f_estimate_required_context, ['modality','posts'], 'gpt-4-1106-preview')
     if f_required_context['modality'] == 'image' and f_required_context['posts'] == 0:
       f_required_context['posts'] = 1
     if int(f_required_context['posts']):
