@@ -19,7 +19,7 @@ f_estimate_required_context = [
         },
         'posts': {
           'type': 'integer',
-          'description': "See more posts (including your own previous replies) to decide next action. Use 0 if asked about functions or no explicit action requested! For affirmations or negations use at least 1, and consider otherwise vague messages as 2 or more.",
+          'description': "See more posts (including your own previous replies) to decide next action. Use 0 if asked about functions or no explicit action suggested! For affirmations or negations use at least 1, and consider otherwise vague messages as 2 or more.",
           'enum': [0,1,2,3,4]
         }
       },
