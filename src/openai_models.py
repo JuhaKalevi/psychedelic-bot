@@ -31,7 +31,7 @@ f_detailed = [
     'parameters': empty_params
   },
   {
-    'name': 'analyze_images',
+    'name': 'analyze_images_referred_in_message',
     'parameters': {
       'type': 'object',
       'properties': {
@@ -55,7 +55,7 @@ f_detailed = [
     'parameters': empty_params
   },
   {
-    'name': 'generate_images_from_message',
+    'name': 'generate_images_requested_in_message',
     'parameters': {
       'type': 'object',
       'properties': {
