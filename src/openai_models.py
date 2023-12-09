@@ -11,7 +11,7 @@ async def chat_completion_choices(msgs:list, f_avail:dict, f_choose:list, decisi
     f_coarse.append({'name':f['name'],'parameters':empty_params})
   print(f"{f_stage}:{count_tokens(f_choose+f_coarse+msgs)}")
   delta = ''
-  async for r in await client.chat.completions.create(messages=msgs, functions=f_choose+f_coarse, function_call={'name':f_stage}, model='gpt-4-1106-preview', stream=True, temperature=0):
+  async for r in await client.chat.completions.create(messages=msgs, functions=f_choose+f_coarse, function_call={'name':f_stage}, model='gpt-3.5-turbo-16k', stream=True, top_p=0):
     if r.choices[0].delta.function_call:
       delta += r.choices[0].delta.function_call.arguments
     else:
@@ -39,7 +39,7 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
   ]
   try:
     f_required_context = await chat_completion_choices(msgs[-1:], {}, f_estimate_required_context, ['modality','posts'])
-    if f_required_context['posts']:
+    if int(f_required_context['posts']):
       if f_required_context['modality'] == 'img':
         f_avail = {f: f_avail[f] for f in f_avail if f in [fdict['name'] for fdict in f_img+f_default]}
       elif f_required_context['modality'] == 'txt':
