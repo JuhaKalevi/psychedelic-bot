@@ -96,14 +96,14 @@ f_detailed = [
   }
 ]
 
-async def chat_completion_choices(msgs:list, f_avail:dict, f_choose:list, decision:str, model:str):
+async def chat_completion_choices(msgs:list, f_avail:dict, f_choose:list, decision:str):
   client = AsyncOpenAI()
   f_coarse = []
   for f in [f for f in f_detailed if f['name'] in f_avail.keys()]:
     f_coarse.append({'name':f['name'],'parameters':empty_params})
   print(f'{decision} tokens:{count_tokens(f_choose+f_coarse)} msgs:{count_tokens(msgs)}')
   delta = ''
-  async for r in await client.chat.completions.create(messages=msgs, functions=f_choose+f_coarse, function_call={'name':f_choose[0]['name']}, model=model, stream=True, temperature=0):
+  async for r in await client.chat.completions.create(messages=msgs, functions=f_choose+f_coarse, function_call={'name':f_choose[0]['name']}, model='gpt-3.5-turbo-16k', stream=True, temperature=0):
     if r.choices[0].delta.function_call:
       delta += r.choices[0].delta.function_call.arguments
     else:
@@ -116,13 +116,12 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
   f_choose = [
     {
       'name': 'choose_function',
-      'description': "Select which actual function to call. Rely on text_response_default if uncertain.",
       'parameters': {
         'type': 'object',
         'properties': {
           'function_name': {
             'type': 'string',
-            'description': "If there is a question about a function, select instant_self_code_analysis. Visual functions must be explicitly requested to be executed, not merely mentioned.",
+            'description': "Image functions must be explicitly requested to be executed!",
             'enum': list(f_avail)
           }
         },
@@ -130,8 +129,8 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
       }
     }
   ]
-  f_required_context = await chat_completion_choices(msgs[-1:], {}, f_estimate_required_context, 'required_context', 'gpt-4-1106-preview')
-  f_choice = await chat_completion_choices(msgs[-f_required_context:], f_avail, f_choose, 'function_name', 'gpt-4-1106-preview')
+  f_required_context = await chat_completion_choices(msgs[-1:], {}, f_estimate_required_context, 'required_context')
+  f_choice = await chat_completion_choices(msgs[-f_required_context:], f_avail, f_choose, 'function_name')
   f_description = next(([f] for f in f_detailed if f['name'] == f_choice), [])
   try:
     if f_description[0]['parameters'] != empty_params:
