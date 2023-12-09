@@ -130,7 +130,7 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
     }
   ]
   f_required_context = await chat_completion_choices(msgs[-1:], {}, f_estimate_required_context, 'required_context')
-  f_choice = await chat_completion_choices(msgs[-f_required_context:], f_avail, f_choose, 'function_name')
+  f_choice = await chat_completion_choices(msgs[-int(f_required_context):], f_avail, f_choose, 'function_name')
   f_description = next(([f] for f in f_detailed if f['name'] == f_choice), [])
   try:
     if f_description[0]['parameters'] != empty_params:
