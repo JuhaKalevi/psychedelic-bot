@@ -84,6 +84,7 @@ f_txt = [
   },
   {
     'name': 'instant_self_code_analysis',
+    'description': "Read your own code temporarily into the context in order to analyze it."
     'parameters': empty_params
   },
   {
