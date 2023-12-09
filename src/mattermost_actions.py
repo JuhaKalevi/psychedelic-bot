@@ -55,6 +55,7 @@ class MattermostActions(Actions):
       msg_tokens = count_tokens(msg)
       new_tokens = tokens + msg_tokens
       if new_tokens > max_tokens:
+        print(f'messages_from_context: {new_tokens} > {max_tokens}')
         break
       msgs.append(msg)
       tokens = new_tokens
