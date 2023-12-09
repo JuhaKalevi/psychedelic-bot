@@ -30,7 +30,7 @@ f_estimate_required_context = [
 
 f_img = [
   {
-    'name': 'analyze_images_referred_in_message',
+    'name': 'analyze_images_referred',
     'parameters': {
       'type': 'object',
       'properties': {
@@ -40,7 +40,7 @@ f_img = [
     }
   },
   {
-    'name': 'generate_images_requested_in_message',
+    'name': 'generate_images_requested',
     'parameters': {
       'type': 'object',
       'properties': {
