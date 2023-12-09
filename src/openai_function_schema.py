@@ -87,7 +87,7 @@ f_txt = [
     'parameters': empty_params
   },
   {
-    'name': 'outside_context_lookup',
+    'name': 'outside_context_lookup_summary',
     'parameters': {
       'type': 'object',
       'properties': {

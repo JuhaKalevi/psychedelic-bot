@@ -15,7 +15,7 @@ class Actions(ABC):
   def __init__(self, functions:dict):
     self.available_functions = {
       'text_response_default': self.text_response_default,
-      'outside_context_lookup': self.outside_context_lookup,
+      'outside_context_lookup_summary': self.outside_context_lookup_summary,
       'get_current_weather': self.get_current_weather,
       'instant_self_code_analysis': self.instant_self_code_analysis,
     }
@@ -36,7 +36,7 @@ class Actions(ABC):
   async def stream_reply(self, msgs:list, model='', max_tokens:int=None):
     pass
 
-  async def outside_context_lookup(self, count:int):
+  async def outside_context_lookup_summary(self, count:int):
     msgs = await self.messages_from_context(count)
     await self.generic('channel_summary', {'count':len(msgs)}, msgs)
 
