@@ -122,7 +122,7 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
         'properties': {
           'function_name': {
             'type': 'string',
-            'description': "If there is a question about a function, that is strong indicator NOT to call it, instant_self_code_analysis could be more appropriate then. Only if some other function is explicitly requested to be executed, not merely mentioned, should they be even considered.",
+            'description': "If there is a question about a function, select instant_self_code_analysis. Visual functions must be explicitly requested to be executed, not merely mentioned.",
             'enum': list(f_avail)
           }
         },
