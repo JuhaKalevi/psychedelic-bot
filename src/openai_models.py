@@ -14,13 +14,17 @@ f_estimate_required_context = [
     'parameters': {
       'type': 'object',
       'properties': {
+        'modality': {
+          'type': 'string',
+          'enum': ['txt','img'],
+        },
         'required_context': {
           'type': 'integer',
           'description': "See N posts (incl yours) to decide next action. 0 if asked about functions or no explicit action requested!",
           'enum': [0,1,2,3,4]
         }
       },
-      'required': ['required_context']
+      'required': ['modality','required_context']
     }
   }
 ]
@@ -96,19 +100,20 @@ f_detailed = [
   }
 ]
 
-async def chat_completion_choices(msgs:list, f_avail:dict, f_choose:list, decision:str):
+async def chat_completion_choices(msgs:list, f_avail:dict, f_choose:list, decisions:list[str]):
   client = AsyncOpenAI()
   f_coarse = []
+  f_stage = f_choose[0]['name']
   for f in [f for f in f_detailed if f['name'] in f_avail.keys()]:
     f_coarse.append({'name':f['name'],'parameters':empty_params})
-  print(f'{decision} tokens:{count_tokens(f_choose+f_coarse)} msgs:{count_tokens(msgs)}')
+  print(f"{f_stage}:{count_tokens(f_choose+f_coarse+msgs)}")
   delta = ''
-  async for r in await client.chat.completions.create(messages=msgs, functions=f_choose+f_coarse, function_call={'name':f_choose[0]['name']}, model='gpt-4-1106-preview', stream=True, temperature=0):
+  async for r in await client.chat.completions.create(messages=msgs, functions=f_choose+f_coarse, function_call={'name':f_stage}, model='gpt-4-1106-preview', stream=True, temperature=0):
     if r.choices[0].delta.function_call:
       delta += r.choices[0].delta.function_call.arguments
     else:
-      f_decision = loads(delta)[decision]
-      print(f'{decision}:{f_decision}')
+      f_decision = [loads(delta)[d] for d in decisions]
+      print(f"{f_stage}:{f_decision}")
       return f_decision
 
 async def chat_completion_functions(msgs:list, f_avail:dict):
