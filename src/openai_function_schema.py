@@ -23,7 +23,7 @@ f_estimate_required_context = [
           'enum': [0,1,2,3,4]
         }
       },
-      'required': ['count','modality']
+      'required': ['modality','posts']
     }
   }
 ]
