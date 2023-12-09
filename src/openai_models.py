@@ -96,19 +96,19 @@ f_detailed = [
   }
 ]
 
-async def chat_completion_choices(msgs:list, f_avail:dict, f_choose:list, choice:str, model:str):
+async def chat_completion_choices(msgs:list, f_avail:dict, f_choose:list, decision:str, model:str):
   client = AsyncOpenAI()
   f_coarse = []
   for f in [f for f in f_detailed if f['name'] in f_avail.keys()]:
     f_coarse.append({'name':f['name'],'parameters':empty_params})
-  print(f'f_choose:{count_tokens(f_choose+f_coarse)} msgs:{count_tokens(msgs)}')
+  print(f'{decision} tokens:{count_tokens(f_choose+f_coarse)} msgs:{count_tokens(msgs)}')
   delta = ''
   async for r in await client.chat.completions.create(messages=msgs, functions=f_choose+f_coarse, function_call={'name':f_choose[0]['name']}, model=model, stream=True):
     if r.choices[0].delta.function_call:
       delta += r.choices[0].delta.function_call.arguments
     else:
-      f_decision = loads(delta)[choice]
-      print(f'{choice}:{f_decision}')
+      f_decision = loads(delta)[decision]
+      print(f'{decision}:{f_decision}')
       return f_decision
 
 async def chat_completion_functions(msgs:list, f_avail:dict):
