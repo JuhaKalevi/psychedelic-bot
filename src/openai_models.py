@@ -116,13 +116,13 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
   f_choose = [
     {
       'name': 'choose_function',
-      'description': "Select which actual function to be call. Rely on text_response_default if uncertain!",
+      'description': "Select which actual function to call. Rely on text_response_default if uncertain.",
       'parameters': {
         'type': 'object',
         'properties': {
           'function_name': {
             'type': 'string',
-            'description': "Rely on text_response_default if uncertain! Only if some other function is explicitly requested to be executed, not merely mentioned, should they be even considered.",
+            'description': "If there is a question about a function, that is strong indicator NOT to call it, instant_self_code_analysis could be more appropriate then. Only if some other function is explicitly requested to be executed, not merely mentioned, should they be even considered.",
             'enum': list(f_avail)
           }
         },
