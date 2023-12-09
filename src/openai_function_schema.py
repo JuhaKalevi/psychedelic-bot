@@ -15,11 +15,11 @@ f_estimate_required_context = [
       'properties': {
         'modality': {
           'type': 'string',
-          'enum': ['txt','img'],
+          'enum': ['text','image'],
         },
         'posts': {
           'type': 'integer',
-          'description': "See more posts (including your own previous replies) to decide next action. Use 0 if asked about functions or no explicit action suggested BUT for affirmations or negations use 1 or higher, and for otherwise vague or too short messages consider 2 or higher!",
+          'description': "See more posts (including your own previous replies) to decide next action. Use 0 if asked about functions or no explicit action suggested BUT for affirmations or negations use 1 or higher, and for otherwise vague or too short messages consider 2 or higher! With image modality, never select 0.",
           'enum': [0,1,2,3,4]
         }
       },
