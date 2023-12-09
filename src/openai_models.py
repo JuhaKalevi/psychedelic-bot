@@ -46,7 +46,10 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
         f_avail = {f: f_avail[f] for f in f_avail if f in [fdict['name'] for fdict in f_default+f_txt]}
       f_choice = await chat_completion_choices(msgs[-int(f_required_context['posts']):], f_avail, f_choose, ['function_name'], 'gpt-3.5-turbo-16k')
       f_choice = f_choice['function_name']
-      f_description = next(([f] for f in f_default+f_img+f_txt if f['name'] == f_choice), [])
+      if f_required_context['modality'] == 'img':
+        f_description = next(([f] for f in f_img+f_default if f['name'] == f_choice), [])
+      elif f_required_context['modality'] == 'txt':
+        f_description = next(([f] for f in f_default+f_txt if f['name'] == f_choice), [])
       if f_description[0]['parameters'] != empty_params:
         print(f'{f_choice}:{count_tokens(f_description)} msgs:{count_tokens(msgs)}')
         f_args_completion = await client.chat.completions.create(messages=msgs, functions=f_description, function_call={'name':f_choice}, model='gpt-4-1106-preview')
