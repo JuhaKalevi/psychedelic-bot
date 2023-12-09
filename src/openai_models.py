@@ -116,7 +116,7 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
   f_choose = [
     {
       'name': 'choose_function',
-      'description': "This function is used to select which of the actual functions should be called. If the user mentions a function by name but the message doesn't really seem to be a request for that function, don't call it then! Use text_response_default instead.",
+      'description': "Select which actual function to be call. If a function is mentioned, the default assumption is still to not call it, unless execution is explicitly requested. Always use text_response_default if uncertain!",
       'parameters': {
         'type': 'object',
         'properties': {
