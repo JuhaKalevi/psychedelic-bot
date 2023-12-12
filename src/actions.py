@@ -8,7 +8,6 @@ import requests
 
 middleware_credentials = base64.b64encode(f"{environ['MIDDLEWARE_USERNAME']}:{environ['MIDDLEWARE_PASSWORD']}".encode()).decode()
 middleware_url = f"{environ['MIDDLEWARE_URL']}/?token={middleware_credentials}"
-system_instruction = {'role':'system', 'content':f"Current time is {ctime()}. Don't mention that you are an AI, everybody knows it!"}
 
 class Actions(ABC):
 
@@ -20,7 +19,7 @@ class Actions(ABC):
       'instant_self_code_analysis': self.instant_self_code_analysis,
     }
     self.available_functions.update(functions)
-    self.instructions = [{'role':'system', 'content':f"{system_instruction}"}]
+    self.instructions = [{'role':'system', 'content':f"{{'role':'system', 'content':f'Current time is {ctime()}. You are in Finland.'}}"}]
     self.content = ''
     create_task(self.__post_handler__())
 
