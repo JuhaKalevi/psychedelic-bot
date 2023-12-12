@@ -19,7 +19,7 @@ class Actions(ABC):
       'instant_self_code_analysis': self.instant_self_code_analysis,
     }
     self.available_functions.update(functions)
-    self.instructions = [{'role':'system', 'content':{'role':'system', 'content':f"Current time is {ctime()}. Don't mention that you are an AI, everybody knows it!"}}]
+    self.instructions = [{'role':'system', 'content':f"{{'role':'system', 'content':f'Current time is {ctime()}. You are in Finland.'}}"}]
     self.content = ''
     create_task(self.__post_handler__())
 
