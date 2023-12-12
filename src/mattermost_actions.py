@@ -2,7 +2,7 @@ import datetime
 import io
 import json
 from os import path, remove
-from time import ctime, time
+from time import time
 from asyncio import Lock
 import base64
 import aiofiles
@@ -23,7 +23,6 @@ class MattermostActions(Actions):
     self.client = client
     self.context = None
     self.file_ids = []
-    self.instructions = [{'role':'system', 'content':{'role':'system', 'content':f"Current time is {ctime()}. Don't mention that you are an AI, everybody knows it!"}}]
     self.post = post
     self.content = post['message']
 
