@@ -23,7 +23,7 @@ class MattermostActions(Actions):
     self.client = client
     self.context = None
     self.file_ids = []
-    self.instructions = [{'role':'system', 'content':{'role':'system', 'content':f"Current time is {ctime()}. Don't mention that you are an AI, everybody knows it!"}}]
+    self.instructions = [{'role':'system', 'content':f"Current time is {ctime()}. Don't mention that you are an AI, everybody knows it!"}]
     self.post = post
     self.content = post['message']
 
