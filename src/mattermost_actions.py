@@ -2,7 +2,7 @@ import datetime
 import io
 import json
 from os import path, remove
-from time import time
+from time import ctime, time
 from asyncio import Lock
 import base64
 import aiofiles
@@ -17,12 +17,13 @@ class MattermostActions(Actions):
 
   def __init__(self, client:mattermostdriver.AsyncDriver, post:dict):
     super().__init__({
-      'analyze_images': self.analyze_images,
-      'generate_images_from_message': self.generate_images_from_message,
+      'analyze_images_referred': self.analyze_images_referred,
+      'generate_images_requested': self.generate_images_requested,
     })
     self.client = client
     self.context = None
     self.file_ids = []
+    self.instructions = [{'role':'system', 'content':f"Current time is {ctime()}. Don't mention that you are an AI, everybody knows it!"}]
     self.post = post
     self.content = post['message']
 
@@ -55,6 +56,7 @@ class MattermostActions(Actions):
       msg_tokens = count_tokens(msg)
       new_tokens = tokens + msg_tokens
       if new_tokens > max_tokens:
+        print(f'messages_from_context: {new_tokens} > {max_tokens}')
         break
       msgs.append(msg)
       tokens = new_tokens
@@ -83,7 +85,7 @@ class MattermostActions(Actions):
         reply_id = await self.client.create_or_update_post({'channel_id':self.post['channel_id'], 'message':''.join(chunks_processed)+''.join(buffer), 'file_ids':self.file_ids, 'root_id':reply_to}, reply_id)
     return reply_id
 
-  async def analyze_images(self, count_images=0, count_posts=0):
+  async def analyze_images_referred(self, count_images=0, count_posts=0):
     '''Analyze images in a channel or thread and reply with a description of the image'''
     print(f'analyze_images: count_images:{count_images} count_posts:{count_posts}')
     if self.post['root_id'] == '':
@@ -123,7 +125,7 @@ class MattermostActions(Actions):
         break
     await self.stream_reply([{'role':'user', 'content':content}], model='gpt-4-vision-preview', max_tokens=2048)
 
-  async def generate_images_from_message(self, prompt:str, negative_prompt='', count=1, resolution='1024x1024', sampling_steps=25):
+  async def generate_images_requested(self, prompt:str, negative_prompt='', count=1, resolution='1024x1024', sampling_steps=25):
     width, height = resolution.split('x')
     payload = {'prompt':prompt, 'negative_prompt':negative_prompt, 'steps':sampling_steps, 'batch_size':count, 'width':width, 'height':height, 'sampler_name':'DPM++ 2M Karras'}
     total_images_saved = 0
