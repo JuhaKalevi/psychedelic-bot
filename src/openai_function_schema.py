@@ -78,28 +78,8 @@ f_img = [
 
 f_txt = [
   {
-    'name': 'get_current_weather',
-    'parameters': {
-      'type': 'object',
-      'properties': {
-        'location': {'type':'string'}
-      },
-      'required': ['location']
-    }
-  },
-  {
     'name': 'instant_self_code_analysis',
     'description': "Read your own code temporarily into the context in order to analyze it. This is NOT a background task!",
     'parameters': empty_params
-  },
-  {
-    'name': 'outside_context_lookup_summary',
-    'parameters': {
-      'type': 'object',
-      'properties': {
-        'count': {'type':'integer'}
-      },
-      'required': ['count']
-    }
   }
 ]

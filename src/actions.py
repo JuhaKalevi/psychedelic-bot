@@ -1,10 +1,8 @@
 from abc import ABC, abstractmethod
 from asyncio import create_task
 import base64
-from json import dumps, loads
 from os import environ, listdir
 from time import ctime
-import requests
 
 middleware_credentials = base64.b64encode(f"{environ['MIDDLEWARE_USERNAME']}:{environ['MIDDLEWARE_PASSWORD']}".encode()).decode()
 middleware_url = f"{environ['MIDDLEWARE_URL']}/?token={middleware_credentials}"
@@ -14,8 +12,6 @@ class Actions(ABC):
   def __init__(self, functions:dict):
     self.available_functions = {
       'text_response_default': self.text_response_default,
-      'outside_context_lookup_summary': self.outside_context_lookup_summary,
-      'get_current_weather': self.get_current_weather,
       'instant_self_code_analysis': self.instant_self_code_analysis,
     }
     self.available_functions.update(functions)
@@ -34,16 +30,6 @@ class Actions(ABC):
   @abstractmethod
   async def stream_reply(self, msgs:list, model='', max_tokens:int=None):
     pass
-
-  async def outside_context_lookup_summary(self, count:int):
-    msgs = await self.messages_from_context(count)
-    await self.generic('channel_summary', {'count':len(msgs)}, msgs)
-
-  async def generic(self, func:str, args:dict, resp:dict):
-    await self.stream_reply([{'role':'user','content':self.content}, {'role':'assistant','content':None,'function_call':{'name':func,'arguments':dumps(args)}}, {'role':'function','name':func,'content':dumps(resp)}])
-
-  async def get_current_weather(self, location:str):
-    await self.generic('get_current_weather', {'location':location}, loads(requests.get(f"https://api.weatherapi.com/v1/current.json?key={environ['WEATHERAPI_KEY']}&q={location}",timeout=7).text))
 
   async def instant_self_code_analysis(self):
     files = []
