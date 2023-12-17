@@ -17,8 +17,8 @@ class MattermostActions(Actions):
 
   def __init__(self, client:mattermostdriver.AsyncDriver, post:dict):
     super().__init__({
-      'analyze_images_referred': self.analyze_images_referred,
-      'generate_images_requested': self.generate_images_requested,
+      'analyze_referred_images': self.analyze_images_referred,
+      'generate_requested_images': self.generate_images_requested,
     })
     self.client = client
     self.context = None

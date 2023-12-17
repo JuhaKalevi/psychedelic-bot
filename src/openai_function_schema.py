@@ -35,7 +35,7 @@ f_estimate_required_context = [
 
 f_img = [
   {
-    'name': 'analyze_images_referred',
+    'name': 'analyze_referred_images',
     'parameters': {
       'type': 'object',
       'properties': {
@@ -45,7 +45,7 @@ f_img = [
     }
   },
   {
-    'name': 'generate_images_requested',
+    'name': 'generate_requested_images',
     'parameters': {
       'type': 'object',
       'properties': {
