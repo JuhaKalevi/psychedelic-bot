@@ -12,7 +12,7 @@ class Actions(ABC):
   def __init__(self, functions:dict):
     self.available_functions = {
       'text_response_default': self.text_response_default,
-      'instant_self_code_analysis': self.instant_self_code_analysis,
+      'runtime_self_analysis': self.runtime_self_analysis,
     }
     self.available_functions.update(functions)
     self.instructions = [{'role':'system', 'content':f"{{'role':'system', 'content':f'Current time is {ctime()}. You are in Finland.'}}"}]
@@ -31,7 +31,7 @@ class Actions(ABC):
   async def stream_reply(self, msgs:list, model='', max_tokens:int=None):
     pass
 
-  async def instant_self_code_analysis(self):
+  async def runtime_self_analysis(self):
     files = []
     for file_path in [x for x in listdir() if x.endswith(('.py'))]:
       with open(file_path, 'r', encoding='utf-8') as file:

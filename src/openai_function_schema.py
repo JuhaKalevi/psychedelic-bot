@@ -78,7 +78,7 @@ f_img = [
 
 f_txt = [
   {
-    'name': 'instant_self_code_analysis',
+    'name': 'runtime_self_analysis',
     'description': "Read your own code temporarily into the context in order to analyze it. This is NOT a background task!",
     'parameters': empty_params
   }
