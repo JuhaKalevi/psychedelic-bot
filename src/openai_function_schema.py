@@ -5,7 +5,13 @@ IMGGEN_WEIGHT = "Parentheses are used to increase the weight of (emphasize) toke
 IMGGEN_REMIND = "Don't use any kind of formatting to separate these keywords, expect what is mentioned above! Remember to translate everything to english!"
 empty_params = {'type':'object','properties':{}}
 
-f_default = [{'name': 'text_response_default','parameters': empty_params}]
+f_default = [
+  {
+    'name': 'text_response_default',
+    'description': 'Default function that can be called when a normal text response suffices, or when the user requests a function that is not available or seems inappropriate.',
+    'parameters': empty_params
+  }
+]
 
 f_estimate_required_context = [
   {
