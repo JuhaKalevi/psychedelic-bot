@@ -86,7 +86,7 @@ class MattermostActions(Actions):
     return reply_id
 
   async def analyze_images_referred(self, count_images=0, count_posts=0):
-    '''Analyze images in a channel or thread and reply with a description of the image'''
+    max_tokens=65536
     print(f'analyze_images: count_images:{count_images} count_posts:{count_posts}')
     if self.post['root_id'] == '':
       if count_posts == 0:
@@ -98,11 +98,17 @@ class MattermostActions(Actions):
       self.context = await self.client.posts.get_thread(self.post['id'])
     if 'order' in self.context:
       self.context['order'].sort(key=lambda x: self.context['posts'][x]['create_at'], reverse=True)
-    content = await self.messages_from_context()
+    msgs = []
+    tokens = count_tokens(self.instructions)
     images = 0
     posts_checked = 0
-    for post_id in self.context['order']:
-      post = self.context['posts'][post_id]
+    for p_id in self.context['order']:
+      post = self.context['posts'][p_id]
+      if 'from_bot' in post['props']:
+        role = 'assistant'
+      else:
+        role = 'user'
+      msg = {'role':role, 'content':{'type':'text','text':self.post['message']}}
       if 'file_ids' in post:
         for post_file_id in post['file_ids']:
           print(post_file_id)
@@ -116,14 +122,20 @@ class MattermostActions(Actions):
               img_byte = temp_file.read()
             remove(f'/tmp/{post_file_path}')
             base64_image = base64.b64encode(img_byte).decode("utf-8")
-            content.append({'type':'image_url','image_url':{'url':f'data:image/{file_type};base64,{base64_image}','detail':'high'}})
+            msgs.append({'role':role, 'content':{'type':'image_url','image_url':{'url':f'data:image/{file_type};base64,{base64_image}','detail':'high'}}})
             images += 1
           if count_images and images >= count_images:
             break
       posts_checked += 1
       if (count_images and images >= count_images) or (count_posts and posts_checked >= count_posts):
         break
-    await self.stream_reply([{'role':'user', 'content':content}], model='gpt-4-vision-preview', max_tokens=2048)
+      msg_tokens = count_tokens(msg)
+      new_tokens = tokens + msg_tokens
+      if new_tokens > max_tokens:
+        print(f'messages_from_context: {new_tokens} > {max_tokens}')
+        break
+      msgs.append(msg)
+    await self.stream_reply(msgs, model='gpt-4-vision-preview', max_tokens=4096)
 
   async def generate_images_requested(self, prompt:str, negative_prompt='', count=1, resolution='1024x1024', sampling_steps=25):
     width, height = resolution.split('x')

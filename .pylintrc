@@ -5,6 +5,7 @@ disable=
     C0116, # missing-function-docstring
     C0301, # line-too-long
     R0902, # too-many-instance-attributes
+    R0912, # too-many-branches
     R0914, # too-many-locals
 [DESIGN]
 max-args=6
