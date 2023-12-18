@@ -80,7 +80,7 @@ f_img = [
 f_txt = [
   {
     'name': 'runtime_self_analysis',
-    'description': "Read your own code temporarily into the context in order to analyze it. This is NOT a background task!",
+    'description': "Read your own code temporarily into the context in order to analyze it. This is NOT a background task! This can be used to analyze other functions.",
     'parameters': empty_params
   }
 ]
