@@ -108,7 +108,7 @@ class MattermostActions(Actions):
         role = 'assistant'
       else:
         role = 'user'
-      msg = {'role':role, 'content':{'type':'text','text':self.post['message']}}
+      msg = {'role':role, 'content':[{'type':'text','text':self.post['message']}]}
       if 'file_ids' in post:
         for post_file_id in post['file_ids']:
           print(post_file_id)
@@ -122,7 +122,7 @@ class MattermostActions(Actions):
               img_byte = temp_file.read()
             remove(f'/tmp/{post_file_path}')
             base64_image = base64.b64encode(img_byte).decode("utf-8")
-            msgs.append({'role':role, 'content':{'type':'image_url','image_url':{'url':f'data:image/{file_type};base64,{base64_image}','detail':'high'}}})
+            msgs.append({'role':role, 'content':[{'type':'image_url','image_url':{'url':f'data:image/{file_type};base64,{base64_image}','detail':'high'}}]})
             images += 1
           if count_images and images >= count_images:
             break
