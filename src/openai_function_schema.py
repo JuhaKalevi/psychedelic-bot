@@ -36,6 +36,7 @@ f_estimate_required_context = [
 f_img = [
   {
     'name': 'analyze_referred_images',
+    'description': 'Analyze images in a channel or thread and reply with a description of the image',
     'parameters': {
       'type': 'object',
       'properties': {
