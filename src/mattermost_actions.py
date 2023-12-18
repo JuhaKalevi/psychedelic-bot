@@ -98,7 +98,7 @@ class MattermostActions(Actions):
       self.context = await self.client.posts.get_thread(self.post['id'])
     if 'order' in self.context:
       self.context['order'].sort(key=lambda x: self.context['posts'][x]['create_at'], reverse=True)
-    content = [{'type':'text','text':self.post['message']}]
+    content = await self.messages_from_context()
     images = 0
     posts_checked = 0
     for post_id in self.context['order']:
