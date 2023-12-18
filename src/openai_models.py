@@ -21,21 +21,6 @@ async def chat_completion_choices(msgs:list, f_avail:dict, f_choose:list, decisi
 
 async def chat_completion_functions(msgs:list, f_avail:dict):
   client = AsyncOpenAI()
-  f_choose = [
-    {
-      'name': 'choose_function',
-      'parameters': {
-        'type': 'object',
-        'properties': {
-          'function_name': {
-            'type': 'string',
-            'enum': list(f_avail)
-          }
-        },
-        'required': ['function_name']
-      }
-    }
-  ]
   try:
     f_required_context = await chat_completion_choices(msgs[-1:], {}, f_estimate_required_context, ['modality','posts'], 'gpt-4-1106-preview')
     if f_required_context['modality'] == 'image' and f_required_context['posts'] == 0:
@@ -45,7 +30,21 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
         f_avail = {f: f_avail[f] for f in f_avail if f in [fdict['name'] for fdict in f_img+f_default]}
       elif f_required_context['modality'] == 'text':
         f_avail = {f: f_avail[f] for f in f_avail if f in [fdict['name'] for fdict in f_default+f_txt]}
-      print(f'f_avail:{f_avail.keys()}')
+      f_choose = [
+        {
+          'name': 'choose_function',
+          'parameters': {
+            'type': 'object',
+            'properties': {
+              'function_name': {
+                'type': 'string',
+                'enum': list(f_avail)
+              }
+            },
+            'required': ['function_name']
+          }
+        }
+      ]
       f_choice = await chat_completion_choices(msgs[-int(f_required_context['posts']):], f_avail, f_choose, ['function_name'], 'gpt-4-1106-preview')
       f_choice = f_choice['function_name']
       if f_required_context['modality'] == 'image':
