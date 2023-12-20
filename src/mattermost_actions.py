@@ -34,12 +34,13 @@ class MattermostActions(Actions):
       self.instructions[0]['content'] += f" {channel['purpose']}"
     bot_user = await self.client.users.get_user('me')
     self.client.user_id = bot_user['id']
-    thread = await self.client.posts.get_thread(self.post['id'])
-    if channel['type'] == 'D' or (len(thread['posts'].values()) == 1 and next(iter(thread['posts'].values()))['user_id'] == self.client.user_id) or any(self.client.name_in_message(post['message']) for post in thread['posts'].values()):
+    self.thread = await self.client.posts.get_thread(self.post['id'])
+    if channel['type'] == 'D' or (len(self.thread['posts'].values()) == 1 and next(iter(self.thread['posts'].values()))['user_id'] == self.client.user_id) or any(self.client.name_in_message(post['message']) for post in self.thread['posts'].values()):
       return await chat_completion_functions(await self.recall_context(), self.available_functions)
 
   async def recall_context(self, count=None, max_tokens=126976):
-    if count:
+    context = self.thread
+    if count and len(context) == 1:
       context = await self.client.posts.get_posts_for_channel(self.post['channel_id'], params={'per_page':count})
     if 'order' in context:
       context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)

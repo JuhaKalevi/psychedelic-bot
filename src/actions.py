@@ -24,7 +24,7 @@ class Actions(ABC):
     pass
 
   @abstractmethod
-  async def recall_context(self, count:int=None, max_tokens:int=None) -> list[dict[str, str]]:
+  async def recall_context(self, count:int=None, max_tokens:int=None):
     pass
 
   @abstractmethod
