@@ -12,7 +12,7 @@ class Actions(ABC):
   def __init__(self, functions:dict):
     self.available_functions = {
       'text_response_default': self.text_response_default,
-      'runtime_self_analysis': self.runtime_self_analysis,
+      #'runtime_self_analysis': self.runtime_self_analysis,
     }
     self.available_functions.update(functions)
     self.instructions = [{'role':'system', 'content':f"{{'role':'system', 'content':f'Current time is {ctime()}. You are in Finland.'}}"}]
