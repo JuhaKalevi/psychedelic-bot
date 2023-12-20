@@ -54,7 +54,7 @@ class MattermostActions(Actions):
       else:
         role = 'user'
       msg = {'role':role, 'content':post['message']}
-      msg_vision = {'role':role, 'content':[{'type':'text','text':self.post['message']}]}
+      msg_vision = {'role':role, 'content':[{'type':'text','text':post['message']}]}
       msg_tokens = count_tokens(msg)
       if 'file_ids' in post:
         for post_file_id in post['file_ids']:
