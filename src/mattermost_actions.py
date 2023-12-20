@@ -86,7 +86,7 @@ class MattermostActions(Actions):
       return self.instructions + msgs_vision
     return self.instructions + msgs
 
-  async def stream_reply(self, msgs:list, max_tokens=None) -> str:
+  async def stream_reply(self, msgs:list) -> str:
     if self.post['root_id'] == '':
       reply_to = self.post['id']
     else:
@@ -96,7 +96,7 @@ class MattermostActions(Actions):
     chunks_processed = []
     start_time = time()
     async with Lock():
-      async for chunk in chat_completion(msgs, model=self.model, max_tokens=max_tokens):
+      async for chunk in chat_completion(msgs, model=self.model, max_tokens=4096):
         buffer.append(chunk)
         if (time() - start_time) * 1000 >= 500:
           joined_chunks = ''.join(buffer)
