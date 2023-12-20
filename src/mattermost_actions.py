@@ -82,10 +82,9 @@ class MattermostActions(Actions):
       msgs_vision.append(msg_vision)
       tokens = new_tokens
     msgs.reverse()
-    if msgs_vision:
+    if self.model == 'gpt-4-vision-preview':
       return self.instructions + msgs_vision
-    else:
-      return self.instructions + msgs
+    return self.instructions + msgs
 
   async def stream_reply(self, msgs:list, max_tokens=None) -> str:
     if self.post['root_id'] == '':
