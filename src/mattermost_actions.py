@@ -82,7 +82,10 @@ class MattermostActions(Actions):
       msgs_vision.append(msg_vision)
       tokens = new_tokens
     msgs.reverse()
-    return self.instructions + msgs
+    if msgs_vision:
+      return self.instructions + msgs_vision
+    else:
+      return self.instructions + msgs
 
   async def stream_reply(self, msgs:list, max_tokens=None) -> str:
     if self.post['root_id'] == '':
