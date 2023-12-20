@@ -48,7 +48,7 @@ class DiscordActions(Actions):
     msgs.reverse()
     return self.instructions+msgs
 
-  async def stream_reply(self, msgs:list, max_tokens:int=None):
+  async def stream_reply(self, msgs:list):
     if self.message.reference:
       reply_to = self.message.reference.message_id
     else:
@@ -59,7 +59,7 @@ class DiscordActions(Actions):
     chunks_processed = []
     start_time = time()
     async with Lock():
-      async for chunk in chat_completion(msgs, model=self.model, max_tokens=max_tokens):
+      async for chunk in chat_completion(msgs, model=self.model, max_tokens=4096):
         if not chunk:
           continue
         buffer.append(chunk)

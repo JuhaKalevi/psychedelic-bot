@@ -17,10 +17,9 @@ class MattermostActions(Actions):
 
   def __init__(self, client:mattermostdriver.AsyncDriver, post:dict):
     super().__init__({
-      'generate_requested_images': self.generate_images,
+      'generate_images': self.generate_images,
     })
     self.client = client
-    self.context = None
     self.file_ids = []
     self.instructions = [{'role':'system', 'content':f"Current time is {ctime()}. Don't mention that you are an AI, everybody knows it!"}]
     self.model = 'gpt-4-1106-preview'
@@ -35,20 +34,20 @@ class MattermostActions(Actions):
       self.instructions[0]['content'] += f" {channel['purpose']}"
     bot_user = await self.client.users.get_user('me')
     self.client.user_id = bot_user['id']
-    self.context = await self.client.posts.get_thread(self.post['id'])
-    if channel['type'] == 'D' or (len(self.context['posts'].values()) == 1 and next(iter(self.context['posts'].values()))['user_id'] == self.client.user_id) or any(self.client.name_in_message(post['message']) for post in self.context['posts'].values()):
-      return await chat_completion_functions(await self.recall_context(max_tokens=12288), self.available_functions)
+    thread = await self.client.posts.get_thread(self.post['id'])
+    if channel['type'] == 'D' or (len(thread['posts'].values()) == 1 and next(iter(thread['posts'].values()))['user_id'] == self.client.user_id) or any(self.client.name_in_message(post['message']) for post in thread['posts'].values()):
+      return await chat_completion_functions(await self.recall_context(), self.available_functions)
 
   async def recall_context(self, count=None, max_tokens=126976):
     if count:
-      self.context = await self.client.posts.get_posts_for_channel(self.post['channel_id'], params={'per_page':count})
-    if 'order' in self.context:
-      self.context['order'].sort(key=lambda x: self.context['posts'][x]['create_at'], reverse=True)
+      context = await self.client.posts.get_posts_for_channel(self.post['channel_id'], params={'per_page':count})
+    if 'order' in context:
+      context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
     msgs = []
     msgs_vision = []
     tokens = count_tokens(self.instructions)
-    for p_id in self.context['order']:
-      post = self.context['posts'][p_id]
+    for p_id in context['order']:
+      post = context['posts'][p_id]
       if 'from_bot' in post['props']:
         role = 'assistant'
       else:

@@ -41,9 +41,9 @@ estimate_required_context = [
   }
 ]
 
-generate_requested_images = [
+generate_images = [
   {
-    'name': 'generate_requested_images',
+    'name': 'generate_images',
     'parameters': {
       'type': 'object',
       'properties': {

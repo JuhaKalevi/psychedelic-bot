@@ -28,7 +28,7 @@ class Actions(ABC):
     pass
 
   @abstractmethod
-  async def stream_reply(self, msgs:list, max_tokens:int=None):
+  async def stream_reply(self, msgs:list):
     pass
 
   async def runtime_self_analysis(self):
