@@ -14,6 +14,7 @@ class DiscordActions(Actions):
     self.context:list[discord.Message] = []
     self.file_ids = []
     self.instructions[0]['content'] += f" Your name is {environ['DISCORD_BOT_NAME']} or {environ['DISCORD_BOT_ID']}."
+    self.model = 'gpt-3.5-turbo-16k'
     self.message = message
     self.content = message.content
 
@@ -25,9 +26,9 @@ class DiscordActions(Actions):
     elif self.channel.type == discord.ChannelType.public_thread:
       self.context.append(self.message)
     if any(self.client.user.mentioned_in(msg) for msg in self.context):
-      return await chat_completion_functions(await self.messages_from_context(max_tokens=12288), self.available_functions)
+      return await chat_completion_functions(await self.recall_context(max_tokens=12288), self.available_functions)
 
-  async def messages_from_context(self, count=None, max_tokens=12288):
+  async def recall_context(self, count=None, max_tokens=12288):
     if count:
       self.context = await self.message.for_channel(self.message['channel_id'], params={'per_page':count})
     msgs = []
@@ -47,7 +48,7 @@ class DiscordActions(Actions):
     msgs.reverse()
     return self.instructions+msgs
 
-  async def stream_reply(self, msgs:list, model='gpt-3.5-turbo-16k', max_tokens:int=None):
+  async def stream_reply(self, msgs:list, max_tokens:int=None):
     if self.message.reference:
       reply_to = self.message.reference.message_id
     else:
@@ -58,7 +59,7 @@ class DiscordActions(Actions):
     chunks_processed = []
     start_time = time()
     async with Lock():
-      async for chunk in chat_completion(msgs, model=model, max_tokens=max_tokens):
+      async for chunk in chat_completion(msgs, model=self.model, max_tokens=max_tokens):
         if not chunk:
           continue
         buffer.append(chunk)

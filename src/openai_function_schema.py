@@ -5,7 +5,15 @@ IMGGEN_WEIGHT = "Parentheses are used to increase the weight of (emphasize) toke
 IMGGEN_REMIND = "Don't use any kind of formatting to separate these keywords, expect what is mentioned above! Remember to translate everything to english!"
 empty_params = {'type':'object','properties':{}}
 
-f_default = [
+runtime_self_analysis = [
+  {
+    'name': 'runtime_self_analysis',
+    'description': "Read your own code temporarily into the context in order to analyze it. This is NOT a background task! This can be used to analyze other functions.",
+    'parameters': empty_params
+  }
+]
+
+text_response_default = [
   {
     'name': 'text_response_default',
     'description': 'Default function that can be called when a normal text response suffices, or when the user requests a function that is not available or seems inappropriate.',
@@ -13,7 +21,7 @@ f_default = [
   }
 ]
 
-f_estimate_required_context = [
+estimate_required_context = [
   {
     'name': 'estimate_required_context',
     'parameters': {
@@ -21,7 +29,7 @@ f_estimate_required_context = [
       'properties': {
         'modality': {
           'type': 'string',
-          'enum': ['text','image'],
+          'enum': ['image','self','text'],
         },
         'posts': {
           'type': 'integer',
@@ -33,18 +41,7 @@ f_estimate_required_context = [
   }
 ]
 
-f_img = [
-  {
-    'name': 'analyze_referred_images',
-    'description': 'Analyze images in a channel or thread and reply with a description of the image',
-    'parameters': {
-      'type': 'object',
-      'properties': {
-        'count_images': {'type': 'integer'},
-        'count_posts': {'type': 'integer'}
-      }
-    }
-  },
+generate_requested_images = [
   {
     'name': 'generate_requested_images',
     'parameters': {
@@ -74,13 +71,5 @@ f_img = [
       },
       'required': ['prompt']
     }
-  }
-]
-
-f_txt = [
-  {
-    'name': 'runtime_self_analysis',
-    'description': "Read your own code temporarily into the context in order to analyze it. This is NOT a background task! This can be used to analyze other functions.",
-    'parameters': empty_params
   }
 ]

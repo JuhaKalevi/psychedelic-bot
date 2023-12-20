@@ -7,3 +7,4 @@ pylint
 tiktoken
 websockets==12.0
 webuiapi
+Pillow

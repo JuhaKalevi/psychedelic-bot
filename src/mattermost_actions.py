@@ -7,23 +7,23 @@ from asyncio import Lock
 import base64
 import aiofiles
 import websockets
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 import mattermostdriver
 from actions import middleware_url, Actions
-from helpers import count_tokens
+from helpers import count_image_tokens, count_tokens
 from openai_models import chat_completion_functions, chat_completion
 
 class MattermostActions(Actions):
 
   def __init__(self, client:mattermostdriver.AsyncDriver, post:dict):
     super().__init__({
-      'analyze_referred_images': self.analyze_images_referred,
-      'generate_requested_images': self.generate_images_requested,
+      'generate_requested_images': self.generate_images,
     })
     self.client = client
     self.context = None
     self.file_ids = []
     self.instructions = [{'role':'system', 'content':f"Current time is {ctime()}. Don't mention that you are an AI, everybody knows it!"}]
+    self.model = 'gpt-4-1106-preview'
     self.post = post
     self.content = post['message']
 
@@ -37,14 +37,15 @@ class MattermostActions(Actions):
     self.client.user_id = bot_user['id']
     self.context = await self.client.posts.get_thread(self.post['id'])
     if channel['type'] == 'D' or (len(self.context['posts'].values()) == 1 and next(iter(self.context['posts'].values()))['user_id'] == self.client.user_id) or any(self.client.name_in_message(post['message']) for post in self.context['posts'].values()):
-      return await chat_completion_functions(await self.messages_from_context(max_tokens=12288), self.available_functions)
+      return await chat_completion_functions(await self.recall_context(max_tokens=12288), self.available_functions)
 
-  async def messages_from_context(self, count=None, max_tokens=126976):
+  async def recall_context(self, count=None, max_tokens=126976):
     if count:
       self.context = await self.client.posts.get_posts_for_channel(self.post['channel_id'], params={'per_page':count})
     if 'order' in self.context:
       self.context['order'].sort(key=lambda x: self.context['posts'][x]['create_at'], reverse=True)
     msgs = []
+    msgs_vision = []
     tokens = count_tokens(self.instructions)
     for p_id in self.context['order']:
       post = self.context['posts'][p_id]
@@ -53,17 +54,37 @@ class MattermostActions(Actions):
       else:
         role = 'user'
       msg = {'role':role, 'content':post['message']}
+      msg_vision = {'role':role, 'content':[{'type':'text','text':self.post['message']}]}
       msg_tokens = count_tokens(msg)
+      if 'file_ids' in post:
+        for post_file_id in post['file_ids']:
+          file_response = await self.client.files.get_file(file_id=post_file_id)
+          if file_response.status_code == 200:
+            try:
+              file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
+              post_file_path = f'{post_file_id}.{file_type}'
+              async with aiofiles.open(f'/tmp/{post_file_path}', 'wb') as post_file:
+                await post_file.write(file_response.content)
+              with open(f'/tmp/{post_file_path}', 'rb') as temp_file:
+                img_byte = temp_file.read()
+              remove(f'/tmp/{post_file_path}')
+              base64_image = base64.b64encode(img_byte).decode("utf-8")
+              msgs.append({'role':role, 'content':[{'type':'image_url','image_url':{'url':f'data:image/{file_type};base64,{base64_image}','detail':'high'}}]})
+              msg_tokens += count_image_tokens(*Image.open(io.BytesIO(base64.b64decode(base64_image))).size)
+              self.model = 'gpt-4-vision-preview'
+            except UnidentifiedImageError as err:
+              print(err)
       new_tokens = tokens + msg_tokens
       if new_tokens > max_tokens:
         print(f'messages_from_context: {new_tokens} > {max_tokens}')
         break
       msgs.append(msg)
+      msgs_vision.append(msg_vision)
       tokens = new_tokens
     msgs.reverse()
-    return self.instructions+msgs
+    return self.instructions + msgs
 
-  async def stream_reply(self, msgs:list, model='gpt-4-1106-preview', max_tokens=None) -> str:
+  async def stream_reply(self, msgs:list, max_tokens=None) -> str:
     if self.post['root_id'] == '':
       reply_to = self.post['id']
     else:
@@ -73,7 +94,7 @@ class MattermostActions(Actions):
     chunks_processed = []
     start_time = time()
     async with Lock():
-      async for chunk in chat_completion(msgs, model=model, max_tokens=max_tokens):
+      async for chunk in chat_completion(msgs, model=self.model, max_tokens=max_tokens):
         buffer.append(chunk)
         if (time() - start_time) * 1000 >= 500:
           joined_chunks = ''.join(buffer)
@@ -85,59 +106,7 @@ class MattermostActions(Actions):
         reply_id = await self.client.create_or_update_post({'channel_id':self.post['channel_id'], 'message':''.join(chunks_processed)+''.join(buffer), 'file_ids':self.file_ids, 'root_id':reply_to}, reply_id)
     return reply_id
 
-  async def analyze_images_referred(self, count_images=0, count_posts=0):
-    max_tokens=65536
-    print(f'analyze_images: count_images:{count_images} count_posts:{count_posts}')
-    if self.post['root_id'] == '':
-      if count_posts == 0:
-        per_page = 200
-      else:
-        per_page = count_posts+1
-      self.context = await self.client.posts.get_posts_for_channel(self.post['channel_id'], params={'per_page':per_page})
-    else:
-      self.context = await self.client.posts.get_thread(self.post['id'])
-    if 'order' in self.context:
-      self.context['order'].sort(key=lambda x: self.context['posts'][x]['create_at'], reverse=True)
-    msgs = []
-    tokens = count_tokens(self.instructions)
-    images = 0
-    posts_checked = 0
-    for p_id in self.context['order']:
-      post = self.context['posts'][p_id]
-      if 'from_bot' in post['props']:
-        role = 'assistant'
-      else:
-        role = 'user'
-      msg = {'role':role, 'content':[{'type':'text','text':self.post['message']}]}
-      if 'file_ids' in post:
-        for post_file_id in post['file_ids']:
-          print(post_file_id)
-          file_response = await self.client.files.get_file(file_id=post_file_id)
-          if file_response.status_code == 200:
-            file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
-            post_file_path = f'{post_file_id}.{file_type}'
-            async with aiofiles.open(f'/tmp/{post_file_path}', 'wb') as post_file:
-              await post_file.write(file_response.content)
-            with open(f'/tmp/{post_file_path}', 'rb') as temp_file:
-              img_byte = temp_file.read()
-            remove(f'/tmp/{post_file_path}')
-            base64_image = base64.b64encode(img_byte).decode("utf-8")
-            msgs.append({'role':role, 'content':[{'type':'image_url','image_url':{'url':f'data:image/{file_type};base64,{base64_image}','detail':'high'}}]})
-            images += 1
-          if count_images and images >= count_images:
-            break
-      posts_checked += 1
-      if (count_images and images >= count_images) or (count_posts and posts_checked >= count_posts):
-        break
-      msg_tokens = count_tokens(msg)
-      new_tokens = tokens + msg_tokens
-      if new_tokens > max_tokens:
-        print(f'messages_from_context: {new_tokens} > {max_tokens}')
-        break
-      msgs.append(msg)
-    await self.stream_reply(msgs, model='gpt-4-vision-preview', max_tokens=4096)
-
-  async def generate_images_requested(self, prompt:str, negative_prompt='', count=1, resolution='1024x1024', sampling_steps=25):
+  async def generate_images(self, prompt:str, negative_prompt='', count=1, resolution='1024x1024', sampling_steps=25):
     width, height = resolution.split('x')
     payload = {'prompt':prompt, 'negative_prompt':negative_prompt, 'steps':sampling_steps, 'batch_size':count, 'width':width, 'height':height, 'sampler_name':'DPM++ 2M Karras'}
     total_images_saved = 0
