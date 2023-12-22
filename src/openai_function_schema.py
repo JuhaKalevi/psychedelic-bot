@@ -6,6 +6,7 @@ IMGGEN_REMIND = "Don't use any kind of formatting to separate these keywords, ex
 empty_params = {'type':'object','properties':{}}
 
 def semantic_analysis(recalled_context_fraction):
+  print(recalled_context_fraction)
   return {
     'name': 'semantic_analysis',
     'description': f"Provide ONLY a concise semantic analysis of the message, DO NOT actually answer like you normally would! Note that the message can be in any language. Think and think again, could the message be unclear due to context being partially missing? You currently see {round(recalled_context_fraction*100)}% of the context.",
