@@ -27,7 +27,7 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
       f_required_context['posts'] = 1
     if int(f_required_context['posts']):
       if f_required_context['modality'] == 'image':
-        f_avail = {f: f_avail[f] for f in f_avail if f in [fdict['name'] for fdict in generate_images+text_response_default]}
+        f_avail = {f: f_avail[f] for f in f_avail if f in [fdict['name'] for fdict in text_response_default]}
       elif f_required_context['modality'] == 'self':
         f_avail = {f: f_avail[f] for f in f_avail if f in [fdict['name'] for fdict in runtime_self_analysis]}
       elif f_required_context['modality'] == 'text':
