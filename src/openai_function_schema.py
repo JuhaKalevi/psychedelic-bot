@@ -13,7 +13,8 @@ def semantic_analysis(available_functions):
       'type': 'object',
       'properties': {
         'analysis': {
-          'type': 'string'
+          'type': 'string',
+          'description': 'Semantic analysis of the message after translation'
         },
         'confidence': {
           'type': 'number'
