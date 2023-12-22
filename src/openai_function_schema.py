@@ -9,13 +9,13 @@ def semantic_analysis(recalled_context_fraction):
   print(recalled_context_fraction)
   return {
     'name': 'semantic_analysis',
-    'description': f"You currently see {round(recalled_context_fraction*100)}% of the context. You can see more if it's necessary for your analysis.",
+    'description': f"You currently see {round(recalled_context_fraction*100)}% of the context. Lower confidence_rating to indicate more context might be useful.",
     'parameters': {
       'type': 'object',
       'properties': {
         'analysis': {
           'type': 'string',
-          'description': "Absolutely refrain from actually answering the message, just analyze it for semantic meaning or problems! Use NLP approach in your analysis.",
+          'description': "Absolutely refrain from normally answering the message! First translate the message to english if necessary, then reply with extremely sparse & concise phrasing by stating what this message signifies semantically. If something is unclear or the message seems confused, point that out.",
         },
         'confidence_rating': {
           'type': 'number',
