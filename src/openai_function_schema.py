@@ -14,7 +14,7 @@ def semantic_analysis(available_functions):
       'properties': {
         'analysis': {
           'type': 'string',
-          'description': 'Semantic analysis of the message after translation'
+          'description': 'Semantic analysis of the message after translation. Not a direct translation but a concise summary of the semantics of the message!'
         },
         'confidence': {
           'type': 'number'
