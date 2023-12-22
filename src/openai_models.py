@@ -10,9 +10,9 @@ async def understand_intention(msgs:list, f_avail:dict, f_choose:dict, model:str
   f_stage = f_choose['name']
   for f in [f for f in [text_response_default,runtime_self_analysis,generate_images] if f['name'] in f_avail.keys()]:
     f_coarse.append({'name':f['name'],'parameters':empty_params})
-  print(f"{f_stage}:{count_tokens(f_choose+f_coarse+msgs)}")
+  print(f"{f_stage}:{count_tokens([f_choose]+f_coarse+msgs)}")
   delta = ''
-  async for r in await client.chat.completions.create(messages=msgs, functions=f_choose+f_coarse, function_call={'name':f_stage}, model=model, stream=True):
+  async for r in await client.chat.completions.create(messages=msgs, functions=[f_choose]+f_coarse, function_call={'name':f_stage}, model=model, stream=True):
     if r.choices[0].delta.function_call:
       delta += r.choices[0].delta.function_call.arguments
     else:
