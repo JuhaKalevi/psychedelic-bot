@@ -20,8 +20,8 @@ async def answer(msgs:list, available_functions:dict):
   print(f"is_mostly_english:{is_mostly_english(msgs[-1]['content'])}")
   client = AsyncOpenAI()
   try:
-    semantics = await understand_intention(msgs[-1:], [semantic_analysis()], 'gpt-4-1106-preview')
-    intention = await understand_intention(semantics['analysis'], [intention_analysis(list(available_functions))], 'gpt-3.5-turbo-16k')
+    semantics = await understand_intention(msgs[-1:], semantic_analysis(), 'gpt-4-1106-preview')
+    intention = await understand_intention(semantics['analysis'], intention_analysis(list(available_functions)), 'gpt-3.5-turbo-16k')
     print(intention)
     f_choice = intention['next_action']
     f_description = next(([f] for f in actions if f['name'] == f_choice), [])
