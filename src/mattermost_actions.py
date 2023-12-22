@@ -96,6 +96,7 @@ class MattermostActions(Actions):
     buffer = []
     chunks_processed = []
     start_time = time()
+    print(msgs)
     async with Lock():
       async for chunk in chat_completion(msgs, model=self.model, max_tokens=4096):
         buffer.append(chunk)
