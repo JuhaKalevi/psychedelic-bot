@@ -22,7 +22,7 @@ def semantic_analysis():
 
 def intention_analysis(available_functions):
   return {
-    'name': 'semantic_analysis',
+    'name': 'intention_analysis',
     'parameters': {
       'type': 'object',
       'properties': {
