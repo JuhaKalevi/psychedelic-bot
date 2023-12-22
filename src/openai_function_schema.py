@@ -26,9 +26,13 @@ def semantic_analysis(recalled_context_fraction):
       'properties': {
         'analysis': {
           'type': 'string',
+        },
+        'confidence_rating': {
+          'type': 'number',
+          'description': "Confidence rating (0-1) on how certain you are about this analysis.",
         }
       },
-      'required': ['analysis']
+      'required': ['analysis','confidence_rating']
     }
   }
 

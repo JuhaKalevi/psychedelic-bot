@@ -17,7 +17,6 @@ async def react(msgs:list, available_functions:dict):
     f_choice = intention['next_action']
     f_description = next(([f] for f in actions if f['name'] == f_choice), [])
     if f_description[0]['parameters'] != empty_params:
-      print(f'{f_choice}:{count_tokens(f_description)} msgs:{count_tokens(msgs)}')
       f_args_completion = await client.chat.completions.create(messages=msgs, functions=f_description, function_call={'name':f_choice}, model='gpt-4-1106-preview')
       function_args_msg = f_args_completion.choices[0].message
       arguments = loads(function_args_msg.function_call.arguments)
@@ -36,9 +35,9 @@ async def think(msgs:list, function_call:dict, model:str):
     if r.choices[0].delta.function_call:
       delta += r.choices[0].delta.function_call.arguments
     else:
-      f_decision = {d:loads(delta)[d] for d in decisions}
-      print(f"{function_call['name']}:{f_decision}")
-      return f_decision
+      outcomes = {d:loads(delta)[d] for d in decisions}
+      print(f"{function_call['name']}:{outcomes}")
+      return outcomes
 
 async def say(msgs, model='gpt-4-1106-preview', max_tokens=None):
   client = AsyncOpenAI()
