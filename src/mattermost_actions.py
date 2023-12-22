@@ -69,7 +69,7 @@ class MattermostActions(Actions):
                 img_byte = temp_file.read()
               remove(f'/tmp/{post_file_path}')
               base64_image = base64.b64encode(img_byte).decode("utf-8")
-              msgs.append({'role':role, 'content':[{'type':'image_url','image_url':{'url':f'data:image/{file_type};base64,{base64_image}','detail':'high'}}]})
+              msgs_vision.append({'role':role, 'content':[{'type':'image_url','image_url':{'url':f'data:image/{file_type};base64,{base64_image}','detail':'high'}}]})
               msg_tokens += count_image_tokens(*Image.open(io.BytesIO(base64.b64decode(base64_image))).size)
               self.model = 'gpt-4-vision-preview'
             except UnidentifiedImageError as err:
@@ -96,7 +96,6 @@ class MattermostActions(Actions):
     buffer = []
     chunks_processed = []
     start_time = time()
-    print(msgs)
     async with Lock():
       async for chunk in chat_completion(msgs, model=self.model, max_tokens=4096):
         buffer.append(chunk)
