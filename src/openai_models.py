@@ -1,30 +1,27 @@
 from json import loads
 from openai import AsyncOpenAI
-from helpers import count_tokens, is_mostly_english
-from openai_function_schema import actions, empty_params, translate_to_english, semantic_analysis, intention_analysis
+from helpers import count_tokens
+from openai_function_schema import actions, empty_params, semantic_analysis, intention_analysis
 
 async def react(msgs:list, available_functions:dict):
   client = AsyncOpenAI()
   try:
-    if is_mostly_english(msgs[-1]['content']):
-      msg = msgs[-1:]
-    else:
-      msg_in_english = await think(msgs[-1:], translate_to_english(), 'gpt-3.5-turbo-16k')
-      msg = [{'role':'user','content':msg_in_english['translation']}]
-    print(len(msg)/len(msgs))
-    semantics = await think(msg, semantic_analysis(len(msg)/len(msgs)), 'gpt-4-1106-preview')
+    semantic_analysis_attempts = 0
+    semantic_analysis_confidence = 0
+    while semantic_analysis_attempts < 3 and semantic_analysis_confidence < 0.85:
+      context = msgs[-1-semantic_analysis_attempts:]
+      semantics = await think(context, semantic_analysis(len(context)/len(msgs)), 'gpt-4-1106-preview')
     intention = await think([{'role':'user','content':semantics['analysis']}], intention_analysis(list(available_functions)), 'gpt-4-1106-preview')
-    f_choice = intention['next_action']
-    f_description = next(([f] for f in actions if f['name'] == f_choice), [])
-    if f_description[0]['parameters'] != empty_params:
-      f_args_completion = await client.chat.completions.create(messages=msgs, functions=f_description, function_call={'name':f_choice}, model='gpt-4-1106-preview')
-      function_args_msg = f_args_completion.choices[0].message
-      arguments = loads(function_args_msg.function_call.arguments)
-      await available_functions[f_choice](**arguments)
+    action = intention['next_action']
+    action_description = next(([f] for f in actions if f['name'] == action), [])
+    if action_description[0]['parameters'] != empty_params:
+      action_arguments_completion = await client.chat.completions.create(messages=msgs, functions=action_description, function_call={'name':action}, model='gpt-4-1106-preview')
+      arguments = loads(action_arguments_completion.choices[0].message.function_call.arguments)
+      await available_functions[action](**arguments)
     else:
-      await available_functions[f_choice]()
+      await available_functions[action]()
   except IndexError as err:
-    print(f'{f_choice}: ERROR: {err}')
+    print(f'{action}: ERROR: {err}')
 
 async def think(msgs:list, function_call:dict, model:str):
   client = AsyncOpenAI()

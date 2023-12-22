@@ -5,18 +5,6 @@ IMGGEN_WEIGHT = "Parentheses are used to increase the weight of (emphasize) toke
 IMGGEN_REMIND = "Don't use any kind of formatting to separate these keywords, expect what is mentioned above! Remember to translate everything to english!"
 empty_params = {'type':'object','properties':{}}
 
-def translate_to_english():
-  return {
-    'name': 'translate_to_english',
-    'parameters': {
-      'type': 'object',
-      'properties': {
-        'translation': {'type': 'string'}
-      },
-      'required': ['translation']
-    }
-  }
-
 def semantic_analysis(recalled_context_fraction):
   return {
     'name': 'semantic_analysis',
