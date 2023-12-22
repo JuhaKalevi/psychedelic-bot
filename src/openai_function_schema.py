@@ -17,10 +17,10 @@ def translate_to_english():
     }
   }
 
-def semantic_analysis():
+def semantic_analysis(recalled_context_fraction):
   return {
     'name': 'semantic_analysis',
-    'description': "Only a concise semantic analysis of the message, don't actually answer! Think could the message be unclear due to context being partially missing?",
+    'description': f"Provide ONLY a concise semantic analysis of the message, DO NOT actually answer like you normally would! Think and think again, could the message be unclear due to context being partially missing?",
     'parameters': {
       'type': 'object',
       'properties': {
