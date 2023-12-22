@@ -46,7 +46,7 @@ semantic_analysis = {
         'type': 'string',
       },
       'confidence': {
-        'type': 'float'
+        'type': 'number'
       }
     },
     'required': ['analysis','confidence']
