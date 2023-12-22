@@ -17,7 +17,7 @@ async def react(full_context:list, available_functions:dict):
     action = intention['next_action']
     action_description = next(([f] for f in actions if f['name'] == action), [])
     if action_description[0]['parameters'] != empty_params:
-      action_arguments_completion = await client.chat.completions.create(messages=full_context, functions=action_description, function_call={'name':action}, model='gpt-4-1106-preview')
+      action_arguments_completion = await client.chat.completions.create(messages=full_context, functions=action_description, function_call={'name':action}, model='gpt-4-1106-preview', top_p=.0000000000000000000001)
       arguments = loads(action_arguments_completion.choices[0].message.function_call.arguments)
       await available_functions[action](**arguments)
     else:
