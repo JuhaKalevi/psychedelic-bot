@@ -7,11 +7,11 @@ async def react(full_context:list, available_functions:dict):
   client = AsyncOpenAI()
   try:
     semantic_analysis_attempts = 0
-    semantic_analysis_confidence = 0
     while semantic_analysis_attempts < 3:
       semantic_analysis_attempts += 1
       current_context = full_context[-semantic_analysis_attempts:]
       semantics = await think(current_context, semantic_analysis(len(current_context)/len(full_context)), 'gpt-3.5-turbo-1106')
+      semantic_analysis_confidence = semantics['confidence_rating']
       if current_context == full_context or semantic_analysis_confidence > 0.85:
         break
     intention = await think([{'role':'user','content':semantics['analysis']}], intention_analysis(list(available_functions)), 'gpt-4-1106-preview')
