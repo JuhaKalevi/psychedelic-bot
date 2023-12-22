@@ -1,14 +1,17 @@
 from json import loads
 from openai import AsyncOpenAI
 from helpers import count_tokens, is_mostly_english
-from openai_function_schema import actions, empty_params, semantic_analysis, intention_analysis
+from openai_function_schema import actions, empty_params, translate_to_english, semantic_analysis, intention_analysis
 
 async def react(msgs:list, available_functions:dict):
-  print(f"is_mostly_english:{is_mostly_english(msgs[-1]['content'])}")
   client = AsyncOpenAI()
   try:
-    semantics = await think(msgs[-1:], semantic_analysis(), 'gpt-4-1106-preview')
-    intention = await think([{'role':'user','content':semantics['analysis']}], intention_analysis(list(available_functions)), 'gpt-4-1106-preview')
+    if not is_mostly_english(msgs[-1]['content']):
+      msg = await think(msgs[-1:], translate_to_english(), 'gpt-3.5-turbo-16k')
+    else:
+      msg = msgs[-1]
+    msg_semantic_analysis = await think(msg, semantic_analysis(), 'gpt-4-1106-preview')
+    intention = await think([{'role':'user','content':msg_semantic_analysis['analysis']}], intention_analysis(list(available_functions)), 'gpt-4-1106-preview')
     print(intention)
     f_choice = intention['next_action']
     f_description = next(([f] for f in actions if f['name'] == f_choice), [])
