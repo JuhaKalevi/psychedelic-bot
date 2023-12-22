@@ -1,6 +1,6 @@
 from json import loads
 from openai import AsyncOpenAI
-from helpers import count_tokens
+from helpers import count_tokens, is_mostly_english
 from openai_function_schema import text_response_default, estimate_required_context, generate_images, runtime_self_analysis, empty_params
 
 async def chat_completion_choices(msgs:list, f_avail:dict, f_choose:list, decisions:list[str], model:str):
@@ -20,6 +20,7 @@ async def chat_completion_choices(msgs:list, f_avail:dict, f_choose:list, decisi
       return f_decision
 
 async def chat_completion_functions(msgs:list, f_avail:dict):
+  print(f'is_mostly_english:{is_mostly_english(msgs[-1:])}')
   client = AsyncOpenAI()
   try:
     f_required_context = await chat_completion_choices(msgs[-1:], {}, estimate_required_context, ['modality','posts'], 'gpt-4-1106-preview')

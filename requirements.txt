@@ -2,6 +2,7 @@ aiofiles
 asyncio
 discord
 httpx
+langdetect
 openai
 pylint
 tiktoken
