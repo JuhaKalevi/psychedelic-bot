@@ -38,7 +38,7 @@ estimate_required_context = {
 
 semantic_analysis = {
   'name': 'semantic_analysis',
-  'description': 'Provide semantic analysis of the message and focus on whether the message could be unclear due to context being only partially visible. Also produce a confidence rating (0-1) on how certain you are what to do next.',
+  'description': 'Provide semantic analysis of the message (translate to english first) and focus on whether the message could be unclear due to context being only partially visible. Also produce a confidence rating (0-1) on how certain you are what to do next.',
   'parameters': {
     'type': 'object',
     'properties': {
