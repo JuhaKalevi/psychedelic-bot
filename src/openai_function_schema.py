@@ -14,6 +14,7 @@ def semantic_analysis(recalled_context_fraction):
       'properties': {
         'analysis': {
           'type': 'string',
+          'description': "Semantic analysis of the message. Absolutely refrain from answering the message, just analyze it for semantic meaning or problems!",
         },
         'confidence_rating': {
           'type': 'number',
