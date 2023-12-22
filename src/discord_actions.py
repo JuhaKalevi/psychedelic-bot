@@ -4,7 +4,7 @@ from asyncio import Lock
 import discord
 from actions import Actions
 from helpers import count_tokens
-from openai_models import chat_completion_functions, chat_completion
+from openai_models import answer, chat_completion
 
 class DiscordActions(Actions):
 
@@ -26,7 +26,7 @@ class DiscordActions(Actions):
     elif self.channel.type == discord.ChannelType.public_thread:
       self.context.append(self.message)
     if any(self.client.user.mentioned_in(msg) for msg in self.context):
-      return await chat_completion_functions(await self.recall_context(max_tokens=12288), self.available_functions)
+      return await answer(await self.recall_context(max_tokens=12288), self.available_functions)
 
   async def recall_context(self, count=None, max_tokens=12288):
     if count:

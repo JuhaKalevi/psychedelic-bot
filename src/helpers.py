@@ -11,6 +11,7 @@ def count_tokens(msg) -> int:
 
 def is_mostly_english(text, threshold=0.9):
   for language in detect_langs(text):
+    print(language)
     if language.lang == 'en' and language.prob >= threshold:
       return True
   return False
