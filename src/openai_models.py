@@ -1,7 +1,7 @@
 from json import loads
 from openai import AsyncOpenAI
 from helpers import count_tokens, is_mostly_english
-from openai_function_schema import text_response_default, estimate_required_context, generate_images, runtime_self_analysis, empty_params, semantic_analysis
+from openai_function_schema import actions, empty_params, semantic_analysis
 
 async def understand_intention(msgs:list, function_call:dict, model:str):
   client = AsyncOpenAI()
@@ -16,55 +16,22 @@ async def understand_intention(msgs:list, function_call:dict, model:str):
       print(f"{function_call['name']}:{f_decision}")
       return f_decision
 
-async def answer(msgs:list, f_avail:dict):
+async def answer(msgs:list, available_functions:dict):
   print(f"is_mostly_english:{is_mostly_english(msgs[-1]['content'])}")
   client = AsyncOpenAI()
   try:
-    intention = await understand_intention(msgs[-1:], semantic_analysis, 'gpt-4-1106-preview')
+    intention = await understand_intention(msgs[-1:], semantic_analysis(available_functions), 'gpt-4-1106-preview')
     print(intention)
-    f_required_context = await understand_intention(msgs[-1:], {}, estimate_required_context, 'gpt-4-1106-preview')
-    if f_required_context['modality'] == 'image' and f_required_context['posts'] == 0:
-      f_required_context['posts'] = 1
-    if int(f_required_context['posts']):
-      if f_required_context['modality'] == 'image':
-        f_avail = {f: f_avail[f] for f in f_avail if f in [fdict['name'] for fdict in text_response_default]}
-      elif f_required_context['modality'] == 'self':
-        f_avail = {f: f_avail[f] for f in f_avail if f in [fdict['name'] for fdict in runtime_self_analysis]}
-      elif f_required_context['modality'] == 'text':
-        f_avail = {f: f_avail[f] for f in f_avail if f in [fdict['name'] for fdict in text_response_default]}
-      f_choose = [
-        {
-          'name': 'choose_function',
-          'parameters': {
-            'type': 'object',
-            'properties': {
-              'function_name': {
-                'type': 'string',
-                'enum': list(f_avail)
-              }
-            },
-            'required': ['function_name']
-          }
-        }
-      ]
-      f_choice = await understand_intention(msgs[-int(f_required_context['posts']):], f_avail, f_choose, 'gpt-4-1106-preview')
-      f_choice = f_choice['function_name']
-      if f_required_context['modality'] == 'image':
-        f_description = next(([f] for f in generate_images+text_response_default if f['name'] == f_choice), [])
-      elif f_required_context['modality'] == 'self':
-        f_description = next(([f] for f in runtime_self_analysis if f['name'] == f_choice), [])
-      elif f_required_context['modality'] == 'text':
-        f_description = next(([f] for f in text_response_default if f['name'] == f_choice), [])
-      if f_description[0]['parameters'] != empty_params:
-        print(f'{f_choice}:{count_tokens(f_description)} msgs:{count_tokens(msgs)}')
-        f_args_completion = await client.chat.completions.create(messages=msgs, functions=f_description, function_call={'name':f_choice}, model='gpt-4-1106-preview')
-        function_args_msg = f_args_completion.choices[0].message
-        arguments = loads(function_args_msg.function_call.arguments)
-        await f_avail[f_choice](**arguments)
-      else:
-        await f_avail[f_choice]()
+    f_choice = intention['next_action']
+    f_description = next(([f] for f in actions if f['name'] == f_choice), [])
+    if f_description[0]['parameters'] != empty_params:
+      print(f'{f_choice}:{count_tokens(f_description)} msgs:{count_tokens(msgs)}')
+      f_args_completion = await client.chat.completions.create(messages=msgs, functions=f_description, function_call={'name':f_choice}, model='gpt-4-1106-preview')
+      function_args_msg = f_args_completion.choices[0].message
+      arguments = loads(function_args_msg.function_call.arguments)
+      await available_functions[f_choice](**arguments)
     else:
-      await f_avail['text_response_default']()
+      await available_functions[f_choice]()
   except IndexError as err:
     print(f'{f_choice}: ERROR: {err}')
 
