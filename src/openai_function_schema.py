@@ -9,17 +9,17 @@ def semantic_analysis(recalled_context_fraction):
   print(recalled_context_fraction)
   return {
     'name': 'semantic_analysis',
-    'description': f"Provide ONLY a very concise semantic analysis of the message. You currently see {round(recalled_context_fraction*100)}% of the context. Absolutely refrain from answering the message, just analyze it for semantic meaning or problems! Use NLP.",
+    'description': f"You currently see {round(recalled_context_fraction*100)}% of the context. You can see more if it's necessary for your analysis.",
     'parameters': {
       'type': 'object',
       'properties': {
         'analysis': {
           'type': 'string',
-          'description': "Semantic analysis of the message. Absolutely refrain from answering the message, just analyze it for semantic meaning or problems!",
+          'description': "Absolutely refrain from actually answering the message, just analyze it for semantic meaning or problems! Use NLP approach in your analysis.",
         },
         'confidence_rating': {
           'type': 'number',
-          'description': "Confidence rating (0-1) on how certain you are about this analysis.",
+          'description': "Confidence rating (0-1) on how certain you are about this analysis. Consider the percentage of context you have available at this time.",
         }
       },
       'required': ['analysis','confidence_rating']
