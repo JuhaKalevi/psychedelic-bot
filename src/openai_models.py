@@ -8,7 +8,7 @@ async def react(msgs:list, available_functions:dict):
   client = AsyncOpenAI()
   try:
     semantics = await think(msgs[-1:], semantic_analysis(), 'gpt-4-1106-preview')
-    intention = await think([{'role':'user','content':semantics['analysis']}], intention_analysis(list(available_functions)), 'gpt-3.5-turbo-16k')
+    intention = await think([{'role':'user','content':semantics['analysis']}], intention_analysis(list(available_functions)), 'gpt-4-1106-preview')
     print(intention)
     f_choice = intention['next_action']
     f_description = next(([f] for f in actions if f['name'] == f_choice), [])
