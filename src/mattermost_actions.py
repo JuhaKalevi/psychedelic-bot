@@ -82,8 +82,8 @@ class MattermostActions(Actions):
       msgs_vision.append(msg_vision)
       tokens = new_tokens
     msgs.reverse()
+    msgs_vision.reverse()
     if self.model == 'gpt-4-vision-preview':
-      print(msgs_vision)
       return self.instructions + msgs_vision
     return self.instructions + msgs
 
