@@ -8,7 +8,7 @@ async def understand_intention(msgs:list, f_avail:dict, f_choose:dict, model:str
   decisions = list(f_choose['parameters']['properties'])
   f_coarse = []
   f_stage = f_choose['name']
-  for f in [f for f in text_response_default+runtime_self_analysis+generate_images if f['name'] in f_avail.keys()]:
+  for f in [f for f in [text_response_default,runtime_self_analysis,generate_images] if f['name'] in f_avail.keys()]:
     f_coarse.append({'name':f['name'],'parameters':empty_params})
   print(f"{f_stage}:{count_tokens(f_choose+f_coarse+msgs)}")
   delta = ''
