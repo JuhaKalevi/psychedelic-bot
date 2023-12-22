@@ -10,6 +10,7 @@ async def react(msgs:list, available_functions:dict):
     semantic_analysis_confidence = 0
     while semantic_analysis_attempts < 3 and semantic_analysis_confidence < 0.85:
       context = msgs[-1-semantic_analysis_attempts:]
+      semantic_analysis_attempts += 1
       semantics = await think(context, semantic_analysis(len(context)/len(msgs)), 'gpt-4-1106-preview')
     intention = await think([{'role':'user','content':semantics['analysis']}], intention_analysis(list(available_functions)), 'gpt-4-1106-preview')
     action = intention['next_action']
