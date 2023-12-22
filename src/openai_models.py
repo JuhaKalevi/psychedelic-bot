@@ -8,6 +8,7 @@ async def react(full_context:list, available_functions:dict):
   try:
     semantic_analysis_attempts = 0
     semantic_analysis_confidence = 0
+    print(len(full_context[-semantic_analysis_attempts:]))
     while semantic_analysis_attempts < 3 and semantic_analysis_confidence < 0.85 and len(full_context[-semantic_analysis_attempts:]) < len(full_context):
       semantic_analysis_attempts += 1
       current_context = full_context[-semantic_analysis_attempts:]
