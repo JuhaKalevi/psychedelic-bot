@@ -1,11 +1,15 @@
 from json import loads
 from openai import AsyncOpenAI
+from transformers import pipeline
+
 from helpers import count_tokens
 from openai_function_schema import actions, empty_params, semantic_analysis, intention_analysis
 
 async def react(full_context:list, available_functions:dict):
   client = AsyncOpenAI()
   try:
+    classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
+    print(classifier(full_context[-1:], ['self_analysis_request','image_generation_request']))
     semantic_analysis_attempts = 0
     while semantic_analysis_attempts < 3:
       semantic_analysis_attempts += 1
