@@ -9,7 +9,7 @@ def semantic_analysis(recalled_context_fraction):
   print(recalled_context_fraction)
   return {
     'name': 'semantic_analysis',
-    'description': f"Provide ONLY a concise semantic analysis of the message, DO NOT actually answer like you normally would! Note that the message can be in any language. Think and think again, could the message be unclear due to context being partially missing? You currently see {round(recalled_context_fraction*100)}% of the context.",
+    'description': f"Provide ONLY a very concise semantic analysis of the message. You currently see {round(recalled_context_fraction*100)}% of the context. Absolutely refrain from answering the message, just analyze it for semantic meaning or problems! Use NLP.",
     'parameters': {
       'type': 'object',
       'properties': {
