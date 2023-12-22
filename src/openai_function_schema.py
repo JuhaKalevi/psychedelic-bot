@@ -8,23 +8,23 @@ empty_params = {'type':'object','properties':{}}
 def semantic_analysis(available_functions):
   return {
     'name': 'semantic_analysis',
-    'description': "INSTEAD OF ANSWERING NORMALLY, Provide concise semantic analysis of message after translation to english. Focus on whether the message could be unclear due to context being partially missing. Also produce a confidence rating (0-1) on how certain you are what to do next given provided actions.",
+    'description': "INSTEAD OF ANSWERING NORMALLY, Provide concise semantic analysis of message after translation to english. Focus on whether the message could be unclear due to context being partially missing. DO NOT ANSWER NORMALLY!",
     'parameters': {
       'type': 'object',
       'properties': {
-        'analysis': {
+        'semantic_analysis': {
           'type': 'string',
-          'description': 'Semantic analysis of the message after translation. Not a direct translation but a concise summary of the semantics of the message!'
         },
-        'confidence': {
-          'type': 'number'
+        'confidence_rating': {
+          'type': 'number',
+          'description': "Confidence rating (0-1) on how certain you are what to do next given provided actions.",
         },
         'next_action': {
           'type': 'string',
           'enum': available_functions
         }
       },
-      'required': ['analysis','confidence','next_action']
+      'required': ['semantic_analysis','confidence_rating','next_action']
     }
   }
 
