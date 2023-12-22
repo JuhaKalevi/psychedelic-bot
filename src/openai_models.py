@@ -3,28 +3,24 @@ from openai import AsyncOpenAI
 from helpers import count_tokens, is_mostly_english
 from openai_function_schema import text_response_default, estimate_required_context, generate_images, runtime_self_analysis, empty_params, semantic_analysis
 
-async def understand_intention(msgs:list, f_avail:dict, f_choose:dict, model:str):
+async def understand_intention(msgs:list, function_call:dict, model:str):
   client = AsyncOpenAI()
-  decisions = list(f_choose['parameters']['properties'])
-  f_coarse = []
-  f_stage = f_choose['name']
-  for f in [f for f in [text_response_default,runtime_self_analysis,generate_images] if f['name'] in f_avail.keys()]:
-    f_coarse.append({'name':f['name'],'parameters':empty_params})
-  print(f"{f_stage}:{count_tokens([f_choose]+f_coarse+msgs)}")
+  decisions = list(function_call['parameters']['properties'])
+  print(f"{function_call['name']}:{count_tokens([function_call]+msgs)}")
   delta = ''
-  async for r in await client.chat.completions.create(messages=msgs, functions=[f_choose]+f_coarse, function_call={'name':f_stage}, model=model, stream=True):
+  async for r in await client.chat.completions.create(messages=msgs, functions=[function_call], function_call={'name':function_call['name']}, model=model, stream=True):
     if r.choices[0].delta.function_call:
       delta += r.choices[0].delta.function_call.arguments
     else:
       f_decision = {d:loads(delta)[d] for d in decisions}
-      print(f"{f_stage}:{f_decision}")
+      print(f"{function_call['name']}:{f_decision}")
       return f_decision
 
 async def answer(msgs:list, f_avail:dict):
   print(f"is_mostly_english:{is_mostly_english(msgs[-1]['content'])}")
   client = AsyncOpenAI()
   try:
-    intention = await understand_intention(msgs[-1:], {}, semantic_analysis, 'gpt-4-1106-preview')
+    intention = await understand_intention(msgs[-1:], semantic_analysis, 'gpt-4-1106-preview')
     print(intention)
     f_required_context = await understand_intention(msgs[-1:], {}, estimate_required_context, 'gpt-4-1106-preview')
     if f_required_context['modality'] == 'image' and f_required_context['posts'] == 0:
