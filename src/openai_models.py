@@ -3,20 +3,7 @@ from openai import AsyncOpenAI
 from helpers import count_tokens, is_mostly_english
 from openai_function_schema import actions, empty_params, semantic_analysis, intention_analysis
 
-async def think(msgs:list, function_call:dict, model:str):
-  client = AsyncOpenAI()
-  decisions = list(function_call['parameters']['properties'])
-  print(f"{function_call['name']}:{count_tokens([function_call]+msgs)}")
-  delta = ''
-  async for r in await client.chat.completions.create(messages=msgs, functions=[function_call], function_call={'name':function_call['name']}, model=model, stream=True):
-    if r.choices[0].delta.function_call:
-      delta += r.choices[0].delta.function_call.arguments
-    else:
-      f_decision = {d:loads(delta)[d] for d in decisions}
-      print(f"{function_call['name']}:{f_decision}")
-      return f_decision
-
-async def answer(msgs:list, available_functions:dict):
+async def react(msgs:list, available_functions:dict):
   print(f"is_mostly_english:{is_mostly_english(msgs[-1]['content'])}")
   client = AsyncOpenAI()
   try:
@@ -36,7 +23,20 @@ async def answer(msgs:list, available_functions:dict):
   except IndexError as err:
     print(f'{f_choice}: ERROR: {err}')
 
-async def chat_completion(msgs, model='gpt-4-1106-preview', max_tokens=None):
+async def think(msgs:list, function_call:dict, model:str):
+  client = AsyncOpenAI()
+  decisions = list(function_call['parameters']['properties'])
+  print(f"{function_call['name']}:{count_tokens([function_call]+msgs)}")
+  delta = ''
+  async for r in await client.chat.completions.create(messages=msgs, functions=[function_call], function_call={'name':function_call['name']}, model=model, stream=True):
+    if r.choices[0].delta.function_call:
+      delta += r.choices[0].delta.function_call.arguments
+    else:
+      f_decision = {d:loads(delta)[d] for d in decisions}
+      print(f"{function_call['name']}:{f_decision}")
+      return f_decision
+
+async def say(msgs, model='gpt-4-1106-preview', max_tokens=None):
   client = AsyncOpenAI()
   kwargs = {'messages':msgs, 'model':model, 'stream':True, 'temperature':0.5, 'top_p':0.5}
   if max_tokens:

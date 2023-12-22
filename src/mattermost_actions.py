@@ -11,7 +11,7 @@ from PIL import Image, UnidentifiedImageError
 import mattermostdriver
 from actions import middleware_url, Actions
 from helpers import count_image_tokens, count_tokens
-from openai_models import answer, chat_completion
+from openai_models import react, say
 
 class MattermostActions(Actions):
 
@@ -36,7 +36,7 @@ class MattermostActions(Actions):
     self.client.user_id = bot_user['id']
     self.thread = await self.client.posts.get_thread(self.post['id'])
     if channel['type'] == 'D' or (len(self.thread['posts'].values()) == 1 and next(iter(self.thread['posts'].values()))['user_id'] == self.client.user_id) or any(self.client.name_in_message(post['message']) for post in self.thread['posts'].values()):
-      return await answer(await self.recall_context(vision=False), self.available_functions)
+      return await react(await self.recall_context(vision=False), self.available_functions)
 
   async def recall_context(self, count=None, max_tokens=126976, vision=True):
     context = self.thread
@@ -97,7 +97,7 @@ class MattermostActions(Actions):
     chunks_processed = []
     start_time = time()
     async with Lock():
-      async for chunk in chat_completion(msgs, model=self.model, max_tokens=4096):
+      async for chunk in say(msgs, model=self.model, max_tokens=4096):
         buffer.append(chunk)
         if (time() - start_time) * 1000 >= 500:
           joined_chunks = ''.join(buffer)

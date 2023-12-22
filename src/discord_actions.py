@@ -4,7 +4,7 @@ from asyncio import Lock
 import discord
 from actions import Actions
 from helpers import count_tokens
-from openai_models import answer, chat_completion
+from openai_models import react, say
 
 class DiscordActions(Actions):
 
@@ -26,7 +26,7 @@ class DiscordActions(Actions):
     elif self.channel.type == discord.ChannelType.public_thread:
       self.context.append(self.message)
     if any(self.client.user.mentioned_in(msg) for msg in self.context):
-      return await answer(await self.recall_context(max_tokens=12288), self.available_functions)
+      return await react(await self.recall_context(max_tokens=12288), self.available_functions)
 
   async def recall_context(self, count=None, max_tokens=12288):
     if count:
@@ -59,7 +59,7 @@ class DiscordActions(Actions):
     chunks_processed = []
     start_time = time()
     async with Lock():
-      async for chunk in chat_completion(msgs, model=self.model, max_tokens=4096):
+      async for chunk in say(msgs, model=self.model, max_tokens=4096):
         if not chunk:
           continue
         buffer.append(chunk)
