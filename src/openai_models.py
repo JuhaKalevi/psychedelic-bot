@@ -20,6 +20,7 @@ async def chat_completion_choices(msgs:list, f_avail:dict, f_choose:list, decisi
       return f_decision
 
 async def chat_completion_functions(msgs:list, f_avail:dict):
+  print(msgs[-1:])
   print(f"is_mostly_english:{is_mostly_english(msgs[-1:]['content'])}")
   client = AsyncOpenAI()
   try:
