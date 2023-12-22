@@ -5,16 +5,27 @@ IMGGEN_WEIGHT = "Parentheses are used to increase the weight of (emphasize) toke
 IMGGEN_REMIND = "Don't use any kind of formatting to separate these keywords, expect what is mentioned above! Remember to translate everything to english!"
 empty_params = {'type':'object','properties':{}}
 
-def semantic_analysis(available_functions):
+def semantic_analysis():
   return {
     'name': 'semantic_analysis',
-    'description': "INSTEAD OF ANSWERING NORMALLY, Provide concise semantic analysis of message after translation to english. Focus on whether the message could be unclear due to context being partially missing. DO NOT ANSWER NORMALLY!",
+    'description': "Concise semantic analysis after translation to english. Could message be unclear due to context being partially missing?",
     'parameters': {
       'type': 'object',
       'properties': {
-        'semantic_analysis': {
+        'analysis': {
           'type': 'string',
-        },
+        }
+      },
+      'required': ['analysis']
+    }
+  }
+
+def intention_analysis(available_functions):
+  return {
+    'name': 'semantic_analysis',
+    'parameters': {
+      'type': 'object',
+      'properties': {
         'confidence_rating': {
           'type': 'number',
           'description': "Confidence rating (0-1) on how certain you are what to do next given provided actions.",
@@ -24,7 +35,7 @@ def semantic_analysis(available_functions):
           'enum': available_functions
         }
       },
-      'required': ['semantic_analysis','confidence_rating','next_action']
+      'required': ['confidence_rating','next_action']
     }
   }
 
