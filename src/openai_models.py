@@ -1,10 +1,12 @@
 from json import loads
 from openai import AsyncOpenAI
 from helpers import count_tokens, is_mostly_english
-from openai_function_schema import text_response_default, estimate_required_context, generate_images, runtime_self_analysis, empty_params
+from openai_function_schema import text_response_default, estimate_required_context, generate_images, runtime_self_analysis, empty_params, semantic_analysis
 
 async def chat_completion_choices(msgs:list, f_avail:dict, f_choose:list, decisions:list[str], model:str):
   client = AsyncOpenAI()
+  decisionsx = [p for p in f_choose[0]['parameters']['properties']]
+  print(decisionsx)
   f_coarse = []
   f_stage = f_choose[0]['name']
   for f in [f for f in text_response_default+runtime_self_analysis+generate_images if f['name'] in f_avail.keys()]:
@@ -23,6 +25,7 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
   print(f"is_mostly_english:{is_mostly_english(msgs[-1]['content'])}")
   client = AsyncOpenAI()
   try:
+    semantic_analysis = await chat_completion_choices(msgs[-1:], {}, semantic_analysis, ['modality','posts'], 'gpt-4-1106-preview')
     f_required_context = await chat_completion_choices(msgs[-1:], {}, estimate_required_context, ['modality','posts'], 'gpt-4-1106-preview')
     if f_required_context['modality'] == 'image' and f_required_context['posts'] == 0:
       f_required_context['posts'] = 1
