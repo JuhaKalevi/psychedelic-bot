@@ -24,7 +24,7 @@ async def answer(msgs:list, f_avail:dict):
   print(f"is_mostly_english:{is_mostly_english(msgs[-1]['content'])}")
   client = AsyncOpenAI()
   try:
-    intention = await understand_intention(msgs[-1:], {}, semantic_analysis, 'gpt-3.5-turbo-16k')
+    intention = await understand_intention(msgs[-1:], {}, semantic_analysis, 'gpt-4-1106-preview')
     print(intention)
     f_required_context = await understand_intention(msgs[-1:], {}, estimate_required_context, 'gpt-4-1106-preview')
     if f_required_context['modality'] == 'image' and f_required_context['posts'] == 0:
