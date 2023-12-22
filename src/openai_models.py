@@ -3,12 +3,11 @@ from openai import AsyncOpenAI
 from helpers import count_tokens, is_mostly_english
 from openai_function_schema import text_response_default, estimate_required_context, generate_images, runtime_self_analysis, empty_params, semantic_analysis
 
-async def understand_intention(msgs:list, f_avail:dict, f_choose:dict, decisions:list[str], model:str):
+async def understand_intention(msgs:list, f_avail:dict, f_choose:dict, model:str):
   client = AsyncOpenAI()
-  decisionsx = list(f_choose['parameters']['properties'])
-  print(decisionsx)
+  decisions = list(f_choose['parameters']['properties'])
   f_coarse = []
-  f_stage = f_choose[0]['name']
+  f_stage = f_choose['name']
   for f in [f for f in text_response_default+runtime_self_analysis+generate_images if f['name'] in f_avail.keys()]:
     f_coarse.append({'name':f['name'],'parameters':empty_params})
   print(f"{f_stage}:{count_tokens(f_choose+f_coarse+msgs)}")
@@ -25,9 +24,9 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
   print(f"is_mostly_english:{is_mostly_english(msgs[-1]['content'])}")
   client = AsyncOpenAI()
   try:
-    f_semantic_analysis = await understand_intention(msgs[-1:], {}, semantic_analysis, ['modality','posts'], 'gpt-4-1106-preview')
-    print(f_semantic_analysis)
-    f_required_context = await understand_intention(msgs[-1:], {}, estimate_required_context, ['modality','posts'], 'gpt-4-1106-preview')
+    intention = await understand_intention(msgs[-1:], {}, semantic_analysis, 'gpt-4-1106-preview')
+    print(intention)
+    f_required_context = await understand_intention(msgs[-1:], {}, estimate_required_context, 'gpt-4-1106-preview')
     if f_required_context['modality'] == 'image' and f_required_context['posts'] == 0:
       f_required_context['posts'] = 1
     if int(f_required_context['posts']):
@@ -52,7 +51,7 @@ async def chat_completion_functions(msgs:list, f_avail:dict):
           }
         }
       ]
-      f_choice = await understand_intention(msgs[-int(f_required_context['posts']):], f_avail, f_choose, ['function_name'], 'gpt-4-1106-preview')
+      f_choice = await understand_intention(msgs[-int(f_required_context['posts']):], f_avail, f_choose, 'gpt-4-1106-preview')
       f_choice = f_choice['function_name']
       if f_required_context['modality'] == 'image':
         f_description = next(([f] for f in generate_images+text_response_default if f['name'] == f_choice), [])
