@@ -11,9 +11,8 @@ async def react(msgs:list, available_functions:dict):
     else:
       msg_in_english = await think(msgs[-1:], translate_to_english(), 'gpt-3.5-turbo-16k')
       msg = [{'role':'user','content':msg_in_english['translation']}]
-    msg_semantic_analysis = await think(msg, semantic_analysis(), 'gpt-4-1106-preview')
-    intention = await think([{'role':'user','content':msg_semantic_analysis['analysis']}], intention_analysis(list(available_functions)), 'gpt-4-1106-preview')
-    print(intention)
+    semantics = await think(msg, semantic_analysis(), 'gpt-4-1106-preview')
+    intention = await think([{'role':'user','content':semantics['analysis']}], intention_analysis(list(available_functions)), 'gpt-4-1106-preview')
     f_choice = intention['next_action']
     f_description = next(([f] for f in actions if f['name'] == f_choice), [])
     if f_description[0]['parameters'] != empty_params:
