@@ -12,12 +12,12 @@ async def react(full_context:list, available_functions:dict):
       semantic_analysis_attempts += 1
       current_context = full_context[-semantic_analysis_attempts:]
       print(len(current_context)/len(full_context))
-      semantics = await think(current_context, semantic_analysis(len(current_context)/len(full_context)), 'gpt-3.5-turbo-16k')
+      semantics = await think(current_context, semantic_analysis(len(current_context)/len(full_context)), 'gpt-3.5-turbo-1106')
     intention = await think([{'role':'user','content':semantics['analysis']}], intention_analysis(list(available_functions)), 'gpt-4-1106-preview')
     action = intention['next_action']
     action_description = next(([f] for f in actions if f['name'] == action), [])
     if action_description[0]['parameters'] != empty_params:
-      action_arguments_completion = await client.chat.completions.create(messages=full_context, functions=action_description, function_call={'name':action}, model='gpt-4-1106-preview', top_p=.0000000000000000000001)
+      action_arguments_completion = await client.chat.completions.create(messages=full_context, functions=action_description, function_call={'name':action}, model='gpt-4-1106-preview', temperature=0)
       arguments = loads(action_arguments_completion.choices[0].message.function_call.arguments)
       await available_functions[action](**arguments)
     else:
