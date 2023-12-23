@@ -14,10 +14,10 @@ async def react(full_context:list, available_functions:dict):
   event_classifications_object = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")(full_context[-1]['content'], EVENT_CATEGORIES, multi_label=True)
   event_classifications = dict(zip(event_classifications_object['labels'], event_classifications_object['scores']))
   print(f"event_classifications:{event_classifications}")
-  if full_context[0] in full_context[-3:]:
+  if full_context[0:] in full_context[-3:]:
     double_check_context = full_context[-3:]
   else:
-    double_check_context = full_context[0] + full_context[-3:]
+    double_check_context = full_context[0:] + full_context[-3:]
   print(await think(double_check_context, double_check(event_classifications), 'gpt-3.5-turbo-1106'))
   if event_classifications_object['labels'][0] == GENERATE_IMAGES:
     if event_classifications[GENERATE_IMAGES] > event_classifications[ANALYZE_SELF]*1.1:
