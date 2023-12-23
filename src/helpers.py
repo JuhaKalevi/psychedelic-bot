@@ -6,11 +6,16 @@ from tiktoken import get_encoding
 def count_image_tokens(w, h):
   return 85 + 170 * ceil(w/512) * ceil(h/512)
 
-def count_tokens(msg) -> int:
+def count_tokens(msg):
   return len(get_encoding('cl100k_base').encode(dumps(msg)))
 
-def mostly_english(text, threshold=0.9):
-  for language in detect_langs(text):
-    if language.lang == 'en' and language.prob >= threshold:
-      return True
-  return False
+def mostly_english(context):
+  probabilities = []
+  for text in [m['content'] for m in context]:
+    for language in detect_langs(text):
+      if language.lang == 'en':
+        probabilities.append(language.prob)
+        break
+    probabilities.append(0)
+  if sum(probabilities) / len(probabilities) > 0.9:
+    return True
