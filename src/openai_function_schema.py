@@ -43,3 +43,21 @@ actions = [
     }
   }
 ]
+
+def double_check(event_classifications):
+  return {
+    'name': 'double_check',
+    'description': f"Double check these zero-shot-classifications: {[f for f in event_classifications if event_classifications[f] > 0.5]}",
+    'parameters': {
+      'type': 'object',
+      'properties': {
+        'confidence': {
+          'type': 'number',
+          'description': "Your confidence for these classifications against the message.",
+          'minimum': 0,
+          'maximum': 1
+        },
+        'required': ['confidence']
+      }
+    }
+  }
