@@ -11,7 +11,7 @@ EVENT_CATEGORIES = [ANALYZE_SELF, GENERATE_IMAGES, 'affirmation', 'statement', '
 async def react(full_context:list, available_functions:dict):
   client = AsyncOpenAI()
   action = 'chat'
-  if full_context[:1] in full_context[-3:]:
+  if full_context[0] in full_context[-3:]:
     context = full_context[-3:]
   else:
     context = full_context[:1] + full_context[-3:]
