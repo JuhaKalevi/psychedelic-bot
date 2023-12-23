@@ -70,5 +70,13 @@ def double_check(event_classifications):
 def in_english():
   return {
     'name': 'in_english',
-    'parameters': EMPTY_PARAMS
+    'parameters': {
+      'type': 'object',
+      'properties': {
+        'translation': {
+          'type': 'string'
+        }
+      },
+      'required': ['translation']
+    }
   }
