@@ -17,7 +17,7 @@ async def react(full_context:list, available_functions:dict):
   if event_classifications_object['labels'][0] == GENERATE_IMAGES:
     if event_classifications[GENERATE_IMAGES] > event_classifications[ANALYZE_SELF]*1.1:
       action = 'generate_images'
-  elif event_classifications_object['labels'][0] == ANALYZE_SELF:
+  elif event_classifications_object['labels'][0] == ANALYZE_SELF or event_classifications[ANALYZE_SELF]>0.5:
     if event_classifications[ANALYZE_SELF] > event_classifications[GENERATE_IMAGES]*1.1:
       action = 'analyze_self'
   action_description = next(([f] for f in actions if f['name'] == action), [])
