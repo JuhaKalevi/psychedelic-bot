@@ -2,11 +2,9 @@ from json import loads
 from openai import AsyncOpenAI
 from transformers import pipeline
 from helpers import count_tokens, mostly_english
-from openai_function_schema import double_check, in_english, actions, EMPTY_PARAMS
+from openai_function_schema import ANALYZE_SELF, GENERATE_IMAGES, in_english, double_check, actions, EMPTY_PARAMS
 
-ANALYZE_SELF = 'self_code_analysis_request'
-GENERATE_IMAGES = 'image_generation_request'
-EVENT_CATEGORIES = [ANALYZE_SELF, GENERATE_IMAGES, 'affirmation', 'statement', 'question', 'command']
+EVENT_CATEGORIES = [ANALYZE_SELF, GENERATE_IMAGES, 'Affirmation', 'Command', 'Question', 'Second-Person Reference', 'Statement']
 
 async def react(full_context:list, available_functions:dict):
   client = AsyncOpenAI()
