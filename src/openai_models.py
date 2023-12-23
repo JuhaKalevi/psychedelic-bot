@@ -9,24 +9,21 @@ async def react(full_context:list, available_functions:dict):
   client = AsyncOpenAI()
   action = 'chat'
   print(f"react: available_functions: {available_functions}")
-  try:
-    event_classifications_object = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")(full_context[-1]['content'], ['self_analysis_request','image_generation_request'], multi_label=True)
-    event_classifications = dict(zip(event_classifications_object['labels'], event_classifications_object['scores']))
-    if event_classifications_object['labels'][0] == 'image_generation_request':
-      if event_classifications['image_generation_request'] > 0.8 and event_classifications['self_analysis_request'] < 0.2:
-        action = 'generate_images'
-    elif event_classifications_object['labels'][0] == 'self_analysis_request':
-      if event_classifications['self_analysis_request'] > 0.8 and event_classifications['image_generation_request'] < 0.2:
-        action = 'analyze_self'
-    action_description = next(([f] for f in actions if f['name'] == action), [])
-    if action_description[0]['parameters'] != EMPTY_PARAMS:
-      action_arguments_completion = await client.chat.completions.create(messages=full_context, functions=action_description, function_call={'name':action}, model='gpt-4-1106-preview', temperature=0)
-      arguments = loads(action_arguments_completion.choices[0].message.function_call.arguments)
-      await available_functions[action](**arguments)
-    else:
-      await available_functions[action]()
-  except IndexError as err:
-    print(f'{action}: ERROR: {err}')
+  event_classifications_object = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")(full_context[-1]['content'], ['self_analysis_request','image_generation_request'], multi_label=True)
+  event_classifications = dict(zip(event_classifications_object['labels'], event_classifications_object['scores']))
+  if event_classifications_object['labels'][0] == 'image_generation_request':
+    if event_classifications['image_generation_request'] > 0.8 and event_classifications['self_analysis_request'] < 0.2:
+      action = 'generate_images'
+  elif event_classifications_object['labels'][0] == 'self_analysis_request':
+    if event_classifications['self_analysis_request'] > 0.8 and event_classifications['image_generation_request'] < 0.2:
+      action = 'analyze_self'
+  action_description = next(([f] for f in actions if f['name'] == action), [])
+  if action_description[0]['parameters'] != EMPTY_PARAMS:
+    action_arguments_completion = await client.chat.completions.create(messages=full_context, functions=action_description, function_call={'name':action}, model='gpt-4-1106-preview', temperature=0)
+    arguments = loads(action_arguments_completion.choices[0].message.function_call.arguments)
+    await available_functions[action](**arguments)
+  else:
+    await available_functions[action]()
 
 async def think(msgs:list, function_call:dict, model:str):
   client = AsyncOpenAI()
