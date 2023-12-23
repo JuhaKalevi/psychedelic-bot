@@ -21,7 +21,6 @@ async def react(full_context:list, available_functions:dict):
   print(context)
   zero_shot_classifications_object = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")(full_context[-1]['content'], EVENT_CATEGORIES, multi_label=True)
   event_classifications = dict(zip(zero_shot_classifications_object['labels'], zero_shot_classifications_object['scores']))
-  print(f"event_classifications:{event_classifications}")
   print(await think(context, double_check(event_classifications), 'gpt-3.5-turbo-1106'))
   if zero_shot_classifications_object['labels'][0] == GENERATE_IMAGES:
     if event_classifications[GENERATE_IMAGES] > event_classifications[ANALYZE_SELF]*1.1:
