@@ -11,12 +11,12 @@ EVENT_CATEGORIES = [ANALYZE_SELF, GENERATE_IMAGES, 'affirmation', 'statement', '
 async def react(full_context:list, available_functions:dict):
   client = AsyncOpenAI()
   action = 'chat'
-  if full_context[0:] in full_context[-3:]:
+  if full_context[:1] in full_context[-3:]:
     context = full_context[-3:]
   else:
     context = full_context[:1] + full_context[-3:]
-  if not mostly_english(context):
-    context = await think(context, in_english(), 'gpt-3.5-turbo-1106')
+  if not mostly_english(context[1:]):
+    context = full_context[:1] + [{'role':'user','content':await think(context[1:], in_english(), 'gpt-3.5-turbo-1106')}]
   zero_shot_classifications_object = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")(full_context[-1]['content'], EVENT_CATEGORIES, multi_label=True)
   event_classifications = dict(zip(zero_shot_classifications_object['labels'], zero_shot_classifications_object['scores']))
   print(f"event_classifications:{event_classifications}")
