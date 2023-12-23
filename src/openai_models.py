@@ -22,7 +22,9 @@ async def classify(event_translation, full_context, labels=None):
   event_classifications = dict(zip(zero_shot_classifications_object['labels'], zero_shot_classifications_object['scores']))
   print(event_classifications)
   if zero_shot_classifications_object['labels'][0] == 'Affirmation':
-    action = classify(event_translation, full_context, labels=[ANALYZE_SELF, GENERATE_IMAGES, 'Chat'])
+    action = await classify(event_translation, full_context, labels=[ANALYZE_SELF, GENERATE_IMAGES, 'Chat'])
+  else:
+    action = 'Chat'
   return action
 
 async def react(full_context:list, available_functions:dict):
@@ -36,7 +38,7 @@ async def react(full_context:list, available_functions:dict):
   context_interactions_in_english = await think(context[1:], translate_to_english(), 'gpt-3.5-turbo-1106')
   print(context_interactions_in_english)
   event_translation = f"System message: {full_context[0]['content']}, Interactions: {context_interactions_in_english['translation']}"
-  action = classify(event_translation, full_context)
+  action = await classify(event_translation, full_context)
   #print(await think(context, double_check(event_classifications), 'gpt-3.5-turbo-1106'))
   action_description = next(([f] for f in actions if f['name'] == action), [])
   if action != 'Chat' and action_description[0]['parameters'] != EMPTY_PARAMS:
