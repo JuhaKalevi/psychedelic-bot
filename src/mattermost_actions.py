@@ -11,13 +11,13 @@ from PIL import Image, UnidentifiedImageError
 import mattermostdriver
 from actions import middleware_url, Actions
 from helpers import count_image_tokens, count_tokens
-from openai_models import react, chat
+from openai_models import react, chat, GENERATE_IMAGES
 
 class MattermostActions(Actions):
 
   def __init__(self, client:mattermostdriver.AsyncDriver, post:dict):
     super().__init__({
-      'generate_images': self.generate_images,
+      GENERATE_IMAGES: self.generate_images,
     })
     self.client = client
     self.file_ids = []

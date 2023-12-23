@@ -3,6 +3,7 @@ from asyncio import create_task
 import base64
 from os import environ, listdir
 from time import ctime
+from openai_models import ANALYZE_SELF
 
 middleware_credentials = base64.b64encode(f"{environ['MIDDLEWARE_USERNAME']}:{environ['MIDDLEWARE_PASSWORD']}".encode()).decode()
 middleware_url = f"{environ['MIDDLEWARE_URL']}/?token={middleware_credentials}"
@@ -11,8 +12,8 @@ class Actions(ABC):
 
   def __init__(self, functions:dict):
     self.available_functions = {
-      'chat': self.chat,
-      'analyze_self': self.analyze_self,
+      'Chat': self.chat,
+      ANALYZE_SELF: self.analyze_self,
     }
     self.available_functions.update(functions)
     self.instructions = [{'role':'system', 'content':f"{{'role':'system', 'content':f'Current time is {ctime()}. You are in Finland.'}}"}]
