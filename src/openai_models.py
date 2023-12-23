@@ -12,10 +12,10 @@ async def react(full_context:list, available_functions:dict):
   event_classifications = dict(zip(event_classifications_object['labels'], event_classifications_object['scores']))
   print(f"event_classifications:{event_classifications}")
   if event_classifications_object['labels'][0] == 'image_generation_request':
-    if event_classifications['image_generation_request'] > 0.9 and event_classifications['self_analysis_request'] < 0.8:
+    if event_classifications['image_generation_request'] > event_classifications['self_analysis_request']*1.2:
       action = 'generate_images'
   elif event_classifications_object['labels'][0] == 'self_analysis_request':
-    if event_classifications['self_analysis_request'] > 0.9 and event_classifications['image_generation_request'] < 0.8:
+    if event_classifications['self_analysis_request'] > event_classifications['image_generation_request']*1.2:
       action = 'analyze_self'
   action_description = next(([f] for f in actions if f['name'] == action), [])
   if action != 'chat' and action_description[0]['parameters'] != EMPTY_PARAMS:
