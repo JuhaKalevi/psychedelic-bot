@@ -70,12 +70,13 @@ def double_check(event_classifications):
 def translate_to_english():
   return {
     'name': 'translate_to_english',
+    'description': "Translate the message to english. This is used to analyze the message in english.",
     'parameters': {
       'type': 'object',
       'properties': {
         'translation': {
           'type': 'string',
-          'description': "Translate the message to english. This is used to analyze the message in english."
+          'description': "The message translated to english. Do not include the original language at all if it wasn't english. If the message was already in english, just copy it here."
         }
       },
       'required': ['translation']
