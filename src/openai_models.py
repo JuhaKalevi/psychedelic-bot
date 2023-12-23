@@ -34,6 +34,7 @@ async def react(full_context:list, available_functions:dict):
     context = full_context[:1] + full_context[-3:]
   print(context[1:])
   context_interactions_in_english = await think(context[1:], in_english(), 'gpt-3.5-turbo-1106')
+  print(context_interactions_in_english)
   event_translation = f"System message: {full_context[0]['content']}, Interactions: {context_interactions_in_english['translation']}"
   action = classify(event_translation, full_context)
   #print(await think(context, double_check(event_classifications), 'gpt-3.5-turbo-1106'))
