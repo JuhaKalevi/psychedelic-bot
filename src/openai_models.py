@@ -2,7 +2,7 @@ from json import loads
 from openai import AsyncOpenAI
 from transformers import pipeline
 from helpers import count_tokens
-from openai_function_schema import ANALYZE_SELF, GENERATE_IMAGES, in_english, actions, EMPTY_PARAMS
+from openai_function_schema import ANALYZE_SELF, GENERATE_IMAGES, translate_to_english, actions, EMPTY_PARAMS
 
 EVENT_CATEGORIES = ['Affirmation', 'Command', 'Question', 'Second-Person Reference']
 
@@ -33,7 +33,7 @@ async def react(full_context:list, available_functions:dict):
   else:
     context = full_context[:1] + full_context[-3:]
   print(context[1:])
-  context_interactions_in_english = await think(context[1:], in_english(), 'gpt-3.5-turbo-1106')
+  context_interactions_in_english = await think(context[1:], translate_to_english(), 'gpt-3.5-turbo-1106')
   print(context_interactions_in_english)
   event_translation = f"System message: {full_context[0]['content']}, Interactions: {context_interactions_in_english['translation']}"
   action = classify(event_translation, full_context)

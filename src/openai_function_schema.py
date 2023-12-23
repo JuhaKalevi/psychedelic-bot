@@ -67,9 +67,9 @@ def double_check(event_classifications):
     }
   }
 
-def in_english():
+def translate_to_english():
   return {
-    'name': 'in_english',
+    'name': 'translate_to_english',
     'parameters': {
       'type': 'object',
       'properties': {
