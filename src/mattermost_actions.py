@@ -21,7 +21,7 @@ class MattermostActions(Actions):
     })
     self.client = client
     self.file_ids = []
-    self.instructions = [{'role':'system', 'content':f"Current time is {ctime()}. Don't mention that you are an AI, everybody knows it!"}]
+    self.instructions = [{'role':'system', 'content':f"Current time is {ctime()}. You are a helpful & concise Mattermost chatbot in Finland."}]
     self.model = 'gpt-4-1106-preview'
     self.post = post
     self.content = post['message']
