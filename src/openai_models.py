@@ -6,7 +6,7 @@ from openai_function_schema import double_check, in_english, actions, EMPTY_PARA
 
 ANALYZE_SELF = 'self_code_analysis_request'
 GENERATE_IMAGES = 'image_generation_request'
-EVENT_CATEGORIES = [ANALYZE_SELF, GENERATE_IMAGES, 'affirmation', 'statement', 'question', 'command', 'greeting', 'farewell', 'apology', 'thanks', 'other']
+EVENT_CATEGORIES = [ANALYZE_SELF, GENERATE_IMAGES, 'affirmation', 'statement', 'question', 'command']
 
 async def react(full_context:list, available_functions:dict):
   client = AsyncOpenAI()
