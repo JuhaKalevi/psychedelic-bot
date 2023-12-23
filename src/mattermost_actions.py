@@ -11,7 +11,7 @@ from PIL import Image, UnidentifiedImageError
 import mattermostdriver
 from actions import middleware_url, Actions
 from helpers import count_image_tokens, count_tokens
-from openai_models import react, say
+from openai_models import react, chat
 
 class MattermostActions(Actions):
 
@@ -97,7 +97,7 @@ class MattermostActions(Actions):
     chunks_processed = []
     start_time = time()
     async with Lock():
-      async for chunk in say(msgs, model=self.model, max_tokens=4096):
+      async for chunk in chat(msgs, model=self.model, max_tokens=4096):
         buffer.append(chunk)
         if (time() - start_time) * 1000 >= 500:
           joined_chunks = ''.join(buffer)

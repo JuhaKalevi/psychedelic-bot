@@ -1,53 +1,14 @@
 
+EMPTY_PARAMS = {'type':'object','properties':{}}
+
 IMGGEN_PROMPT = "Don't use full sentences, just a few keywords, separating these aspects by spaces or commas so that each comma separated group can have multiple space separated keywords."
 IMGGEN_GROUPS = "Instead of commas, it's possible to use periods which separate bigger units consisting of multiple comma separated keywords or groups of keywords together. It's important to place the most important elements first in all of these levels of groupings!"
 IMGGEN_WEIGHT = "Parentheses are used to increase the weight of (emphasize) tokens, such as: (((red hair))). Each set of parentheses multiplies the weight by 1.05. Convert adjectives like 'barely', 'slightly', 'very' or 'extremely' to this format!. Curly brackets can be conversely used to de-emphasize with a similar logic & multiplier."
 IMGGEN_REMIND = "Don't use any kind of formatting to separate these keywords, expect what is mentioned above! Remember to translate everything to english!"
-empty_params = {'type':'object','properties':{}}
-
-def semantic_analysis(recalled_context_fraction):
-  print(recalled_context_fraction)
-  return {
-    'name': 'semantic_analysis',
-    'description': f"You currently see {round(recalled_context_fraction*100)}% of the context. Lower confidence_rating to indicate more context might be useful.",
-    'parameters': {
-      'type': 'object',
-      'properties': {
-        'analysis': {
-          'type': 'string',
-          'description': "Absolutely refrain from normally answering the message! First translate the message to english if necessary, then reply with extremely sparse & concise phrasing by stating what this message signifies semantically. If something is unclear or the message seems confused, point that out.",
-        },
-        'confidence_rating': {
-          'type': 'number',
-          'description': "Confidence rating (0-1) on how certain you are about this analysis. Consider the percentage of context you have available at this time.",
-        }
-      },
-      'required': ['analysis','confidence_rating']
-    }
-  }
-
-def intention_analysis(available_functions):
-  return {
-    'name': 'intention_analysis',
-    'parameters': {
-      'type': 'object',
-      'properties': {
-        'confidence_rating': {
-          'type': 'number',
-          'description': "Confidence rating (0-1) on how certain you are what to do next given provided actions.",
-        },
-        'next_action': {
-          'type': 'string',
-          'enum': available_functions
-        }
-      },
-      'required': ['confidence_rating','next_action']
-    }
-  }
 
 actions = [
   {
-    'name': 'generate_images',
+    'name': 'image_generation_request',
     'parameters': {
       'type': 'object',
       'properties': {
@@ -77,13 +38,8 @@ actions = [
     }
   },
   {
-    'name': 'runtime_self_analysis',
+    'name': 'self_analysis_request',
     'description': "Read your own code temporarily into the context in order to analyze it. This is NOT a background task! This can be used to analyze other functions.",
-    'parameters': empty_params
-  },
-  {
-    'name': 'text_response_default',
-    'description': 'Default function that can be called when a normal text response suffices, or when the user requests a function that is not available or seems inappropriate.',
-    'parameters': empty_params
+    'parameters': EMPTY_PARAMS
   }
 ]

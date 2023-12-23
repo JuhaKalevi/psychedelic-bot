@@ -3,25 +3,24 @@ from openai import AsyncOpenAI
 from transformers import pipeline
 
 from helpers import count_tokens
-from openai_function_schema import actions, empty_params, semantic_analysis, intention_analysis
+from openai_function_schema import actions, EMPTY_PARAMS
 
 async def react(full_context:list, available_functions:dict):
   client = AsyncOpenAI()
   try:
-    classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
-    print(f"zero-shot-classification: {classifier(full_context[-1]['content'], ['self_analysis_request','image_generation_request'])}")
-    semantic_analysis_attempts = 0
-    while semantic_analysis_attempts < 3:
-      semantic_analysis_attempts += 1
-      current_context = full_context[-semantic_analysis_attempts:]
-      semantics = await think(current_context, semantic_analysis(len(current_context)/len(full_context)), 'gpt-3.5-turbo-1106')
-      semantic_analysis_confidence = semantics['confidence_rating']
-      if current_context == full_context or semantic_analysis_confidence > 0.85:
-        break
-    intention = await think([{'role':'user','content':semantics['analysis']}], intention_analysis(list(available_functions)), 'gpt-4-1106-preview')
-    action = intention['next_action']
+    zero_shot_classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
+    event_classifications_object = zero_shot_classifier(f"zero-shot-classifier: {zero_shot_classifier(full_context[-1]['content'], ['self_analysis_request','image_generation_request'])}", multi_label=True)
+    event_classifications = dict(zip(event_classifications_object['labels'], event_classifications_object['scores']))
+    if event_classifications_object['labels'][0] == 'image_generation_request':
+      if event_classifications['image_generation_request'] > 0.8 and event_classifications['self_analysis_request'] < 0.2:
+        action = 'generate_images'
+    elif event_classifications_object['labels'][0] == 'self_analysis_request':
+      if event_classifications['self_analysis_request'] > 0.8 and event_classifications['image_generation_request'] < 0.2:
+        action = 'analyze_self'
+    else:
+      action = 'chat'
     action_description = next(([f] for f in actions if f['name'] == action), [])
-    if action_description[0]['parameters'] != empty_params:
+    if action_description[0]['parameters'] != EMPTY_PARAMS:
       action_arguments_completion = await client.chat.completions.create(messages=full_context, functions=action_description, function_call={'name':action}, model='gpt-4-1106-preview', temperature=0)
       arguments = loads(action_arguments_completion.choices[0].message.function_call.arguments)
       await available_functions[action](**arguments)
@@ -43,7 +42,7 @@ async def think(msgs:list, function_call:dict, model:str):
       print(f"{function_call['name']}:{outcomes}")
       return outcomes
 
-async def say(msgs, model='gpt-4-1106-preview', max_tokens=None):
+async def chat(msgs, model='gpt-4-1106-preview', max_tokens=None):
   client = AsyncOpenAI()
   kwargs = {'messages':msgs, 'model':model, 'stream':True, 'temperature':0.5, 'top_p':0.5}
   if max_tokens:

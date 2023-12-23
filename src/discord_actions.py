@@ -4,7 +4,7 @@ from asyncio import Lock
 import discord
 from actions import Actions
 from helpers import count_tokens
-from openai_models import react, say
+from openai_models import react, chat
 
 class DiscordActions(Actions):
 
@@ -59,7 +59,7 @@ class DiscordActions(Actions):
     chunks_processed = []
     start_time = time()
     async with Lock():
-      async for chunk in say(msgs, model=self.model, max_tokens=4096):
+      async for chunk in chat(msgs, model=self.model, max_tokens=4096):
         if not chunk:
           continue
         buffer.append(chunk)
