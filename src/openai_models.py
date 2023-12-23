@@ -18,7 +18,6 @@ async def react(full_context:list, available_functions:dict):
   if not mostly_english(context[1:]):
     context_in_english = await think(context[1:], in_english(), 'gpt-3.5-turbo-1106')
     context = full_context[:1] + [{'role':'user','content':context_in_english['translation']}]
-  print(context)
   zero_shot_classifications_object = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")(full_context[-1]['content'], EVENT_CATEGORIES, multi_label=True)
   event_classifications = dict(zip(zero_shot_classifications_object['labels'], zero_shot_classifications_object['scores']))
   print(await think(context, double_check(event_classifications), 'gpt-3.5-turbo-1106'))
