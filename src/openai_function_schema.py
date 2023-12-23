@@ -8,7 +8,12 @@ IMGGEN_REMIND = "Don't use any kind of formatting to separate these keywords, ex
 
 actions = [
   {
-    'name': 'image_generation_request',
+    'name': 'analyze_self',
+    'description': "Read your own code temporarily into the context in order to analyze it. This is NOT a background task! This can be used to analyze other functions.",
+    'parameters': EMPTY_PARAMS
+  },
+  {
+    'name': 'generate_images',
     'parameters': {
       'type': 'object',
       'properties': {
@@ -36,10 +41,5 @@ actions = [
       },
       'required': ['prompt']
     }
-  },
-  {
-    'name': 'self_analysis_request',
-    'description': "Read your own code temporarily into the context in order to analyze it. This is NOT a background task! This can be used to analyze other functions.",
-    'parameters': EMPTY_PARAMS
   }
 ]

@@ -8,8 +8,7 @@ from openai_function_schema import actions, EMPTY_PARAMS
 async def react(full_context:list, available_functions:dict):
   client = AsyncOpenAI()
   try:
-    zero_shot_classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
-    event_classifications_object = zero_shot_classifier(f"zero-shot-classifier: {zero_shot_classifier(full_context[-1]['content'], ['self_analysis_request','image_generation_request'])}", multi_label=True)
+    event_classifications_object = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")(full_context[-1]['content'], ['self_analysis_request','image_generation_request'], multi_label=True)
     event_classifications = dict(zip(event_classifications_object['labels'], event_classifications_object['scores']))
     if event_classifications_object['labels'][0] == 'image_generation_request':
       if event_classifications['image_generation_request'] > 0.8 and event_classifications['self_analysis_request'] < 0.2:
