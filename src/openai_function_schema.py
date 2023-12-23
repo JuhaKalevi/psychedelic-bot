@@ -74,7 +74,8 @@ def translate_to_english():
       'type': 'object',
       'properties': {
         'translation': {
-          'type': 'string'
+          'type': 'string',
+          'description': "Translate the message to english. This is used to analyze the message in english."
         }
       },
       'required': ['translation']
