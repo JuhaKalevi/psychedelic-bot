@@ -18,7 +18,7 @@ class DiscordActions(Actions):
     self.message = message
     self.content = message.content
 
-  async def __post_handler__(self) -> None:
+  async def process_event(self) -> None:
     self.channel = await self.client.fetch_channel(self.message.channel.id)
     self.context = [m async for m in self.channel.history()]
     if self.channel.type == discord.ChannelType.text:

@@ -26,7 +26,7 @@ class MattermostActions(Actions):
     self.post = post
     self.content = post['message']
 
-  async def __post_handler__(self):
+  async def process_event(self):
     channel = await self.client.channels.get_channel(self.post['channel_id'])
     if channel['type'] == 'G':
       self.instructions[0]['content'] += f" {channel['header']}"
