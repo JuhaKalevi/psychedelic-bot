@@ -16,6 +16,6 @@ def mostly_english(context):
       if language.lang == 'en':
         probabilities += language.prob
         break
-  if sum(probabilities) / len(probabilities) > 0.9:
+  if probabilities / len(context) > 0.9:
     return True
   return False
