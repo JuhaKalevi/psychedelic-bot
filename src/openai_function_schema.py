@@ -57,7 +57,7 @@ def double_check(event_classifications):
           'minimum': 0,
           'maximum': 1
         },
-        'required': ['confidence']
-      }
+      },
+      'required': ['confidence']
     }
   }
