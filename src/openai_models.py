@@ -4,7 +4,9 @@ from transformers import pipeline
 from helpers import count_tokens
 from openai_function_schema import actions, EMPTY_PARAMS
 
-EVENT_CATEGORIES = ['self_analysis_request','image_generation_request','chat']
+ANALYZE_SELF = 'self_code_analysis_request'
+GENERATE_IMAGES = 'image_generation_request'
+EVENT_CATEGORIES = [ANALYZE_SELF,GENERATE_IMAGES,'affirmation','statement','question','command','greeting','farewell','apology','thanks','other']
 
 async def react(full_context:list, available_functions:dict):
   client = AsyncOpenAI()
@@ -12,11 +14,11 @@ async def react(full_context:list, available_functions:dict):
   event_classifications_object = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")(full_context[-1]['content'], EVENT_CATEGORIES, multi_label=True)
   event_classifications = dict(zip(event_classifications_object['labels'], event_classifications_object['scores']))
   print(f"event_classifications:{event_classifications}")
-  if event_classifications_object['labels'][0] == 'image_generation_request':
-    if event_classifications['image_generation_request'] > event_classifications['self_analysis_request']*1.2:
+  if event_classifications_object['labels'][0] == GENERATE_IMAGES:
+    if event_classifications[GENERATE_IMAGES] > event_classifications[ANALYZE_SELF]*1.1:
       action = 'generate_images'
-  elif event_classifications_object['labels'][0] == 'self_analysis_request':
-    if event_classifications['self_analysis_request'] > event_classifications['image_generation_request']*1.2:
+  elif event_classifications_object['labels'][0] == ANALYZE_SELF:
+    if event_classifications[ANALYZE_SELF] > event_classifications[GENERATE_IMAGES]*1.1:
       action = 'analyze_self'
   action_description = next(([f] for f in actions if f['name'] == action), [])
   if action != 'chat' and action_description[0]['parameters'] != EMPTY_PARAMS:
