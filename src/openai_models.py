@@ -9,7 +9,7 @@ async def react(full_context:list, available_functions:dict):
   client = AsyncOpenAI()
   try:
     classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
-    print(classifier(full_context[-1]['content'], ['self_analysis_request','image_generation_request']))
+    print(f"zero-shot-classification: {classifier(full_context[-1]['content'], ['self_analysis_request','image_generation_request'])}")
     semantic_analysis_attempts = 0
     while semantic_analysis_attempts < 3:
       semantic_analysis_attempts += 1
