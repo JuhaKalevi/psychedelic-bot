@@ -1,7 +1,7 @@
 from json import loads
 from openai import AsyncOpenAI
 from transformers import pipeline
-from helpers import count_tokens
+from helpers import count_tokens, is_mostly_english
 from openai_function_schema import double_check, actions, EMPTY_PARAMS
 
 ANALYZE_SELF = 'self_code_analysis_request'
