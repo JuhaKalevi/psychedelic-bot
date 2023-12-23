@@ -1,8 +1,8 @@
 from json import loads
 from openai import AsyncOpenAI
 from transformers import pipeline
-from helpers import count_tokens, is_mostly_english
-from openai_function_schema import double_check, actions, EMPTY_PARAMS
+from helpers import count_tokens, mostly_english
+from openai_function_schema import double_check, in_english, actions, EMPTY_PARAMS
 
 ANALYZE_SELF = 'self_code_analysis_request'
 GENERATE_IMAGES = 'image_generation_request'
@@ -11,18 +11,20 @@ EVENT_CATEGORIES = [ANALYZE_SELF, GENERATE_IMAGES, 'affirmation', 'statement', '
 async def react(full_context:list, available_functions:dict):
   client = AsyncOpenAI()
   action = 'chat'
-  event_classifications_object = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")(full_context[-1]['content'], EVENT_CATEGORIES, multi_label=True)
-  event_classifications = dict(zip(event_classifications_object['labels'], event_classifications_object['scores']))
-  print(f"event_classifications:{event_classifications}")
   if full_context[0:] in full_context[-3:]:
-    double_check_context = full_context[-3:]
+    context = full_context[-3:]
   else:
-    double_check_context = full_context[0:] + full_context[-3:]
-  print(await think(double_check_context, double_check(event_classifications), 'gpt-3.5-turbo-1106'))
-  if event_classifications_object['labels'][0] == GENERATE_IMAGES:
+    context = full_context[:1] + full_context[-3:]
+  if not mostly_english(context):
+    context = await think(context, in_english(), 'gpt-3.5-turbo-1106')
+  zero_shot_classifications_object = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")(full_context[-1]['content'], EVENT_CATEGORIES, multi_label=True)
+  event_classifications = dict(zip(zero_shot_classifications_object['labels'], zero_shot_classifications_object['scores']))
+  print(f"event_classifications:{event_classifications}")
+  print(await think(context, double_check(event_classifications), 'gpt-3.5-turbo-1106'))
+  if zero_shot_classifications_object['labels'][0] == GENERATE_IMAGES:
     if event_classifications[GENERATE_IMAGES] > event_classifications[ANALYZE_SELF]*1.1:
       action = 'generate_images'
-  elif event_classifications_object['labels'][0] == ANALYZE_SELF or event_classifications[ANALYZE_SELF]>0.5:
+  elif zero_shot_classifications_object['labels'][0] == ANALYZE_SELF or event_classifications[ANALYZE_SELF]>0.5:
     if event_classifications[ANALYZE_SELF] > event_classifications[GENERATE_IMAGES]*1.1:
       action = 'analyze_self'
   action_description = next(([f] for f in actions if f['name'] == action), [])
