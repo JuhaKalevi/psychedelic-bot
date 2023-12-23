@@ -10,13 +10,12 @@ def count_tokens(msg):
   return len(get_encoding('cl100k_base').encode(dumps(msg)))
 
 def mostly_english(context):
-  probabilities = []
+  probabilities = 0
   for text in [m['content'] for m in context]:
     for language in detect_langs(text):
       if language.lang == 'en':
-        probabilities.append(language.prob)
+        probabilities += language.prob
         break
-    probabilities.append(0)
   if sum(probabilities) / len(probabilities) > 0.9:
     return True
   return False
