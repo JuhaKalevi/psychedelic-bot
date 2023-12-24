@@ -25,6 +25,7 @@ async def classify(event_translation, full_context, labels=None):
     action = await classify(event_translation, full_context, labels=[ANALYZE_SELF, GENERATE_IMAGES, 'Chat'])
   else:
     action = 'Chat'
+  print(action)
   return action
 
 async def react(full_context:list, available_functions:dict):
