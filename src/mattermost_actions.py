@@ -17,7 +17,8 @@ class MattermostActions(Actions):
 
   def __init__(self, client:mattermostdriver.AsyncDriver, post:dict):
     super().__init__({
-      GENERATE_IMAGES: self.generate_images,
+      GENERATE_IMAGES: self.generate_images
+
     })
     self.client = client
     self.file_ids = []

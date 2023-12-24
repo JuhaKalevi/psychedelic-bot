@@ -4,7 +4,7 @@ from transformers import pipeline
 from helpers import count_tokens
 from openai_function_schema import ANALYZE_SELF, GENERATE_IMAGES, translate_to_english, actions, EMPTY_PARAMS
 
-EVENT_CATEGORIES = ['Affirmation', 'Command', 'Introduction', 'Question', 'Second-Person Reference']
+EVENT_CATEGORIES = ['Chat', 'Command', 'Question', 'Second-Person Reference']
 
 async def chat(msgs, model='gpt-4-1106-preview', max_tokens=None):
   client = AsyncOpenAI()
@@ -14,6 +14,9 @@ async def chat(msgs, model='gpt-4-1106-preview', max_tokens=None):
   async for part in await client.chat.completions.create(**kwargs):
     yield part.choices[0].delta.content or ""
 
+def select_labels(classifications, threshold, always_include=None):
+  return {label: score for label, score in classifications.items() if score > threshold or label in (always_include or [])}
+
 async def classify(event_translation, full_context, labels=None):
   print(event_translation)
   if not labels:
@@ -21,8 +24,10 @@ async def classify(event_translation, full_context, labels=None):
   zero_shot_classifications_object = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")(event_translation, labels, multi_label=True)
   event_classifications = dict(zip(zero_shot_classifications_object['labels'], zero_shot_classifications_object['scores']))
   print(event_classifications)
-  if zero_shot_classifications_object['labels'][0] == 'Affirmation':
+  if zero_shot_classifications_object['labels'][0] == 'Chat':
     action = await classify(event_translation, full_context, labels=[ANALYZE_SELF, GENERATE_IMAGES, 'Chat'])
+  elif zero_shot_classifications_object['labels'][0] == 'Question':
+    action = await classify(event_translation, full_context, labels=[ANALYZE_SELF, 'Chat'])
   else:
     action = 'Chat'
   return action
