@@ -4,7 +4,7 @@ from transformers import pipeline
 from helpers import count_tokens
 from openai_function_schema import ANALYZE_SELF, GENERATE_IMAGES, translate_to_english, actions, EMPTY_PARAMS
 
-EVENT_CATEGORIES = ['Command', 'Question', 'Second Person']
+EVENT_CATEGORIES = ['Command', 'Question', 'Self-reference']
 
 async def chat(msgs, model='gpt-4-1106-preview', max_tokens=None):
   client = AsyncOpenAI()
