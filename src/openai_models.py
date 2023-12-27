@@ -11,7 +11,7 @@ async def chat_completion(kwargs):
     yield part.choices[0].delta.content or ""
 
 async def chat_completion_background_function(kwargs):
-  async for r in await chat_completion(kwargs):
+  async for r in chat_completion(kwargs):
     if r.choices[0].delta.function_call:
       delta += r.choices[0].delta.function_call.arguments
     else:
@@ -46,7 +46,7 @@ async def react(full_context:list, available_functions:dict):
   if action != 'Chat' and action_description[0]['parameters'] != EMPTY_PARAMS:
     arguments_completion_kwargs = {'messages':full_context, 'functions':action_description, 'function_call':{'name':action}, 'model':'gpt-4-1106-preview', 'temperature':0}
     delta = ''
-    async for r in await chat_completion(arguments_completion_kwargs):
+    async for r in chat_completion(arguments_completion_kwargs):
       if r.choices[0].delta.function_call:
         delta += r.choices[0].delta.function_call.arguments
       else:
