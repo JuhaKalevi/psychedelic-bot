@@ -1,7 +1,5 @@
 # Schema variables for functions that are exposed to user
 
-ANALYZE_SELF = 'self_code_analysis_request'
-GENERATE_IMAGES = 'image_generation_request'
 EMPTY_PARAMS = {'type':'object','properties':{}}
 
 IMGGEN_PROMPT = "Don't use full sentences, just a few keywords, separating these aspects by spaces or commas so that each comma separated group can have multiple space separated keywords."
@@ -9,12 +7,15 @@ IMGGEN_GROUPS = "Instead of commas, it's possible to use periods which separate 
 IMGGEN_WEIGHT = "Parentheses are used to increase the weight of (emphasize) tokens, such as: (((red hair))). Each set of parentheses multiplies the weight by 1.05. Convert adjectives like 'barely', 'slightly', 'very' or 'extremely' to this format!. Curly brackets can be conversely used to de-emphasize with a similar logic & multiplier."
 IMGGEN_REMIND = "Don't use any kind of formatting to separate these keywords, expect what is mentioned above! Remember to translate everything to english!"
 
-actions = [
+analyze_self = [
   {
     'name': 'analyze_self',
     'description': "Read your own code temporarily into the context in order to analyze it. This is NOT a background task! This can be used to analyze other functions.",
     'parameters': EMPTY_PARAMS
-  },
+  }
+]
+
+generate_images = [
   {
     'name': 'generate_images',
     'parameters': {
@@ -47,38 +48,17 @@ actions = [
   }
 ]
 
-# Methods for internal use only, not exposed to user
-
-def double_check(event_classifications):
-  return {
-    'name': 'double_check',
-    'description': f"Double check these zero-shot-classifications: {[f for f in event_classifications if event_classifications[f] > 0.5]}",
-    'parameters': {
-      'type': 'object',
-      'properties': {
-        'confidence': {
-          'type': 'number',
-          'description': "Your confidence for these classifications against the message.",
-          'minimum': 0,
-          'maximum': 1
-        },
-      },
-      'required': ['confidence']
-    }
+translate_to_english = {
+  'name': 'translate_to_english',
+  'description': "Translate the message to english. This is used to analyze the message in english.",
+  'parameters': {
+    'type': 'object',
+    'properties': {
+      'translation': {
+        'type': 'string',
+        'description': "The message translated to english. Do not include the original language at all if it wasn't english. If the message was already in english, just copy it here."
+      }
+    },
+    'required': ['translation']
   }
-
-def translate_to_english():
-  return {
-    'name': 'translate_to_english',
-    'description': "Translate the message to english. This is used to analyze the message in english.",
-    'parameters': {
-      'type': 'object',
-      'properties': {
-        'translation': {
-          'type': 'string',
-          'description': "The message translated to english. Do not include the original language at all if it wasn't english. If the message was already in english, just copy it here."
-        }
-      },
-      'required': ['translation']
-    }
-  }
+}
