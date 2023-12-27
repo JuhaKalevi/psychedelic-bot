@@ -1,7 +1,7 @@
 from json import loads
 from openai import AsyncOpenAI
 from transformers import pipeline
-from openai_function_schema import analyze_self, translate_to_english, EMPTY_PARAMS
+from openai_function_schema import translate_to_english, ACTIONS, EMPTY_PARAMS
 
 EVENT_CATEGORIES = ['Instructions given to the chatbot to generate described images.', 'Messages that address the chatbot directly or discuss its functions, capabilities, or status.']
 
@@ -38,19 +38,13 @@ async def react(full_context:list, available_functions:dict):
   else:
     context = full_context[:1] + full_context[-3:]
   print(context[1:])
-  context_interactions_in_english = await chat_completion_background_function({'messages':context[1:], 'functions':translate_to_english, 'function_call':{'name':translate_to_english['name']}, 'model':'gpt-3.5-turbo-1106'})
+  context_interactions_in_english = await chat_completion_background_function({'messages':context[1:], 'functions':[translate_to_english], 'function_call':{'name':translate_to_english['name']}, 'model':'gpt-3.5-turbo-1106'})
   print(context_interactions_in_english)
   event_translation = f"System message:\n{full_context[0]['content']}\n\nInteractions:\n{context_interactions_in_english['translation']}"
   action = await classify(event_translation)
-  action_description = next(([f] for f in analyze_self if f['name'] == action), [])
+  action_description = next(([f] for f in ACTIONS if f['name'] == action), [])
   if action != 'Chat' and action_description[0]['parameters'] != EMPTY_PARAMS:
-    arguments_completion_kwargs = {'messages':full_context, 'functions':action_description, 'function_call':{'name':action}, 'model':'gpt-4-1106-preview', 'temperature':0}
-    delta = ''
-    async for r in chat_completion(arguments_completion_kwargs):
-      if r.choices[0].delta.function_call:
-        delta += r.choices[0].delta.function_call.arguments
-      else:
-        arguments_completion_kwargs = {d:loads(delta)[d] for d in list(action_description['parameters']['properties'])}
+    arguments_completion_kwargs = await chat_completion_background_function({'messages':full_context, 'functions':[action_description], 'function_call':{'name':action}, 'model':'gpt-4-1106-preview', 'temperature':0})
     arguments = loads(arguments_completion_kwargs.choices[0].message.function_call.arguments)
     await available_functions[action](**arguments)
   else:

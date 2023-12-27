@@ -12,7 +12,7 @@ class Actions(ABC):
   def __init__(self, functions:dict):
     self.available_functions = {
       'Chat': self.chat,
-      analyze_self[0]['name']: self.analyze_self,
+      analyze_self['name']: self.analyze_self,
     }
     self.available_functions.update(functions)
     self.instructions = []
