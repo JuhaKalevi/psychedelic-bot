@@ -4,13 +4,10 @@ from transformers import pipeline
 from helpers import count_tokens
 from openai_function_schema import ANALYZE_SELF, GENERATE_IMAGES, translate_to_english, actions, EMPTY_PARAMS
 
-EVENT_CATEGORIES = ['Instructions given to the chatbot to perform a specific action.', 'Inquiries seeking information or explanations on a variety of topics.', 'Messages that address the chatbot directly or discuss its functions, capabilities, or status.']
+EVENT_CATEGORIES = ['Instructions given to the chatbot to generate described images.', 'Messages that address the chatbot directly or discuss its functions, capabilities, or status.']
 
-async def chat(msgs, model='gpt-4-1106-preview', max_tokens=None):
+async def chat_completion(kwargs):
   client = AsyncOpenAI()
-  kwargs = {'messages':msgs, 'model':model, 'stream':True, 'temperature':0.5, 'top_p':0.5}
-  if max_tokens:
-    kwargs["max_tokens"] = max_tokens
   async for part in await client.chat.completions.create(**kwargs):
     yield part.choices[0].delta.content or ""
 
@@ -34,7 +31,6 @@ async def classify(event_translation, full_context, labels=None):
   return action
 
 async def react(full_context:list, available_functions:dict):
-  client = AsyncOpenAI()
   action = 'Chat'
   if full_context[0] in full_context[-3:]:
     context = full_context[-3:]
@@ -48,21 +44,26 @@ async def react(full_context:list, available_functions:dict):
   #print(await think(context, double_check(event_classifications), 'gpt-3.5-turbo-1106'))
   action_description = next(([f] for f in actions if f['name'] == action), [])
   if action != 'Chat' and action_description[0]['parameters'] != EMPTY_PARAMS:
-    action_arguments_completion = await client.chat.completions.create(messages=full_context, functions=action_description, function_call={'name':action}, model='gpt-4-1106-preview', temperature=0)
-    arguments = loads(action_arguments_completion.choices[0].message.function_call.arguments)
+    arguments_completion_kwargs = {'messages':full_context, 'functions':action_description, 'function_call':{'name':action}, 'model':'gpt-4-1106-preview', 'temperature':0}
+    delta = ''
+    async for r in await chat_completion(arguments_completion_kwargs):
+      if r.choices[0].delta.function_call:
+        delta += r.choices[0].delta.function_call.arguments
+      else:
+        arguments_completion_kwargs = {d:loads(delta)[d] for d in list(action_description['parameters']['properties'])}
+    arguments = loads(arguments_completion_kwargs.choices[0].message.function_call.arguments)
     await available_functions[action](**arguments)
   else:
     await available_functions[action]()
 
-async def think(msgs:list, function_call:dict, model:str):
-  client = AsyncOpenAI()
-  decisions = list(function_call['parameters']['properties'])
-  print(f"{function_call['name']}:{count_tokens([function_call]+msgs)}")
+async def think(messages:list, function_call:dict, model:str, max_tokens=4096):
+  kwargs = {'messages':messages, 'functions':[function_call], 'function_call':{'name':function_call['name']}, 'model':model, 'stream':True, 'temperature':0, 'max_tokens':max_tokens}
+  print(f"{function_call['name']}:{count_tokens([function_call]+messages)}")
   delta = ''
-  async for r in await client.chat.completions.create(messages=msgs, functions=[function_call], function_call={'name':function_call['name']}, model=model, stream=True):
+  async for r in await chat_completion(kwargs):
     if r.choices[0].delta.function_call:
       delta += r.choices[0].delta.function_call.arguments
     else:
-      outcomes = {d:loads(delta)[d] for d in decisions}
+      outcomes = {d:loads(delta)[d] for d in list(function_call['parameters']['properties'])}
       print(f"{function_call['name']}:{outcomes}")
       return outcomes
