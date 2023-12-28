@@ -36,8 +36,8 @@ async def react(full_context:list, available_functions:dict):
     action = 'analyze_self'
   elif event_classifications[event_categories['generate_images']] > 0.8 and event_classifications[event_categories['analyze_self']] < 0.2:
     action = 'generate_images'
-  action_description = next((f for f in ACTIONS if f['name'] == action), [])
-  if action != 'Chat' and action_description['parameters'] != EMPTY_PARAMS:
-    await available_functions[action](**await background_function({'messages':full_context, 'functions':[action_description], 'function_call':{'name':action}, 'model':'gpt-4-1106-preview', 'temperature':0}))
+  action_description = next(([f] for f in ACTIONS if f['name'] == action), [])
+  if action != 'Chat' and action_description[0]['parameters'] != EMPTY_PARAMS:
+    await available_functions[action](**await background_function({'messages':full_context, 'functions':action_description, 'function_call':{'name':action}, 'model':'gpt-4-1106-preview', 'temperature':0}))
   else:
     await available_functions[action]()
