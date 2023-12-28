@@ -7,7 +7,7 @@ event_labels = {
  'code_analysis':'Analysis of code, functions or capabilities.',
 }
 action_labels = {
-  'analyze_self':'Analysis of your features.',
+  'analyze_self':'Message refers to you.',
   'generate_images':'Instructions that clearly describe an image the user wants to generate.',
 }
 zero_shot_classification_pipeline = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
