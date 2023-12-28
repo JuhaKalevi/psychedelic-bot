@@ -14,6 +14,7 @@ async def background_function(kwargs):
     if delta.function_call:
       completion += delta.function_call.arguments
     else:
+      print(completion)
       return {d:loads(completion)[d] for d in list(kwargs['functions'][0]['parameters']['properties'])}
 
 async def chat_completion(kwargs):
