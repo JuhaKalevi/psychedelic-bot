@@ -29,7 +29,7 @@ async def react(full_context:list, available_functions:dict):
     context = full_context[:1] + full_context[-3:]
   context_interactions_in_english = await background_function({'messages':context[1:], 'functions':[translate_to_english], 'function_call':{'name':translate_to_english['name']}, 'model':'gpt-4-1106-preview'})
   event_translation = f"System message:\n{full_context[0]['content']}\n\nInteractions:\n{context_interactions_in_english['translation']}"
-  zero_shot_classifications_object = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")(event_translation, list(event_categories.values()), multi_label=True)
+  zero_shot_classifications_object = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")(event_translation, list(event_categories.values()))
   event_classifications = dict(zip(zero_shot_classifications_object['labels'], zero_shot_classifications_object['scores']))
   print(event_classifications)
   if event_classifications[event_categories['analyze_self']] > 0.8 and event_classifications[event_categories['generate_images']] < 0.2:
