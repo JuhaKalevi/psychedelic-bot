@@ -8,7 +8,7 @@ event_labels = {
 }
 action_labels = {
   'analyze_self':'Message refers to you.',
-  'generate_images':'Instructions that clearly describe an image the user wants to generate.',
+  'generate_images':'Instructions that clearly describe an image the user wants to generate or confirm a previous clarification question.',
 }
 zero_shot_classification_pipeline = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
 
