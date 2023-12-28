@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from asyncio import create_task
 import base64
 from os import environ, listdir
-from openai_function_schema import analyze_self
 
 middleware_credentials = base64.b64encode(f"{environ['MIDDLEWARE_USERNAME']}:{environ['MIDDLEWARE_PASSWORD']}".encode()).decode()
 middleware_url = f"{environ['MIDDLEWARE_URL']}/?token={middleware_credentials}"
@@ -12,7 +11,7 @@ class Actions(ABC):
   def __init__(self, functions:dict):
     self.available_functions = {
       'Chat': self.chat,
-      analyze_self['name']: self.analyze_self,
+      'analyze_self': self.analyze_self
     }
     self.available_functions.update(functions)
     self.instructions = []

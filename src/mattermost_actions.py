@@ -12,13 +12,12 @@ import mattermostdriver
 from actions import middleware_url, Actions
 from helpers import count_image_tokens, count_tokens
 from openai_models import react, chat_completion
-from openai_function_schema import generate_images
 
 class MattermostActions(Actions):
 
   def __init__(self, client:mattermostdriver.AsyncDriver, post:dict):
     super().__init__({
-      generate_images['name']: self.generate_images
+      'generate_images': self.generate_images
     })
     self.client = client
     self.file_ids = []
