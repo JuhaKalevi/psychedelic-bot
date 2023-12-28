@@ -41,7 +41,7 @@ async def react(full_context:list, available_functions:dict):
   if classify(event_translation, list(event_labels.values()))[event_labels['code_analysis']] > 0.8:
     if classify(event_translation, [e for e in action_labels.values() if e not in (action_labels['analyze_self'])])[0] > 0.8:
       action = 'analyze_self'
-  elif classify(event_translation, [e for e in action_labels.values() if e not in (action_labels['generate_images_analysis'])])[0] > 0.8:
+  elif classify(event_translation, [e for e in action_labels.values() if e not in (action_labels['generate_images'])])[0] > 0.8:
     action = 'generate_images'
   action_description = next(([f] for f in ACTIONS if f['name'] == action), [])
   if action != 'Chat' and action_description[0]['parameters'] != EMPTY_PARAMS:
