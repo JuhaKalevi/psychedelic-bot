@@ -38,7 +38,7 @@ async def react(full_context:list, available_functions:dict):
     context = full_context[:1] + full_context[-3:]
   context_interactions_in_english = await background_function({'messages':context[1:], 'functions':[translate_to_english], 'function_call':{'name':translate_to_english['name']}, 'model':'gpt-4-1106-preview'})
   event_translation = f"System message:\n{full_context[0]['content']}\n\nInteractions:\n{context_interactions_in_english['translation']}"
-  if classify(event_translation, list(event_labels.values()))[event_labels['code_analysis']] > 0.8:
+  if classify(event_translation, list(event_labels.values()))[event_labels['code_analysis']] > 0.6:
     if classify(event_translation, [e for e in action_labels.values() if e == action_labels['analyze_self']])[action_labels['analyze_self']] > 0.8:
       action = 'analyze_self'
   elif classify(event_translation, [e for e in action_labels.values() if e == action_labels['generate_images']])[action_labels['generate_images']] > 0.8:
