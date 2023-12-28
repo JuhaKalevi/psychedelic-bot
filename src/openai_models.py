@@ -49,7 +49,7 @@ async def react(full_context:list, available_functions:dict):
   else:
     if classify(event_translation, [e for e in action_labels.values() if e == action_labels['generate_images']])[action_labels['generate_images']] > 0.8:
       action = 'generate_images'
-    elif classify(event_translation, [e for e in action_labels.values() if e == confirmation_labels['generate_images']])[confirmation_labels['generate_images']] > 0.8:
+    elif classify(event_translation, [e for e in confirmation_labels.values() if e == confirmation_labels['generate_images']])[confirmation_labels['generate_images']] > 0.8:
       action = 'generate_images'
   action_description = next(([f] for f in ACTIONS if f['name'] == action), [])
   if action != 'Chat' and action_description[0]['parameters'] != EMPTY_PARAMS:
