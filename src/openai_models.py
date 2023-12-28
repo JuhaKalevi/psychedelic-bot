@@ -3,10 +3,10 @@ from openai import AsyncOpenAI
 from transformers import pipeline
 from openai_function_schema import translate_to_english, ACTIONS, EMPTY_PARAMS
 
-EVENT_ANALYZE_SELF = 'Messages that address the chatbot directly or discuss its functions, capabilities, or status.'
-EVENT_GENERATE_IMAGES = 'Instructions given to the chatbot to (often implicitly) generate described images.'
-
-EVENT_CATEGORIES = [EVENT_ANALYZE_SELF, EVENT_GENERATE_IMAGES]
+event_categories = {
+  'analyze_self':'Messages that address the chatbot directly or discuss its functions, capabilities, or status.',
+  'generate_images':'Instructions given to the chatbot to (often implicitly) generate described images.'
+}
 
 async def background_function(kwargs):
   completion = ''
@@ -29,13 +29,13 @@ async def react(full_context:list, available_functions:dict):
     context = full_context[:1] + full_context[-3:]
   context_interactions_in_english = await background_function({'messages':context[1:], 'functions':[translate_to_english], 'function_call':{'name':translate_to_english['name']}, 'model':'gpt-4-1106-preview'})
   event_translation = f"System message:\n{full_context[0]['content']}\n\nInteractions:\n{context_interactions_in_english['translation']}"
-  zero_shot_classifications_object = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")(event_translation, EVENT_CATEGORIES, multi_label=True)
+  zero_shot_classifications_object = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")(event_translation, event_categories, multi_label=True)
   event_classifications = dict(zip(zero_shot_classifications_object['labels'], zero_shot_classifications_object['scores']))
   print(event_classifications)
-  if event_classifications[EVENT_ANALYZE_SELF] > 0.8 and event_classifications[EVENT_GENERATE_IMAGES] < 0.2:
-    action = EVENT_ANALYZE_SELF
-  elif event_classifications[EVENT_GENERATE_IMAGES] > 0.8 and event_classifications[EVENT_ANALYZE_SELF] < 0.2:
-    action = EVENT_GENERATE_IMAGES
+  if event_classifications[event_categories['analyze_self']] > 0.8 and event_classifications[event_categories['generate_images']] < 0.2:
+    action = event_categories['analyze_self']
+  elif event_classifications[event_categories['generate_images']] > 0.8 and event_classifications[event_categories['analyze_self']] < 0.2:
+    action = event_categories['generate_images']
   action_description = next(([f] for f in ACTIONS if f['name'] == action), [])
   if action != 'Chat' and action_description[0]['parameters'] != EMPTY_PARAMS:
     arguments_completion_kwargs = await background_function({'messages':full_context, 'functions':[action_description], 'function_call':{'name':action}, 'model':'gpt-4-1106-preview', 'temperature':0})
