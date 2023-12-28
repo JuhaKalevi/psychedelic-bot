@@ -38,8 +38,6 @@ async def react(full_context:list, available_functions:dict):
     action = 'generate_images'
   action_description = next(([f] for f in ACTIONS if f['name'] == action), [])
   if action != 'Chat' and action_description[0]['parameters'] != EMPTY_PARAMS:
-    arguments_completion_kwargs = await background_function({'messages':full_context, 'functions':[action_description], 'function_call':{'name':action}, 'model':'gpt-4-1106-preview', 'temperature':0})
-    arguments = loads(arguments_completion_kwargs.choices[0].message.function_call.arguments)
-    await available_functions[action](**arguments)
+    await available_functions[action](**await background_function({'messages':full_context, 'functions':[action_description], 'function_call':{'name':action}, 'model':'gpt-4-1106-preview', 'temperature':0}))
   else:
     await available_functions[action]()
