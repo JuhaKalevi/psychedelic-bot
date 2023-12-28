@@ -4,9 +4,10 @@ from transformers import pipeline
 from openai_function_schema import translate_to_english, ACTIONS, EMPTY_PARAMS
 
 event_categories = {
-  'analyze_self':'Addressing chatbot directly about development generally.',
-  'generate_images':'Request for images from the chatbot.',
-  'generate_images_analysis':'Addressing chatbot directly about developing its image generation function.'
+  'analyze_self':'Addressing chatbot about its development.',
+  'generate_images':'Instructions for chatbot to generate images.',
+  'generate_images_analysis':'Addressing chatbot about developing its image generation function.',
+  'generate_images_confirmation':'Confirmation to proceed with image generation.'
 }
 
 async def background_function(kwargs):
@@ -33,11 +34,12 @@ async def react(full_context:list, available_functions:dict):
   event_translation = f"System message:\n{full_context[0]['content']}\n\nInteractions:\n{context_interactions_in_english['translation']}"
   zero_shot_classifications_object = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")(event_translation, list(event_categories.values()))
   event_classifications = dict(zip(zero_shot_classifications_object['labels'], zero_shot_classifications_object['scores']))
-  print(event_classifications)
   analyze_self_score = event_classifications[event_categories['analyze_self']] + event_classifications[event_categories['generate_images_analysis']]
-  if analyze_self_score > 0.8 and event_classifications[event_categories['generate_images']] < 0.2:
+  generate_images_score = event_classifications[event_categories['generate_images']] + event_classifications[event_categories['generate_images_confirmation']]
+  print(f'analyze_self_score: {analyze_self_score}, generate_images_score: {generate_images_score}')
+  if analyze_self_score > 0.8 and generate_images_score < 0.2:
     action = 'analyze_self'
-  elif event_classifications[event_categories['generate_images']] > 0.8 and analyze_self_score < 0.2:
+  elif generate_images_score > 0.8 and analyze_self_score < 0.2:
     action = 'generate_images'
   action_description = next(([f] for f in ACTIONS if f['name'] == action), [])
   if action != 'Chat' and action_description[0]['parameters'] != EMPTY_PARAMS:
