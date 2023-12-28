@@ -8,7 +8,10 @@ event_labels = {
 }
 action_labels = {
   'analyze_self':'Message refers to you.',
-  'generate_images':'Instructions that clearly describe an image the user wants to generate or confirm a previous clarification question.',
+  'generate_images':'Instructions that describe an image the user wants to generate.',
+}
+confirmation_labels = {
+  'generate_images':'Confirmation of image generation request.'
 }
 zero_shot_classification_pipeline = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
 
@@ -43,8 +46,11 @@ async def react(full_context:list, available_functions:dict):
   if classify(event_translation, list(event_labels.values()))[event_labels['code_analysis']] > 0.6:
     if classify(event_translation, [e for e in action_labels.values() if e == action_labels['analyze_self']])[action_labels['analyze_self']] > 0.8:
       action = 'analyze_self'
-  elif classify(event_translation, [e for e in action_labels.values() if e == action_labels['generate_images']])[action_labels['generate_images']] > 0.8:
-    action = 'generate_images'
+  else:
+    if classify(event_translation, [e for e in action_labels.values() if e == action_labels['generate_images']])[action_labels['generate_images']] > 0.8:
+      action = 'generate_images'
+    elif classify(event_translation, [e for e in action_labels.values() if e == confirmation_labels['generate_images']])[confirmation_labels['generate_images']] > 0.8:
+      action = 'generate_images'
   action_description = next(([f] for f in ACTIONS if f['name'] == action), [])
   if action != 'Chat' and action_description[0]['parameters'] != EMPTY_PARAMS:
     await available_functions[action](**await background_function({'messages':full_context, 'functions':action_description, 'function_call':{'name':action}, 'model':'gpt-4-1106-preview', 'temperature':0}))
