@@ -62,7 +62,7 @@ class DiscordActions(Actions):
       async for chunk in chat_completion({'messages':msgs, 'model':self.model, 'max_tokens':4096}):
         if not chunk:
           continue
-        buffer.append(chunk)
+        buffer.append(chunk.content)
         if (time() - start_time) * 1000 >= 1337:
           joined_chunks = ''.join(buffer)
           content = ''.join(chunks_processed)+joined_chunks
