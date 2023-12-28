@@ -8,14 +8,14 @@ EVENT_CATEGORIES = ['Instructions given to the chatbot to generate described ima
 async def chat_completion(kwargs):
   client = AsyncOpenAI()
   async for part in await client.chat.completions.create(**kwargs, stream=True):
-    yield part.choices[0].delta.content or ""
+    yield part.choices[0].delta
 
 async def chat_completion_background_function(kwargs):
-  async for r in chat_completion(kwargs):
-    if r.choices[0].delta.function_call:
-      delta += r.choices[0].delta.function_call.arguments
+  async for delta in chat_completion(kwargs):
+    if delta.function_call:
+      completion += delta.function_call.arguments
     else:
-      return {d:loads(delta)[d] for d in list(kwargs['functions']['parameters']['properties'])}
+      return {d:loads(completion)[d] for d in list(kwargs['functions']['parameters']['properties'])}
 
 def select_labels(classifications, threshold, always_include=None):
   return {label: score for label, score in classifications.items() if score > threshold or label in (always_include or [])}
