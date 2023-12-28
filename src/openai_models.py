@@ -11,6 +11,7 @@ async def chat_completion(kwargs):
     yield part.choices[0].delta
 
 async def chat_completion_background_function(kwargs):
+  completion = ''
   async for delta in chat_completion(kwargs):
     if delta.function_call:
       completion += delta.function_call.arguments
