@@ -5,7 +5,7 @@ from openai_function_schema import translate_to_english, ACTIONS, EMPTY_PARAMS
 
 event_categories = {
   'analyze_self':'Messages that address the chatbot directly for developing its functions & capabilities.',
-  'generate_images':'Instructions given to the chatbot to (often implicitly) generate described images.'
+  'generate_images':'Instructions given to the chatbot to generate/display described images, when not discussing the chatbot itself.'
 }
 
 async def background_function(kwargs):
