@@ -3,9 +3,12 @@ asyncio
 discord
 httpx
 langdetect
+more-itertools
+numba
 openai
 pylint
 tiktoken
 websockets==12.0
 webuiapi
+pip install --upgrade --no-deps --force-reinstall git+https://github.com/openai/whisper.git
 Pillow

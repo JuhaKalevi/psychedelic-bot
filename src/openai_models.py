@@ -7,7 +7,7 @@ EVENT_CATEGORIES = ['Instructions given to the chatbot to generate described ima
 
 async def chat_completion(kwargs):
   client = AsyncOpenAI()
-  async for part in await client.chat.completions.create(**kwargs):
+  async for part in await client.chat.completions.create(**kwargs, stream=True):
     yield part.choices[0].delta.content or ""
 
 async def chat_completion_background_function(kwargs):
