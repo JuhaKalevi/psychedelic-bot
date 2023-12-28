@@ -60,7 +60,7 @@ class DiscordActions(Actions):
     start_time = time()
     async with Lock():
       async for chunk in chat_completion({'messages':msgs, 'model':self.model, 'max_tokens':4096}):
-        if not chunk:
+        if not chunk.content:
           continue
         buffer.append(chunk.content)
         if (time() - start_time) * 1000 >= 1337:
