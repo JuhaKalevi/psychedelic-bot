@@ -18,7 +18,6 @@ async def background_function(kwargs):
     if delta.function_call:
       completion += delta.function_call.arguments
     else:
-      print(completion)
       return {d:loads(completion)[d] for d in kwargs['functions'][0]['parameters']['properties'] if d in loads(completion)}
 
 async def chat_completion(kwargs):
@@ -28,6 +27,7 @@ async def chat_completion(kwargs):
 
 def classify(event_translation, labels):
   zero_shot_classifications_object = zero_shot_classification_pipeline(event_translation, labels)
+  print(zero_shot_classifications_object)
   return dict(zip(zero_shot_classifications_object['labels'], zero_shot_classifications_object['scores']))
 
 async def react(full_context:list, available_functions:dict):
