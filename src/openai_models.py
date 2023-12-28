@@ -4,8 +4,8 @@ from transformers import pipeline
 from openai_function_schema import translate_to_english, ACTIONS, EMPTY_PARAMS
 
 event_categories = {
-  'analyze_self':'Messages that address the chatbot directly for developing its functions & capabilities.',
-  'generate_images':'Instructions given to the chatbot to generate/display described images, when not discussing the chatbot itself.'
+  'analyze_self':'Messages that address the chatbot directly for developing its functions & capabilities. That means self-referential coding questions.',
+  'generate_images':'Instructions given to the chatbot to generate/display described images, when not discussing code implementation.'
 }
 
 async def background_function(kwargs):
