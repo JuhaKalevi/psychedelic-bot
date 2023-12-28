@@ -7,7 +7,7 @@ event_labels = {
  'code_analysis':'Request for analysis of your code/features/functions/capabilities.',
 }
 action_labels = {
-  'analyze_self':'Addressing your development.',
+  'analyze_self':'Addressing questions or ideas about your development or state of the project.',
   'generate_images':'Instructions that describe an image the user wants to generate.',
 }
 zero_shot_classification_pipeline = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
