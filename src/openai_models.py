@@ -17,7 +17,7 @@ async def chat_completion_background_function(kwargs):
       completion += delta.function_call.arguments
     else:
       print(completion)
-      return {d:loads(completion)[d] for d in list(kwargs['functions']['parameters']['properties'])}
+      return {d:loads(completion)[d] for d in list(kwargs['functions'][0]['parameters']['properties'])}
 
 def select_labels(classifications, threshold, always_include=None):
   return {label: score for label, score in classifications.items() if score > threshold or label in (always_include or [])}
