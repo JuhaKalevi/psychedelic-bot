@@ -4,11 +4,11 @@ from transformers import pipeline
 from openai_function_schema import translate_to_english, ACTIONS, EMPTY_PARAMS
 
 event_labels = {
- 'code_analysis':'Request for analysis of your code, features, functions or capabilities.',
+ 'code_analysis':'Analysis of code, functions or capabilities.',
 }
 action_labels = {
-  'analyze_self':'Addressing questions or ideas about your development or state of the project.',
-  'generate_images':'Instructions that describe an image the user wants to generate.',
+  'analyze_self':'Analysis of your chatbot code and its various functions.',
+  'generate_images':'Instructions that clearly describe an image the user wants to generate.',
 }
 zero_shot_classification_pipeline = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
 
