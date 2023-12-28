@@ -28,7 +28,9 @@ async def chat_completion(kwargs):
 
 def classify(event_translation, labels):
   zero_shot_classifications_object = zero_shot_classification_pipeline(event_translation, labels)
-  return dict(zip(zero_shot_classifications_object['labels'], zero_shot_classifications_object['scores']))
+  scores = dict(zip(zero_shot_classifications_object['labels'], zero_shot_classifications_object['scores']))
+  print(scores)
+  return scores
 
 async def react(full_context:list, available_functions:dict):
   action = 'Chat'
