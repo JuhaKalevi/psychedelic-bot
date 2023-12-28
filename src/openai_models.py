@@ -5,7 +5,7 @@ from openai_function_schema import translate_to_english, ACTIONS, EMPTY_PARAMS
 
 event_categories = {
   'analyze_self':'Addressing bot (you) directly about developing its functions & capabilities.',
-  'generate_images':'Request for image generation/display actions.',
+  'generate_images':'Request for images.',
   'generate_images_analysis':'Addressing bot (you) directly about developing its image generation functions & capabilities.'
 }
 
