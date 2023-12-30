@@ -1,6 +1,6 @@
 from json import loads
 from openai import AsyncOpenAI
-from transformers import pipeline
+from transformers import pipeline, AutoModelForTokenClassification, AutoTokenizer
 from openai_function_schema import translate_to_english, ACTIONS, EMPTY_PARAMS
 
 event_labels = {
@@ -13,6 +13,7 @@ action_labels = {
 confirmation_labels = {
   'generate_images':'Confirmation of image generation request.'
 }
+ner_pipeline = pipeline("ner", model=AutoModelForTokenClassification.from_pretrained("dslim/bert-base-NER"), tokenizer=AutoTokenizer.from_pretrained("dslim/bert-base-NER"))
 zero_shot_classification_pipeline = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
 
 async def background_function(kwargs):
@@ -30,6 +31,7 @@ async def chat_completion(kwargs):
     yield part.choices[0].delta
 
 def classify(event_translation, labels):
+  print(ner_pipeline(event_translation))
   zero_shot_classifications_object = zero_shot_classification_pipeline(event_translation, labels)
   scores = dict(zip(zero_shot_classifications_object['labels'], zero_shot_classifications_object['scores']))
   print(scores)
