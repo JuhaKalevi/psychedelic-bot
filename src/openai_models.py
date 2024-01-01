@@ -28,9 +28,9 @@ async def react(context:list, available_functions:dict):
   action = 'Chat'
   translation = await background_function({'messages':[{'role':'system','content':'Just translate this message to english instead of replying normally'}, context[-1]], 'model':'gpt-3.5-turbo-1106', 'temperature':0})
   meaning = await background_function({'messages':[{'role':'user','content':f'ONLY describe the meaning of the rest of this message INSTEAD OF REPLYING NORMALLY:\n{translation}'}], 'model':'gpt-3.5-turbo-1106', 'temperature':0})
-  if await background_function({'messages':[{'role':'user','content':f'ONLY answer should you load your chatbot source code into the context considering this:\n{meaning}'}], 'model':'gpt-3.5-turbo-1106', 'temperature':0, 'max_tokens':1}) > 0.8:
+  if await background_function({'messages':[{'role':'user','content':f'ONLY answer TRUE/FALSE should you load your chatbot source code into the context considering this:\n{meaning}'}], 'model':'gpt-3.5-turbo-1106', 'temperature':0, 'max_tokens':1}) > 0.8:
     action = 'analyze_self'
-  elif await background_function({'messages':[{'role':'user','content':f'ONLY answer should you use your image generation capability considering this:\n{meaning}'}], 'model':'gpt-3.5-turbo-1106', 'temperature':0, 'max_tokens':1}) > 0.8:
+  elif await background_function({'messages':[{'role':'user','content':f'ONLY answer TRUE/FALSE should you use your image generation capability considering this:\n{meaning}'}], 'model':'gpt-3.5-turbo-1106', 'temperature':0, 'max_tokens':1}) > 0.8:
     action = 'generate_images'
   action_arguments = next(([f] for f in ACTIONS if f['name'] == action), [])
   if action != 'Chat' and action_arguments:
