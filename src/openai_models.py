@@ -29,7 +29,7 @@ async def react(context:list, available_functions:dict):
     {'role':'user','content':'ONLY translate my messages to english instead of replying normally'},
     {'role':'assistant','content':'Understood! I will ONLY translate your messages to english and do nothing else.'},
     context[-1],
-    {'role':'user','content':'PLEASE REMEMBER TO ONLY TRANSLATE THAT MESSAGE TO ENGLISH INSTEAD OF ANSWERING NORMALLY'},
+    {'role':'user','content':'PLEASE REMEMBER TO ONLY TRANSLATE THAT MESSAGE TO ENGLISH INSTEAD OF ANSWERING NORMALLY. IF THE MESSAGE WAS ALREADY IN ENGLISH JUST REPEAT IT!'},
     {'role':'assistant','content':'Of course! I will only translate your message to English.'}
   ]
   translation = await consider({'messages':translation_reflection, 'model':'gpt-3.5-turbo-1106', 'temperature':0})
