@@ -44,8 +44,7 @@ def classify(event_translation, labels):
 
 async def react(context:list, available_functions:dict):
   action = 'Chat'
-  translation_completion = await background_function({'messages':[{'role':'system','content':'Just translate this message to english instead of replying normally'},context[-1]], 'model':'gpt-3.5-turbo-1106'})
-  translation = translation_completion['translation']
+  translation = await background_function({'messages':[{'role':'system','content':'Just translate this message to english instead of replying normally'},context[-1]], 'model':'gpt-3.5-turbo-1106'})
   if classify(translation, list(event_labels.values()))[event_labels['code_analysis']] > 0.6:
     if classify(translation, [e for e in action_labels.values() if e == action_labels['analyze_self']])[action_labels['analyze_self']] > 0.8:
       action = 'analyze_self'
