@@ -39,7 +39,7 @@ async def react(context:list, available_functions:dict):
   meaning = await background_function({'messages':[{'role':'system','content':'Just laconically describe the meaning of this message instead of replying normally'}, {'role':'user','content':translation}], 'model':'gpt-3.5-turbo-1106'})
   if classify(meaning, ['Analysis of code, functions or capabilities.']) > 0.6:
     print('CONSIDER analyze_self')
-    if classify(meaning, ['Message refers to you.']) > 0.4:
+    if classify(meaning, ['Message refers to you.']) > 0.6:
       print('DO analyze_self')
       action = 'analyze_self'
   else:
