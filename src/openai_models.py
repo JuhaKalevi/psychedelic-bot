@@ -1,7 +1,7 @@
 from json import loads
 from openai import AsyncOpenAI
 from transformers import pipeline
-from openai_function_schema import translate_to_english, ACTIONS, EMPTY_PARAMS
+from openai_function_schema import ACTIONS, EMPTY_PARAMS
 
 event_labels = {
  'code_analysis':'Analysis of code, functions or capabilities.',
