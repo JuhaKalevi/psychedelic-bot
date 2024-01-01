@@ -46,16 +46,16 @@ def classify(event_translation, labels):
 async def react(context:list, available_functions:dict):
   action = 'Chat'
   translation = await background_function({'messages':[{'role':'system','content':'Just translate this message to english instead of replying normally'},context[-1]], 'model':'gpt-3.5-turbo-1106'})
-  if classify(translation, list(event_labels.values()))[event_labels['code_analysis']] > 0.6:
-    if classify(translation, [e for e in action_labels.values() if e == action_labels['analyze_self']])[action_labels['analyze_self']] > 0.8:
+  if classify(translation, [event_labels['code_analysis']]) > 0.6:
+    if classify(translation, [action_labels['analyze_self']]) > 0.4:
       action = 'analyze_self'
   else:
-    if classify(translation, [e for e in action_labels.values() if e == action_labels['generate_images']])[action_labels['generate_images']] > 0.8:
+    if classify(translation, [action_labels['generate_images']]) > 0.8:
       action = 'generate_images'
-    elif classify(translation, [e for e in confirmation_labels.values() if e == confirmation_labels['generate_images']])[confirmation_labels['generate_images']] > 0.8:
+    elif classify(translation, [confirmation_labels['generate_images']]) > 0.8:
       action = 'generate_images'
   action_arguments = next(([f] for f in ACTIONS if f['name'] == action), [])
   if action != 'Chat' and action_arguments:
-    await available_functions[action](**await background_function({'messages':context, 'functions':action_arguments, 'function_call':{'name':action}, 'model':'gpt-4-1106-preview', 'temperature':0}))
+    await available_functions[action](**await background_function({'messages':context, 'functions':action_arguments, 'function_call':{'name':action}, 'model':'gpt-4-1106-preview'}))
   else:
     await available_functions[action]()
