@@ -25,7 +25,7 @@ async def consider(kwargs):
         buffer = delta
       else:
         buffer = delta.content
-      if delta.content is not None:
+      if buffer is not None:
         completion += buffer
       else:
         print(f'Completion: {completion}')
