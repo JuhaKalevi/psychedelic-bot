@@ -27,20 +27,20 @@ async def react(context:list, available_functions:dict):
   translation_reflection = [
     {'role':'system','content':'You are a translator.'},
     {'role':'user','content':'ONLY translate my messages to english instead of replying normally'},
-    {'role':'assistant','content':'Understood! I will only translate your messages to english and do nothing else.'},
+    {'role':'assistant','content':'Understood! I will ONLY translate your messages to english and do nothing else.'},
     context[-1]
   ]
   translation = await consider({'messages':translation_reflection, 'model':'gpt-3.5-turbo-1106', 'temperature':0})
   self_analysis_reflection = [
     {'role':'system','content':'You are a validator for true/false questions.'},
     {'role':'user','content':'From now on ONLY classify whether messages are requesting analysis of YOUR chatbot capabilities.'},
-    {'role':'assistant','content':'Understood! I will only answer 1 or 0 to your messages, signifying if they are requesting analysis of MY capabilities.'},
+    {'role':'assistant','content':'Understood! I will ONLY answer 1 or 0 to your messages, signifying if they are requesting analysis of MY capabilities.'},
     {'role':'user','content':translation}
   ]
   image_generation_reflection = [
     {'role':'system','content':'You are a validator for true/false questions.'},
     {'role':'user','content':'From now on ONLY classify whether messages are requesting image generation.'},
-    {'role':'assistant','content':'Understood! I will only answer 1 or 0 to your messages, signifying if they are requesting images.'},
+    {'role':'assistant','content':'Understood! I will ONLY answer 1 or 0 to your messages, signifying if they are requesting images.'},
     {'role':'user','content':translation}
   ]
   action = 'Chat'
