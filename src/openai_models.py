@@ -14,13 +14,11 @@ async def consider(kwargs):
       if delta.function_call:
         completion += delta.function_call.arguments
       else:
-        print(completion)
         return {arg:loads(completion)[arg] for arg in kwargs['functions'][0]['parameters']['properties'] if arg in loads(completion)}
     else:
       if delta.content is not None:
         completion += delta.content
       else:
-        print(f'Completion: {completion}')
         return completion
 
 async def react(context:list, available_functions:dict):
@@ -40,8 +38,10 @@ async def react(context:list, available_functions:dict):
   ]
   action = 'Chat'
   if await consider({'messages':self_analysis_reflection, 'model':'gpt-3.5-turbo-1106', 'temperature':0, 'max_tokens':1}) == '1':
+    print('DO analyze_self')
     action = 'analyze_self'
   elif await consider({'messages':image_generation_reflection, 'model':'gpt-3.5-turbo-1106', 'temperature':0, 'max_tokens':1}) == '1':
+    print('DO generate_images')
     action = 'generate_images'
   action_arguments = next(([f] for f in ACTIONS if f['name'] == action), [])
   if action != 'Chat' and action_arguments:
