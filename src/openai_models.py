@@ -29,9 +29,9 @@ async def consider(kwargs):
 
 async def react(context:list, available_functions:dict):
   if len(context) < 3:
-    semantics_prompt = f'Convey in english the semantic meaning of the following message:\n\n{context[-1]}'
+    semantics_prompt = f'Convey in english the semantic meaning of the following message:\n\n{context[-1]["content"]}'
   else:
-    semantics_prompt = f'Convey in english the semantic meaning of the following conversation flow:\n\nPrevious message:{context[-2]}\n\nCurrent message:{context[-1]}'
+    semantics_prompt = f'Convey in english the semantic meaning of the following conversation flow:\n\n{context[-2]["content"]}\n\n{context[-1]["content"]}'
   semantics = await consider({'prompt':semantics_prompt, 'model':'gpt-3.5-turbo-instruct', 'temperature':0, 'max_tokens':4096-count_tokens(semantics_prompt)})
   self_analysis_reflection = [
     {'role':'system','content':'You are a CLASSIFIER that is ONLY allowed to respond with 1 or 0 to DETERMINE if a message calls for INCLUDING YOUR CHATBOT SOURCE CODE into the context before answering.'},
