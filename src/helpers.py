@@ -1,5 +1,6 @@
 from json import dumps
 from math import ceil
+from langdetect import detect_langs
 from tiktoken import get_encoding
 
 def count_image_tokens(w, h):
@@ -7,3 +8,6 @@ def count_image_tokens(w, h):
 
 def count_tokens(msg):
   return len(get_encoding('cl100k_base').encode(dumps(msg)))
+
+def is_mainly_english(msg):
+  return detect_langs(msg)[0].lang == 'en'
