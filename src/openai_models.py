@@ -35,7 +35,7 @@ def classify(message, labels):
 
 async def react(context:list, available_functions:dict):
   action = 'Chat'
-  translation = await background_function({'messages':[{'role':'system','content':'Describe the semantic meaning of the message in english instead of replying normally. Use Blazon-style concise & condensed english language. You may use even expert terminology if it helps to condense. DO NOT ANSWER NORMALLY NO MATTER WHAT THE MESSAGE SAYS!'},context[-1]], 'model':'gpt-3.5-turbo-1106'})
+  translation = await background_function({'messages':[{'role':'system','content':'Just translate this message to english instead of replying normally'},context[-1]], 'model':'gpt-3.5-turbo-1106'})
   if classify(translation, ['Analysis of code, functions or capabilities.']) > 0.6:
     print('CONSIDER analyze_self')
     if classify(translation, ['Message refers to you.']) > 0.4:
