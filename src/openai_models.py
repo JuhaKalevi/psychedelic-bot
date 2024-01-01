@@ -37,16 +37,10 @@ async def react(context:list, available_functions:dict):
   action = 'Chat'
   translation = await background_function({'messages':[{'role':'system','content':'Just translate this message to english instead of replying normally'}, context[-1]], 'model':'gpt-3.5-turbo-1106', 'temperature':0})
   meaning = await background_function({'messages':[{'role':'user','content':f'ONLY describe the meaning of the rest of this message INSTEAD OF REPLYING NORMALLY:\n{translation}'}], 'model':'gpt-3.5-turbo-1106', 'temperature':0})
-  if classify(meaning, ['Analysis of code, functions or capabilities.']) > 0.6:
-    print('CONSIDER analyze_self')
-    if classify(meaning, ['Message refers to you.']) > 0.6:
-      print('DO analyze_self')
-      action = 'analyze_self'
-  else:
-    if classify(meaning, ['Instructions that describe an image the user wants to generate.']) > 0.8:
-      print('DO generate_images')
-      action = 'generate_images'
-    elif classify(meaning, ['Confirmation of image generation request.']) > 0.8:
+  if classify(meaning, ['Explain yourself']) > 0.8:
+    print('DO analyze_self')
+    action = 'analyze_self'
+  elif classify(meaning, ['Image requested']) > 0.8:
       print('DO generate_images')
       action = 'generate_images'
   action_arguments = next(([f] for f in ACTIONS if f['name'] == action), [])
