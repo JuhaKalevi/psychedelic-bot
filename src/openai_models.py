@@ -32,7 +32,7 @@ async def react(context:list, available_functions:dict):
     {'role':'assistant','content':'Understood! I will act as an NLP PROCESSOR and ONLY TRANSLATE your messages to ENGLISH SEMANTICS and do NOTHING ELSE.'},
     context[-1]
   ]
-  user_content_semantics = {'role':'user','content':await consider({'messages':translation_reflection, 'model':'gpt-3.5-turbo-1106', 'temperature':0})}
+  user_content_semantics = {'role':'user','content':await consider({'messages':translation_reflection, 'model':'gpt-3.5-turbo-instruct', 'temperature':0})}
   self_analysis_reflection = [
     {'role':'system','content':'You are a CLASSIFIER that is ONLY allowed to respond with 1 or 0 to DETERMINE if a message calls for INCLUDING YOUR CHATBOT SOURCE CODE into the context before answering.'},
     {'role':'user','content':'From now on ONLY classify whether messages are requesting analysis of YOUR chatbot capabilities! Reply 1 if the message is requesting analysis of your capabilities, and 0 if it is not!'},
