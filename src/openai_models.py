@@ -11,7 +11,7 @@ async def consider(kwargs):
   completion = ''
   if kwargs['model'] == 'gpt-3.5-turbo-instruct':
     print(kwargs)
-    completion = await AsyncOpenAI().completions.create(**kwargs)
+    completion = await AsyncOpenAI().completions.create(**kwargs, stream=False)
     print(completion)
     print(completion.choices[0].text)
     print('FILLER')
