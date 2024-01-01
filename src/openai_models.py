@@ -26,7 +26,7 @@ async def consider(kwargs):
         return completion
 
 async def react(context:list, available_functions:dict):
-  user_content_semantics = consider({'prompt':f'Act as NLP PROCESSOR and convey in english the semantic meaning of the following message:\n\n{context[-1]}', 'model':'gpt-3.5-turbo-instruct', 'temperature':0})
+  user_content_semantics = await consider({'prompt':f'Act as NLP PROCESSOR and convey in english the semantic meaning of the following message:\n\n{context[-1]}', 'model':'gpt-3.5-turbo-instruct', 'temperature':0})
   self_analysis_reflection = [
     {'role':'system','content':'You are a CLASSIFIER that is ONLY allowed to respond with 1 or 0 to DETERMINE if a message calls for INCLUDING YOUR CHATBOT SOURCE CODE into the context before answering.'},
     {'role':'user','content':'From now on ONLY classify whether messages are requesting analysis of YOUR chatbot capabilities! Reply 1 if the message is requesting analysis of your capabilities, and 0 if it is not!'},
