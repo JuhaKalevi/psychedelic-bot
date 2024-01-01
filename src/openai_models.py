@@ -41,7 +41,10 @@ def classify(event_translation, labels):
   zero_shot_classifications_object = zero_shot_classification_pipeline(event_translation, labels)
   scores = dict(zip(zero_shot_classifications_object['labels'], zero_shot_classifications_object['scores']))
   print(scores)
-  return scores
+  if len(labels) == 1:
+    return scores[labels[0]]
+  else:
+    return scores
 
 async def react(context:list, available_functions:dict):
   action = 'Chat'
