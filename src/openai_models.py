@@ -3,14 +3,14 @@ from openai import AsyncOpenAI
 from openai_function_schema import generate_images_schema
 
 async def chat_completion(kwargs):
-  client = AsyncOpenAI()
-  async for part in await client.chat.completions.create(**kwargs, stream=True):
+  async for part in await AsyncOpenAI().chat.completions.create(**kwargs, stream=True):
     yield part.choices[0].delta
-  await client.close()
 
 async def consider(kwargs):
   completion = ''
   print(kwargs)
+  if kwargs['model'] == 'gpt-3.5-turbo-instruct':
+    return await AsyncOpenAI().completions.create(**kwargs)
   async for delta in chat_completion(kwargs):
     if 'function_call' in kwargs:
       if delta.function_call:
