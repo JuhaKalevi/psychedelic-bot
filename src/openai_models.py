@@ -11,6 +11,7 @@ async def chat_completion(kwargs):
 
 async def consider(kwargs):
   completion = ''
+  print(kwargs)
   async for delta in chat_completion(kwargs):
     if 'function_call' in kwargs:
       if delta.function_call:
