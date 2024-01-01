@@ -40,7 +40,7 @@ async def react(context:list, available_functions:dict):
   image_generation_reflection = [
     {'role':'system','content':'You are a validator for true/false questions.'},
     {'role':'user','content':'From now on ONLY classify whether messages are requesting image generation.'},
-    {'role':'assistant','content':'Understood! I will only answer 1 or 0 to your messages, signifying if they are requesting image generation.'},
+    {'role':'assistant','content':'Understood! I will only answer 1 or 0 to your messages, signifying if they are requesting images.'},
     {'role':'user','content':translation}
   ]
   action = 'Chat'
