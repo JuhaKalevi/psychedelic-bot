@@ -28,7 +28,7 @@ async def background_function(kwargs):
       if delta.content:
         completion += delta.content
       else:
-        print(completion)
+        print(f'Completion: {completion}')
         return completion
 
 async def chat_completion(kwargs):
