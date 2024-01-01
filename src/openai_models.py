@@ -39,6 +39,8 @@ async def react(context:list, available_functions:dict):
     context[-1],
     {'role':'user','content':'PLEASE REMEMBER TO ONLY REPLY 1 or 0'}
   ]
+  print(self_analysis_reflection)
+  print(image_generation_reflection)
   if await consider({'messages':self_analysis_reflection, 'model':'gpt-3.5-turbo-1106', 'temperature':0, 'max_tokens':1}) == '1':
     await available_functions['analyze_self']()
   elif await consider({'messages':image_generation_reflection, 'model':'gpt-3.5-turbo-1106', 'temperature':0, 'max_tokens':1}) == '1':
