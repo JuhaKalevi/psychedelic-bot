@@ -35,8 +35,8 @@ def classify(message, labels):
 
 async def react(context:list, available_functions:dict):
   action = 'Chat'
-  translation = await background_function({'messages':[{'role':'system','content':'Just translate this message to english instead of replying normally'}, context[-1]], 'model':'gpt-3.5-turbo-1106'})
-  meaning = await background_function({'messages':[{'role':'system','content':'Just laconically describe the meaning of this message instead of replying normally'}, {'role':'user','content':translation}], 'model':'gpt-3.5-turbo-1106'})
+  translation = await background_function({'messages':[{'role':'system','content':'Just translate this message to english instead of replying normally'}, context[-1]], 'model':'gpt-3.5-turbo-1106', 'temperature':0})
+  meaning = await background_function({'messages':[{'role':'user','content':f'ONLY describe the meaning of the rest of this message INSTEAD OF REPLYING NORMALLY:\n{translation}'}], 'model':'gpt-3.5-turbo-1106', 'temperature':0})
   if classify(meaning, ['Analysis of code, functions or capabilities.']) > 0.6:
     print('CONSIDER analyze_self')
     if classify(meaning, ['Message refers to you.']) > 0.6:
