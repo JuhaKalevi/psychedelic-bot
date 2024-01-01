@@ -10,6 +10,7 @@ async def chat_completion(kwargs):
 async def consider(kwargs):
   completion = ''
   if kwargs['model'] == 'gpt-3.5-turbo-instruct':
+    print(kwargs)
     completion = await AsyncOpenAI().completions.create(**kwargs)
     print(completion)
     print(completion.choices[0].text)
