@@ -88,7 +88,6 @@ class MattermostActions(Actions):
     return self.instructions + msgs
 
   async def stream_reply(self, msgs:list) -> str:
-    print(msgs)
     if self.post['root_id'] == '':
       reply_to = self.post['id']
     else:
