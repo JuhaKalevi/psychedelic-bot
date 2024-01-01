@@ -21,8 +21,12 @@ async def consider(kwargs):
         print(completion)
         return {arg:loads(completion)[arg] for arg in kwargs['functions'][0]['parameters']['properties'] if arg in loads(completion)}
     else:
+      if kwargs['model'] == 'gpt-3.5-turbo-instruct':
+        buffer = delta
+      else:
+        buffer = delta.content
       if delta.content is not None:
-        completion += delta.content
+        completion += buffer
       else:
         print(f'Completion: {completion}')
         return completion
