@@ -27,7 +27,7 @@ async def react(context:list, available_functions:dict):
     message = {context[-1]["content"]}
   else:
     message = f'{context[-2]["content"]} {context[-1]["content"]}'
-    translation_reflection = {'role':'system','content':f'Your job is respond with exactly the following message in English: {message}'}
+  translation_reflection = {'role':'system','content':f'Your job is respond with exactly the following message in English: {message}'}
   translation = await consider({'messages':translation_reflection, 'model':'gpt-3.5-turbo-1106'})
   self_analysis_reflection = [
     {'role':'system','content':'You are a CLASSIFIER that is ONLY allowed to respond with 1 or 0 to DETERMINE if a message calls for INCLUDING YOUR CHATBOT SOURCE CODE into the context before answering.'},
