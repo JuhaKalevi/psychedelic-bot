@@ -14,35 +14,41 @@ async def consider(kwargs):
       if delta.function_call:
         completion += delta.function_call.arguments
       else:
+        print(completion)
         return {arg:loads(completion)[arg] for arg in kwargs['functions'][0]['parameters']['properties'] if arg in loads(completion)}
     else:
       if delta.content is not None:
         completion += delta.content
       else:
+        print(f'Completion: {completion}')
         return completion
 
 async def react(context:list, available_functions:dict):
-  print(context[-1])
+  translation_reflection = [
+    {'role':'system','content':'You are a translator.'},
+    {'role':'user','content':'ONLY translate my messages to english instead of replying normally'},
+    {'role':'assistant','content':'Understood! I will ONLY translate your messages to english and do nothing else. If a message is already in english, I will reply with the same message.'},
+    context[-1]
+  ]
+  translation = await consider({'messages':translation_reflection, 'model':'gpt-3.5-turbo-1106', 'temperature':0})
   self_analysis_reflection = [
     {'role':'system','content':'You are a CLASSIFIER that is ONLY allowed to respond with 1 or 0 to DETERMINE if a message calls for INCLUDING YOUR CHATBOT SOURCE CODE into the context before answering.'},
     {'role':'user','content':'From now on ONLY classify whether messages are requesting analysis of YOUR chatbot capabilities!'},
     {'role':'assistant','content':'Understood! I will ONLY answer 1 or 0 to your messages, signifying if they are requesting analysis of MY capabilities. I will NEVER reply anything else!'},
-    context[-1],
+    {'role':'user','content':translation},
     {'role':'user','content':'PLEASE REMEMBER TO ONLY REPLY 1 or 0'}
   ]
   image_generation_reflection = [
     {'role':'system','content':'You are a CLASSIFIER that is ONLY allowed to respond with 1 or 0 to DETERMINE if a message calls for the generation of images using a local API.'},
     {'role':'user','content':'From now on ONLY classify whether messages are requesting image generation!'},
     {'role':'assistant','content':'Understood! I will ONLY answer 1 or 0 to your messages, signifying if they are requesting images. I will NEVER reply anything else!'},
-    context[-1],
+    {'role':'user','content':translation},
     {'role':'user','content':'PLEASE REMEMBER TO ONLY REPLY 1 or 0'}
   ]
   action = 'Chat'
   if await consider({'messages':self_analysis_reflection, 'model':'gpt-3.5-turbo-1106', 'temperature':0, 'max_tokens':1}) == '1':
-    print('DO analyze_self')
     action = 'analyze_self'
   elif await consider({'messages':image_generation_reflection, 'model':'gpt-3.5-turbo-1106', 'temperature':0, 'max_tokens':1}) == '1':
-    print('DO generate_images')
     action = 'generate_images'
   action_arguments = next(([f] for f in ACTIONS if f['name'] == action), [])
   if action != 'Chat' and action_arguments:

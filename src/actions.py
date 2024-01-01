@@ -31,7 +31,6 @@ class Actions(ABC):
     pass
 
   async def analyze_self(self):
-    print('analyze_self')
     files = []
     for file_path in [x for x in listdir() if x.endswith(('.py'))]:
       with open(file_path, 'r', encoding='utf-8') as file:
