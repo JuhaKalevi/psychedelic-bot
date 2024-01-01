@@ -45,17 +45,3 @@ generate_images = {
 }
 
 ACTIONS = [analyze_self, generate_images]
-
-translate_to_english = {
-  'name': 'translate_to_english',
-  'parameters': {
-    'type': 'object',
-    'properties': {
-      'translation': {
-        'type': 'string',
-        'description':"Translate the message to english."
-      }
-    },
-    'required': ['translation']
-  }
-}

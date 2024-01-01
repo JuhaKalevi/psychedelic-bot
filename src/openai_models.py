@@ -35,14 +35,10 @@ def classify(event_translation, labels):
   print(scores)
   return scores
 
-async def react(full_context:list, available_functions:dict):
+async def react(context:list, available_functions:dict):
   action = 'Chat'
-  if full_context[0] in full_context[-3:]:
-    context = full_context[-3:]
-  else:
-    context = full_context[:1] + full_context[-3:]
-  context_interactions_in_english = await background_function({'messages':context[1:], 'functions':[translate_to_english], 'function_call':{'name':translate_to_english['name']}, 'model':'gpt-4-1106-preview'})
-  event_translation = f"System message:\n{full_context[0]['content']}\n\nInteractions:\n{context_interactions_in_english['translation']}"
+  last_message_in_english = await background_function({'messages':[{'role':'system','content':'Just translate this message to english instead of replying normally'},context[-1]], 'model':'gpt-3.5-turbo-instruct'})
+  event_translation = f"System message:\n{context[0]['content']}\n\nInteractions:\n{last_message_in_english['translation']}"
   if classify(event_translation, list(event_labels.values()))[event_labels['code_analysis']] > 0.6:
     if classify(event_translation, [e for e in action_labels.values() if e == action_labels['analyze_self']])[action_labels['analyze_self']] > 0.8:
       action = 'analyze_self'
@@ -53,6 +49,6 @@ async def react(full_context:list, available_functions:dict):
       action = 'generate_images'
   action_description = next(([f] for f in ACTIONS if f['name'] == action), [])
   if action != 'Chat' and action_description[0]['parameters'] != EMPTY_PARAMS:
-    await available_functions[action](**await background_function({'messages':full_context, 'functions':action_description, 'function_call':{'name':action}, 'model':'gpt-4-1106-preview', 'temperature':0}))
+    await available_functions[action](**await background_function({'messages':context, 'functions':action_description, 'function_call':{'name':action}, 'model':'gpt-4-1106-preview', 'temperature':0}))
   else:
     await available_functions[action]()
