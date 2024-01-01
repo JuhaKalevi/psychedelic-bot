@@ -6,7 +6,7 @@ async def chat_completion(kwargs):
   client = AsyncOpenAI()
   async for part in await client.chat.completions.create(**kwargs, stream=True):
     yield part.choices[0].delta
-  client.close()
+  await client.close()
 
 async def consider(kwargs):
   completion = ''
