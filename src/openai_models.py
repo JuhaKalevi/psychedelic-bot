@@ -30,8 +30,8 @@ async def react(context:list, available_functions:dict):
   if not is_mainly_english(context[-1]['content']):
     translation_reflection = [
       {'role':'system','content':'You are a translator.'},
-      {'role':'user','content':'ONLY translate my messages to english instead of replying normally'},
-      {'role':'assistant','content':'Understood! I will ONLY translate your messages to english and do nothing else. If a message is already in english, I will reply with the same message.'},
+      {'role':'user','content':'ONLY translate my messages to english instead of replying normally!'},
+      {'role':'assistant','content':'Understood! I will ONLY translate your messages to english and do nothing else. If a message is already in english, I will reply with the same message. If you translate, then do not repeat the original message!'},
       context[-1]
     ]
     user_content = {'role':'user','content':await consider({'messages':translation_reflection, 'model':'gpt-3.5-turbo-1106', 'temperature':0})}
