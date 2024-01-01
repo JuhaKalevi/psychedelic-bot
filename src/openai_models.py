@@ -23,13 +23,13 @@ async def background_function(kwargs):
         completion += delta.function_call.arguments
       else:
         print(completion)
-        return {d:loads(completion)[d] for d in kwargs['functions'][0]['parameters']['properties'] if d in loads(completion)}
+        return {arg:loads(completion)[arg] for arg in kwargs['functions'][0]['parameters']['properties'] if arg in loads(completion)}
     else:
       if delta.content:
         completion += delta.content
       else:
         print(completion)
-        return loads(completion)
+        return completion
 
 async def chat_completion(kwargs):
   client = AsyncOpenAI()
