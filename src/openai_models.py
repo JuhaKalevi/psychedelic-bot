@@ -22,17 +22,17 @@ async def consider(kwargs):
         print(f'Completion: {completion}')
         return completion
 
-async def react(context:list, available_functions:dict):
+async def react(context:list, available_functions:dict, my_name:str):
   if len(context) < 3:
     message = {context[-1]["content"]}
   else:
     message = f'{context[-2]["content"]} {context[-1]["content"]}'
   translation_reflection = [
-    {'role':'system','content':f'You are a TRANSLATOR that is ONLY allowed to respond with a translation of the message to english.'},
+    {'role':'system','content':f'You are a TRANSLATOR called {my_name} that is ONLY allowed to respond with a translation of the message to english.'},
     {'role':'user','content':'From now on ONLY translate messages to english!'},
     {'role':'assistant','content':'Understood! I will ONLY answer with translations to your messages. I will NEVER reply anything else!'},
     {'role':'user','content':message},
-    {'role':'user','content':f'Your job is translate this message to english if necessary and then reply with the translation or the original message if it was in english.'}
+    {'role':'user','content':'Your job is TRANSLATE THE ABOVE MESSAGE TO ENGLISH IF NECESSARY and then reply with the TRANSLATION OR THE ORIGINAL MESSAGE if it was already in good enough english. DO NOT DO ANYTHING ELSE'}
     ]
   translation = await consider({'messages':translation_reflection, 'model':'gpt-3.5-turbo-1106'})
   self_analysis_reflection = [

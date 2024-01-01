@@ -36,7 +36,7 @@ class MattermostActions(Actions):
     self.client.user_id = bot_user['id']
     self.thread = await self.client.posts.get_thread(self.post['id'])
     if channel['type'] == 'D' or (len(self.thread['posts'].values()) == 1 and next(iter(self.thread['posts'].values()))['user_id'] == self.client.user_id) or any(self.client.name_in_message(post['message']) for post in self.thread['posts'].values()):
-      return await react(await self.recall_context(vision=False), self.available_functions)
+      return await react(await self.recall_context(vision=False), self.available_functions, bot_user)
 
   async def recall_context(self, count=None, max_tokens=126976, vision=True):
     context = self.thread
