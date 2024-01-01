@@ -3,17 +3,7 @@ from openai import AsyncOpenAI
 from transformers import pipeline
 from openai_function_schema import ACTIONS
 
-event_labels = {
- 'code_analysis':'Analysis of code, functions or capabilities.',
-}
-action_labels = {
-  'analyze_self':'Message refers to you.',
-  'generate_images':'Instructions that describe an image the user wants to generate.',
-}
-confirmation_labels = {
-  'generate_images':'Confirmation of image generation request.'
-}
-zero_shot_classification_pipeline = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
+classification_pipeline = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
 
 async def background_function(kwargs):
   completion = ''
@@ -38,24 +28,25 @@ async def chat_completion(kwargs):
     yield part.choices[0].delta
 
 def classify(event_translation, labels):
-  zero_shot_classifications_object = zero_shot_classification_pipeline(event_translation, labels)
-  scores = dict(zip(zero_shot_classifications_object['labels'], zero_shot_classifications_object['scores']))
-  print(scores)
-  if len(labels) == 1:
-    return scores[labels[0]]
-  else:
-    return scores
+  if len(labels) > 1:
+    zero_shot_classification = classification_pipeline(event_translation, labels)
+    return dict(zip(zero_shot_classification['labels'], zero_shot_classification['scores']))
+  return classification_pipeline(event_translation, labels[0])['scores'][0]
 
 async def react(context:list, available_functions:dict):
   action = 'Chat'
   translation = await background_function({'messages':[{'role':'system','content':'Just translate this message to english instead of replying normally'},context[-1]], 'model':'gpt-3.5-turbo-1106'})
-  if classify(translation, [event_labels['code_analysis']]) > 0.6:
-    if classify(translation, [action_labels['analyze_self']]) > 0.4:
+  if classify(translation, ['Analysis of code, functions or capabilities.']) > 0.6:
+    print('CONSIDER analyze_self')
+    if classify(translation, ['Message refers to you.']) > 0.4:
+      print('DO analyze_self')
       action = 'analyze_self'
   else:
-    if classify(translation, [action_labels['generate_images']]) > 0.8:
+    if classify(translation, ['Instructions that describe an image the user wants to generate.']) > 0.8:
+      print('DO generate_images')
       action = 'generate_images'
-    elif classify(translation, [confirmation_labels['generate_images']]) > 0.8:
+    elif classify(translation, ['Confirmation of image generation request.']) > 0.8:
+      print('DO generate_images')
       action = 'generate_images'
   action_arguments = next(([f] for f in ACTIONS if f['name'] == action), [])
   if action != 'Chat' and action_arguments:
