@@ -27,9 +27,9 @@ async def consider(kwargs):
 
 async def react(context:list, available_functions:dict):
   translation_reflection = [
-    {'role':'system','content':'You are a NLP processor.'},
+    {'role':'system','content':'You are an NLP PROCESSOR.'},
     {'role':'user','content':'ONLY translate my messages to ENGLISH SEMANTICS instead of replying normally!'},
-    {'role':'assistant','content':'Understood! I will ONLY TRANSLATE your messages to ENGLISH SEMANTICS and do NOTHING ELSE.'},
+    {'role':'assistant','content':'Understood! I will act as an NLP PROCESSOR and ONLY TRANSLATE your messages to ENGLISH SEMANTICS and do NOTHING ELSE.'},
     context[-1]
   ]
   user_content_semantics = {'role':'user','content':await consider({'messages':translation_reflection, 'model':'gpt-3.5-turbo-1106', 'temperature':0})}
