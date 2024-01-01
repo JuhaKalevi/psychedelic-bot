@@ -1,6 +1,6 @@
 from json import loads
 from openai import AsyncOpenAI
-from openai_function_schema import ACTIONS
+from openai_function_schema import generate_images_schema
 
 async def chat_completion(kwargs):
   client = AsyncOpenAI()
@@ -39,13 +39,9 @@ async def react(context:list, available_functions:dict):
     context[-1],
     {'role':'user','content':'PLEASE REMEMBER TO ONLY REPLY 1 or 0'}
   ]
-  action = 'Chat'
   if await consider({'messages':self_analysis_reflection, 'model':'gpt-3.5-turbo-1106', 'temperature':0, 'max_tokens':1}) == '1':
-    action = 'analyze_self'
+    await available_functions['analyze_self']()
   elif await consider({'messages':image_generation_reflection, 'model':'gpt-3.5-turbo-1106', 'temperature':0, 'max_tokens':1}) == '1':
-    action = 'generate_images'
-  action_arguments = next(([f] for f in ACTIONS if f['name'] == action), [])
-  if action != 'Chat' and action_arguments:
-    await available_functions[action](**await consider({'messages':context, 'functions':action_arguments, 'function_call':{'name':action}, 'model':'gpt-4-1106-preview'}))
+    await available_functions['generate_images'](**await consider({'messages':context, 'functions':[generate_images_schema], 'function_call':{'name':'generate_images'}, 'model':'gpt-4-1106-preview'}))
   else:
-    await available_functions[action]()
+    await available_functions['Chat']()

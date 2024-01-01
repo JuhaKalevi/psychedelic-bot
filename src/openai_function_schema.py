@@ -5,7 +5,7 @@ IMGGEN_GROUPS = "Instead of commas, it's possible to use periods which separate 
 IMGGEN_WEIGHT = "Parentheses are used to increase the weight of (emphasize) tokens, such as: (((red hair))). Each set of parentheses multiplies the weight by 1.05. Convert adjectives like 'barely', 'slightly', 'very' or 'extremely' to this format!. Curly brackets can be conversely used to de-emphasize with a similar logic & multiplier."
 IMGGEN_REMIND = "Don't use any kind of formatting to separate these keywords, expect what is mentioned above! Remember to translate everything to english!"
 
-generate_images = {
+generate_images_schema = {
   'name': 'generate_images',
   'parameters': {
     'type': 'object',
@@ -35,5 +35,3 @@ generate_images = {
     'required': ['prompt']
   }
 }
-
-ACTIONS = [generate_images]
