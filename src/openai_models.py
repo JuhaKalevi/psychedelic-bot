@@ -36,7 +36,7 @@ async def react(context:list, available_functions:dict):
     semantics_prompt = f'Convey in english the semantic meaning of the following message: {context[-1]["content"]}'
   else:
     semantics_prompt = f'Convey in english the semantic meaning of the following conversation flow: {context[-2]["content"]} {context[-1]["content"]}'
-  semantics = await consider({'prompt':semantics_prompt, 'model':'gpt-3.5-turbo-instruct', 'temperature':0, 'max_tokens':4000-count_tokens(semantics_prompt)})
+  semantics = await consider({'prompt':semantics_prompt, 'model':'gpt-3.5-turbo-instruct', 'max_tokens':4000-count_tokens(semantics_prompt)})
   self_analysis_reflection = [
     {'role':'system','content':'You are a CLASSIFIER that is ONLY allowed to respond with 1 or 0 to DETERMINE if a message calls for INCLUDING YOUR CHATBOT SOURCE CODE into the context before answering.'},
     {'role':'user','content':'From now on ONLY classify whether messages are requesting analysis of YOUR chatbot capabilities! Reply 1 if the message is requesting analysis of your capabilities, and 0 if it is not!'},
