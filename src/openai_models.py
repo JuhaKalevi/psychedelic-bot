@@ -36,7 +36,7 @@ def classify(message, labels):
 async def react(context:list, available_functions:dict):
   action = 'Chat'
   translation = await background_function({'messages':[{'role':'system','content':'Just translate this message to english instead of replying normally'}, context[-1]], 'model':'gpt-3.5-turbo-1106'})
-  implication = await background_function({'messages':[{'role':'system','content':'With Blazon-like language describe the implication of this message instead of replying normally'}, {'role':'user','content':translation}], 'model':'gpt-3.5-turbo-1106'})
+  implication = await background_function({'messages':[{'role':'system','content':'Just describe the implication of this message instead of replying normally'}, {'role':'user','content':translation}], 'model':'gpt-3.5-turbo-1106'})
   if classify(implication, ['Analysis of code, functions or capabilities.']) > 0.6:
     print('CONSIDER analyze_self')
     if classify(implication, ['Message refers to you.']) > 0.4:
