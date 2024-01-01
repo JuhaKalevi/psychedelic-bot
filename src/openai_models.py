@@ -6,7 +6,7 @@ from openai_function_schema import generate_images_schema
 async def chat_completion(kwargs):
   if kwargs['model'] == 'gpt-3.5-turbo-instruct':
     async for part in await AsyncOpenAI().completions.create(**kwargs, stream=True):
-      yield part.choices[0].delta
+      yield part.choices[0].text
   else:
     async for part in await AsyncOpenAI().chat.completions.create(**kwargs, stream=True):
       yield part.choices[0].delta
