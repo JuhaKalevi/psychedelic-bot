@@ -4,18 +4,15 @@ from helpers import count_tokens
 from openai_function_schema import generate_images_schema
 
 async def chat_completion(kwargs):
-  async for part in await AsyncOpenAI().chat.completions.create(**kwargs, stream=True):
-    yield part.choices[0].delta
+  if kwargs['model'] == 'gpt-3.5-turbo-instruct':
+    async for part in await AsyncOpenAI().completions.create(**kwargs, stream=True):
+      yield part.choices[0].delta
+  else:
+    async for part in await AsyncOpenAI().chat.completions.create(**kwargs, stream=True):
+      yield part.choices[0].delta
 
 async def consider(kwargs):
   completion = ''
-  if kwargs['model'] == 'gpt-3.5-turbo-instruct':
-    print(kwargs)
-    completion = await AsyncOpenAI().completions.create(**kwargs, stream=False)
-    print(completion)
-    print(completion.choices[0].text)
-    print('FILLER')
-    return completion.choices[0].text
   async for delta in chat_completion(kwargs):
     if 'function_call' in kwargs:
       if delta.function_call:
