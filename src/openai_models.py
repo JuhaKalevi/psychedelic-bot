@@ -17,6 +17,7 @@ zero_shot_classification_pipeline = pipeline("zero-shot-classification", model="
 
 async def background_function(kwargs):
   completion = ''
+  print(kwargs)
   async for delta in chat_completion(kwargs):
     if 'function_call' in kwargs:
       if delta.function_call:
