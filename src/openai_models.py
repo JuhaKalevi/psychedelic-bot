@@ -26,7 +26,7 @@ async def background_function(kwargs):
         print(completion)
         return {arg:loads(completion)[arg] for arg in kwargs['functions'][0]['parameters']['properties'] if arg in loads(completion)}
     else:
-      if delta.content:
+      if delta.content is not None:
         completion += delta.content
       else:
         print(f'Completion: {completion}')
