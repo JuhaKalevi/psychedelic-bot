@@ -3,7 +3,7 @@ from openai import AsyncOpenAI
 from transformers import pipeline
 from openai_function_schema import ACTIONS
 
-classification_pipeline = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
+classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
 
 async def background_function(kwargs):
   completion = ''
@@ -27,11 +27,11 @@ async def chat_completion(kwargs):
   async for part in await client.chat.completions.create(**kwargs, stream=True):
     yield part.choices[0].delta
 
-def classify(event_translation, labels):
+def classify(message, labels):
   if len(labels) > 1:
-    zero_shot_classification = classification_pipeline(event_translation, labels)
-    return dict(zip(zero_shot_classification['labels'], zero_shot_classification['scores']))
-  return classification_pipeline(event_translation, labels[0])['scores'][0]
+    classification = classifier(message, labels)
+    return dict(zip(classification['labels'], classification['scores']))
+  return classifier(message, labels[0])['scores'][0]
 
 async def react(context:list, available_functions:dict):
   action = 'Chat'
