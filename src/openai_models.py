@@ -29,6 +29,7 @@ async def consider(kwargs):
 
 async def react(context:list, available_functions:dict):
   if len(context) < 3:
+    print('SINGLE MESSAGE')
     semantics_prompt = f'Convey in english the semantic meaning of the following message:\n\n{context[-1]["content"]}'
   else:
     semantics_prompt = f'Convey in english the semantic meaning of the following conversation flow: {context[-2]["content"]} {context[-1]["content"]}'
