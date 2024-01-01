@@ -4,13 +4,8 @@ from helpers import count_tokens
 from openai_function_schema import generate_images_schema
 
 async def chat_completion(kwargs):
-  if kwargs['model'] == 'gpt-3.5-turbo-instruct':
-    async for part in await AsyncOpenAI().completions.create(**kwargs, stream=True):
-      print(part.choices[0].text)
-      yield part.choices[0].text
-  else:
-    async for part in await AsyncOpenAI().chat.completions.create(**kwargs, stream=True):
-      yield part.choices[0].delta
+  async for part in await AsyncOpenAI().chat.completions.create(**kwargs, stream=True):
+    yield part.choices[0].delta
 
 async def consider(kwargs):
   completion = ''
@@ -22,12 +17,8 @@ async def consider(kwargs):
         print(completion)
         return {arg:loads(completion)[arg] for arg in kwargs['functions'][0]['parameters']['properties'] if arg in loads(completion)}
     else:
-      if kwargs['model'] == 'gpt-3.5-turbo-instruct':
-        buffer = delta
-      else:
-        buffer = delta.content
-      if buffer is not None:
-        completion += buffer
+      if delta.content is not None:
+        completion += delta.content
       else:
         print(f'Completion: {completion}')
         return completion
@@ -38,7 +29,7 @@ async def react(context:list, available_functions:dict):
     translation = f'Reply with the following message translated to english if necessary. Just repeat the message if translation is not necessary. Message begins: {context[-1]["content"]}'
   else:
     translation = f'Reply with the following two messages translated to english if necessary. Just repeat the messages if translation is not necessary. Messages begin: {context[-2]["content"]} {context[-1]["content"]}'
-  semantics = await consider({'prompt':translation, 'model':'gpt-3.5-turbo-instruct', 'max_tokens':4000-count_tokens(translation)})
+  semantics = await consider({'prompt':translation, 'model':'gpt-3.5-turbo-1106', 'max_tokens':4096-count_tokens(translation)})
   self_analysis_reflection = [
     {'role':'system','content':'You are a CLASSIFIER that is ONLY allowed to respond with 1 or 0 to DETERMINE if a message calls for INCLUDING YOUR CHATBOT SOURCE CODE into the context before answering.'},
     {'role':'user','content':'From now on ONLY classify whether messages are requesting analysis of YOUR chatbot capabilities! Reply 1 if the message is requesting analysis of your capabilities, and 0 if it is not!'},
