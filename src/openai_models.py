@@ -35,9 +35,9 @@ async def consider(kwargs):
 async def react(context:list, available_functions:dict):
   if len(context) < 3:
     print('SINGLE MESSAGE')
-    translation = f'Reply with the following message translated to english if necessary: {context[-1]["content"]}'
+    translation = f'Reply with the following message translated to english if necessary. Just repeat the message if translation is not necessary. Message begins: {context[-1]["content"]}'
   else:
-    translation = f'Reply with the following two messages translated to english if necessary: {context[-2]["content"]} {context[-1]["content"]}'
+    translation = f'Reply with the following two messages translated to english if necessary. Just repeat the messages if translation is not necessary. Messages begin: {context[-2]["content"]} {context[-1]["content"]}'
   semantics = await consider({'prompt':translation, 'model':'gpt-3.5-turbo-instruct', 'max_tokens':4000-count_tokens(translation)})
   self_analysis_reflection = [
     {'role':'system','content':'You are a CLASSIFIER that is ONLY allowed to respond with 1 or 0 to DETERMINE if a message calls for INCLUDING YOUR CHATBOT SOURCE CODE into the context before answering.'},
