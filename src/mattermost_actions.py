@@ -96,11 +96,12 @@ class MattermostActions(Actions):
     buffer = []
     chunks_processed = []
     start_time = time()
+    print(msgs)
     async with Lock():
-      async for chunk in chat_completion({'messages':msgs, 'model':self.model, 'max_tokens':4096}):
-        if not chunk.content:
+      async for delta in chat_completion({'messages':msgs, 'model':self.model, 'max_tokens':4096}):
+        if not delta.content:
           continue
-        buffer.append(chunk.content)
+        buffer.append(delta.content)
         if (time() - start_time) * 1000 >= 500:
           joined_chunks = ''.join(buffer)
           reply_id = await self.client.create_or_update_post({'channel_id':self.post['channel_id'], 'message':''.join(chunks_processed)+joined_chunks, 'file_ids':self.file_ids, 'root_id':reply_to}, reply_id)
