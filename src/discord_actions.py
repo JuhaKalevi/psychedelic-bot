@@ -26,7 +26,7 @@ class DiscordActions(Actions):
     elif self.channel.type == discord.ChannelType.public_thread:
       self.context.append(self.message)
     if any(self.client.user.mentioned_in(msg) for msg in self.context):
-      return await react(await self.recall_context(max_tokens=12288), self.available_functions, self.client.user.name)
+      return await react(await self.recall_context(max_tokens=12288), self.available_functions)
 
   async def recall_context(self, count=None, max_tokens=12288):
     if count:
