@@ -27,26 +27,18 @@ async def react(context:list, available_functions:dict, my_name:str):
     message = context[-1]["content"]
   else:
     message = f'{context[-2]["content"]} {context[-1]["content"]}'
-  translation_reflection = [
-    {'role':'system','content':f'You are a TRANSLATOR called {my_name} that is ONLY allowed to respond with a translation of the message to english.'},
-    {'role':'user','content':'From now on ONLY translate messages to english!'},
-    {'role':'assistant','content':'Understood! I will ONLY answer with translations to your messages. I will NEVER reply anything else!'},
-    {'role':'user','content':message},
-    {'role':'user','content':'Your job is TRANSLATE THE ABOVE MESSAGE TO ENGLISH IF NECESSARY and then reply with the TRANSLATION OR THE ORIGINAL MESSAGE if it was already in good enough english. DO NOT DO ANYTHING ELSE'}
-    ]
-  translation = await consider({'messages':translation_reflection, 'model':'gpt-3.5-turbo-1106'})
   self_analysis_reflection = [
     {'role':'system','content':'You are a CLASSIFIER that is ONLY allowed to respond with 1 or 0 to DETERMINE if a message calls for INCLUDING YOUR CHATBOT SOURCE CODE into the context before answering.'},
     {'role':'user','content':'From now on ONLY classify whether messages are requesting analysis of YOUR chatbot capabilities! Reply 1 if the message is requesting analysis of your capabilities, and 0 if it is not!'},
     {'role':'assistant','content':'Understood! I will ONLY answer 1 or 0 to your messages, signifying if they are requesting analysis of MY capabilities. I will NEVER reply anything else!'},
-    {'role':'user','content':translation},
+    {'role':'user','content':message},
     {'role':'user','content':'PLEASE REMEMBER TO ONLY REPLY 1 or 0'}
   ]
   image_generation_reflection = [
     {'role':'system','content':'You are a CLASSIFIER that is ONLY allowed to respond with 1 or 0 to DETERMINE if a message calls for the generation of images using a local API.'},
     {'role':'user','content':'From now on ONLY classify whether messages are requesting image generation!'},
     {'role':'assistant','content':'Understood! I will ONLY answer 1 or 0 to your messages, signifying if they are requesting images. I will NEVER reply anything else!'},
-    {'role':'user','content':translation},
+    {'role':'user','content':message},
     {'role':'user','content':'PLEASE REMEMBER TO ONLY REPLY 1 or 0'}
   ]
   if await consider({'messages':self_analysis_reflection, 'model':'gpt-3.5-turbo-1106', 'temperature':0, 'max_tokens':1}) == '1':
