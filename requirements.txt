@@ -1,14 +1,9 @@
 aiofiles
 asyncio
 discord
-httpx
-langdetect
-more-itertools
-numba
+git+https://gitlab.psychedelic.fi/ai/python-mattermost-driver.git#egg=mattermostdriver
 openai
 pylint
 tiktoken
-websockets==12.0
-webuiapi
-pip install --upgrade --no-deps --force-reinstall git+https://github.com/openai/whisper.git
+websockets
 Pillow
