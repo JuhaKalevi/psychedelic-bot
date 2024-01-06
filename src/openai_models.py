@@ -7,7 +7,6 @@ async def chat_completion(kwargs):
     yield part.choices[0].delta
 
 async def consider(kwargs):
-  print(kwargs)
   completion = ''
   async for delta in chat_completion(kwargs):
     if 'function_call' in kwargs:
@@ -25,7 +24,7 @@ async def consider(kwargs):
 
 async def react(context:list, available_functions:dict, my_name:str):
   if len(context) < 3:
-    message = {context[-1]["content"]}
+    message = context[-1]["content"]
   else:
     message = f'{context[-2]["content"]} {context[-1]["content"]}'
   translation_reflection = [
