@@ -27,12 +27,11 @@ async def consider(kwargs):
         return completion
 
 async def react(context:list, available_functions:dict):
-  if len(context) < 3:
-    trigger = context[-1]["content"]
-  else:
-    trigger = [context[-2]["content"], context[-1]["content"]]
+  messages = [context[-1]["content"]]
+  if len(context) > 2:
+    messages = [context[-2]["content"]] + messages
   translation_start_time = time()
-  translation = translator.translate(trigger, target_lang='en')
+  translation = '\n'.join(translator.translate(messages, target_lang='en'))
   print(f'{time()-translation_start_time}: {translation}')
   self_analysis_reflection = [
     {'role':'system','content':'You are a CLASSIFIER that is ONLY allowed to respond with 1 or 0 to DETERMINE if a message calls for INCLUDING YOUR CHATBOT SOURCE CODE into the context before answering.'},
