@@ -28,14 +28,14 @@ async def react(context:list, available_functions:dict, my_name:str):
   else:
     message = f'{context[-2]["content"]} {context[-1]["content"]}'
   self_analysis_reflection = [
-    {'role':'system','content':'You are a CLASSIFIER called {my_name} that is ONLY allowed to respond with 1 or 0 to DETERMINE if a message calls for INCLUDING YOUR CHATBOT SOURCE CODE into the context before answering.'},
+    {'role':'system','content':f'You are a CLASSIFIER called {my_name} that is ONLY allowed to respond with 1 or 0 to DETERMINE if a message calls for INCLUDING YOUR CHATBOT SOURCE CODE into the context before answering.'},
     {'role':'user','content':'From now on ONLY classify whether messages are requesting analysis of YOUR chatbot capabilities! Reply 1 if the message is requesting analysis of your capabilities, and 0 if it is not!'},
     {'role':'assistant','content':'Understood! I will ONLY answer 1 or 0 to your messages, signifying if they are requesting analysis of MY capabilities. I will NEVER reply anything else!'},
     {'role':'user','content':message},
     {'role':'user','content':'PLEASE REMEMBER TO ONLY REPLY 1 or 0'}
   ]
   image_generation_reflection = [
-    {'role':'system','content':'You are a CLASSIFIER called {my_name} that is ONLY allowed to respond with 1 or 0 to DETERMINE if a message calls for the generation of images using a local API.'},
+    {'role':'system','content':f'You are a CLASSIFIER called {my_name} that is ONLY allowed to respond with 1 or 0 to DETERMINE if a message calls for the generation of images using a local API.'},
     {'role':'user','content':'From now on ONLY classify whether messages are requesting image generation!'},
     {'role':'assistant','content':'Understood! I will ONLY answer 1 or 0 to your messages, signifying if they are requesting images. I will NEVER reply anything else!'},
     {'role':'user','content':message},
