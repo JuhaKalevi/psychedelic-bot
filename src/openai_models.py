@@ -7,6 +7,7 @@ async def chat_completion(kwargs):
     yield part.choices[0].delta
 
 async def consider(kwargs):
+  print(kwargs)
   completion = ''
   async for delta in chat_completion(kwargs):
     if 'function_call' in kwargs:
