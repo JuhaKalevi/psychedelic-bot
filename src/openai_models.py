@@ -31,6 +31,7 @@ async def react(context:list, available_functions:dict):
   else:
     message = f'{context[-2]["content"]} {context[-1]["content"]}'
   translation = translator.translate(message, target_lang='en')
+  print(message)
   print(translation)
   self_analysis_reflection = [
     {'role':'system','content':'You are a CLASSIFIER that is ONLY allowed to respond with 1 or 0 to DETERMINE if a message calls for INCLUDING YOUR CHATBOT SOURCE CODE into the context before answering.'},
