@@ -73,10 +73,10 @@ class MattermostActions(Actions):
               msg_tokens += count_image_tokens(*Image.open(io.BytesIO(base64.b64decode(base64_image))).size)
               self.model = 'gpt-4-vision-preview'
             except UnidentifiedImageError as err:
-              print(err)
+              print(f'Error processing attachment: {err}')
       new_tokens = tokens + msg_tokens
       if new_tokens > max_tokens:
-        print(f'messages_from_context: {new_tokens} > {max_tokens}')
+        print(f'Token limit reached: {new_tokens} > {max_tokens}')
         break
       msgs.append(msg)
       msgs_vision.append(msg_vision)
