@@ -10,7 +10,7 @@ import websockets
 from PIL import Image, UnidentifiedImageError
 import mattermostdriver
 from actions import middleware_url, Actions
-from helpers import count_image_tokens, count_tokens
+from helpers import count_image_tokens, count_tokens, extract_pdf_as_images
 from openai_models import react, chat_completion
 
 class MattermostActions(Actions):
@@ -44,8 +44,7 @@ class MattermostActions(Actions):
       context = await self.client.posts.get_posts_for_channel(self.post['channel_id'], params={'per_page':count})
     if 'order' in context:
       context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
-    msgs = []
-    msgs_vision = []
+    msgs, msgs_vision = [], []
     tokens = count_tokens(self.instructions)
     for p_id in context['order']:
       post = context['posts'][p_id]
@@ -53,27 +52,33 @@ class MattermostActions(Actions):
         role = 'assistant'
       else:
         role = 'user'
-      msg = {'role':role, 'content':post['message']}
-      msg_vision = {'role':role, 'content':[{'type':'text','text':post['message']}]}
+      msg, msg_vision = {'role':role, 'content':post['message']}, {'role':role, 'content':[{'type':'text','text':post['message']}]}
       msg_tokens = count_tokens(msg)
       if vision and 'file_ids' in post:
         for post_file_id in post['file_ids']:
           file_response = await self.client.files.get_file(file_id=post_file_id)
-          if file_response.status_code == 200:
-            try:
-              file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
-              post_file_path = f'{post_file_id}.{file_type}'
-              async with aiofiles.open(f'/tmp/{post_file_path}', 'wb') as post_file:
-                await post_file.write(file_response.content)
-              with open(f'/tmp/{post_file_path}', 'rb') as temp_file:
-                img_byte = temp_file.read()
-              remove(f'/tmp/{post_file_path}')
+          if file_response.status_code != 200:
+            print(f'Error downloading attachment: {file_response.status_code}')
+            continue
+          file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
+          tmp_file_path = f'/tmp/{post_file_id}.{file_type}'
+          async with aiofiles.open(tmp_file_path, 'wb') as tmp_file:
+            await tmp_file.write(file_response.content)
+          try:
+            if file_type == 'pdf':
+              pdf_pages = extract_pdf_as_images(tmp_file_path)
+              msg_vision['content'].extend([{'type':'image_url','image_url':{'url':image_url,'detail':'high'}} for image_url in pdf_pages])
+            else:
+              with open(tmp_file_path, 'rb') as tmp_file:
+                img_byte = tmp_file.read()
               base64_image = base64.b64encode(img_byte).decode("utf-8")
-              msgs_vision.append({'role':role, 'content':[{'type':'image_url','image_url':{'url':f'data:image/{file_type};base64,{base64_image}','detail':'high'}}]})
-              msg_tokens += count_image_tokens(*Image.open(io.BytesIO(base64.b64decode(base64_image))).size)
-              self.model = 'gpt-4-vision-preview'
-            except UnidentifiedImageError as err:
-              print(f'Error processing attachment: {err}')
+              msg_vision['content'].extend([{'type':'image_url','image_url':{'url':f'data:image/{file_type};base64,{base64_image}','detail':'high'}}])
+            msg_tokens += count_image_tokens(*Image.open(io.BytesIO(base64.b64decode(base64_image))).size)
+            self.model = 'gpt-4-vision-preview'
+          except UnidentifiedImageError as err:
+            print(f'Error processing attachment: {err}')
+          finally:
+            remove(tmp_file_path)
       new_tokens = tokens + msg_tokens
       if new_tokens > max_tokens:
         print(f'Token limit reached: {new_tokens} > {max_tokens}')
@@ -93,8 +98,7 @@ class MattermostActions(Actions):
     else:
       reply_to = self.post['root_id']
     reply_id = None
-    buffer = []
-    chunks_processed = []
+    buffer, chunks_processed = [], []
     start_time = time()
     async with Lock():
       async for chunk in chat_completion({'messages':msgs, 'model':self.model, 'max_tokens':4096}):
