@@ -61,24 +61,24 @@ class MattermostActions(Actions):
             print(f'Error downloading attachment: {file_response.status_code}')
             continue
           file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
-          file = f'/tmp/{post_file_id}.{file_type}'
-          async with aiofiles.open(file, 'wb') as file:
-            await file.write(file_response.content)
+          tmp_file = f'/tmp/{post_file_id}.{file_type}'
+          async with aiofiles.open(tmp_file, 'wb') as tmp_file:
+            await tmp_file.write(file_response.content)
           try:
             if file_type == 'pdf':
-              pdf_pages = base64_images_from_pdf_file(file)
+              pdf_pages = base64_images_from_pdf_file(tmp_file)
+              remove(tmp_file)
               msg_vision['content'].extend([{'type':'image_url','image_url':{'url':f'data:image/png;base64,{pdf_page_image}','detail':'high'}} for pdf_page_image in pdf_pages])
               msg_tokens += sum(count_image_tokens(*Image.open(io.BytesIO(base64.b64decode(img))).size) for img in pdf_pages)
               self.model = 'gpt-4-vision-preview'
             else:
-              image = base64_image_from_file(file)
+              image = base64_image_from_file(tmp_file)
+              remove(tmp_file)
               msg_vision['content'].extend([{'type':'image_url','image_url':{'url':f'data:image/{file_type};base64,{image}','detail':'high'}}])
               msg_tokens += count_image_tokens(*Image.open(io.BytesIO(base64.b64decode(image))).size)
               self.model = 'gpt-4-vision-preview'
           except UnidentifiedImageError as err:
             print(f'Error processing attachment: {err}')
-          finally:
-            remove(file)
       new_tokens = tokens + msg_tokens
       if new_tokens > max_tokens:
         print(f'Token limit reached: {new_tokens} > {max_tokens}')
