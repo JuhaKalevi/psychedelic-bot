@@ -68,7 +68,7 @@ class MattermostActions(Actions):
             if file_type == 'pdf':
               pdf_pages = base64_images_from_pdf_file(tmp_file_path)
               remove(tmp_file_path)
-              msg_vision['content'].extend([{'type':'image_url','image_url':{'url':f'data:image/png;base64,{pdf_page_image}','detail':'high'}} for pdf_page_image in pdf_pages])
+              msg_vision['content'].extend([{'type':'image_url','image_url':{'url':f'data:image/png;base64,{pdf_page_image}','detail':'low'}} for pdf_page_image in pdf_pages])
               msg_tokens += sum(count_image_tokens(*Image.open(io.BytesIO(base64.b64decode(img))).size) for img in pdf_pages)
               self.model = 'gpt-4-vision-preview'
             else:
