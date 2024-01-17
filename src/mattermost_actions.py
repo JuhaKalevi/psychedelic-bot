@@ -10,7 +10,7 @@ import websockets
 from PIL import Image, UnidentifiedImageError
 import mattermostdriver
 from actions import middleware_url, Actions
-from helpers import base64_image_from_file, base64_images_from_pdf_file, count_image_tokens, count_tokens, crop_borders
+from helpers import base64_image_from_file, base64_images_from_pdf_file, count_image_tokens, count_tokens
 from openai_models import react, chat_completion
 
 class MattermostActions(Actions):
@@ -68,7 +68,7 @@ class MattermostActions(Actions):
             if file_type == 'pdf':
               pdf_pages = base64_images_from_pdf_file(tmp_file_path)
               remove(tmp_file_path)
-              msg_vision['content'].extend([{'type':'image_url','image_url':{'url':f'data:image/png;base64,{crop_borders(pdf_page_image, 255)}','detail':'low'}} for pdf_page_image in pdf_pages])
+              msg_vision['content'].extend([{'type':'image_url','image_url':{'url':f'data:image/png;base64,{pdf_page_image}','detail':'low'}} for pdf_page_image in pdf_pages])
               msg_tokens += 85
               self.model = 'gpt-4-vision-preview'
             else:
