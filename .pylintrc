@@ -8,8 +8,11 @@ disable=
     R0902, # too-many-instance-attributes
     R0912, # too-many-branches
     R0914, # too-many-locals
+extension-pkg-whitelist=cv2
 [DESIGN]
 max-args=6
 [FORMAT]
 indent-string='  '
 indent-after-paren=2
+[TYPECHECK]
+generated-members=cv2.*

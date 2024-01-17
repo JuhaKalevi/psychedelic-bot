@@ -3,7 +3,9 @@ asyncio
 easynmt
 discord
 git+https://gitlab.psychedelic.fi/ai/python-mattermost-driver.git#egg=mattermostdriver
+numpy
 openai
+opencv-python
 pylint
 tiktoken
 websockets
