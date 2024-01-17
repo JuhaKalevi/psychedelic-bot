@@ -10,7 +10,7 @@ import websockets
 from PIL import Image, UnidentifiedImageError
 import mattermostdriver
 from actions import middleware_url, Actions
-from helpers import count_image_tokens, count_tokens, extract_pdf_as_images
+from helpers import base64_image_from_file, base64_images_from_pdf_file, count_image_tokens, count_tokens
 from openai_models import react, chat_completion
 
 class MattermostActions(Actions):
@@ -40,7 +40,7 @@ class MattermostActions(Actions):
 
   async def recall_context(self, count=None, max_tokens=126976, vision=True):
     context = self.thread
-    if count and len(context) == 1:
+    if count and len(self.thread) == 1:
       context = await self.client.posts.get_posts_for_channel(self.post['channel_id'], params={'per_page':count})
     if 'order' in context:
       context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
@@ -61,24 +61,24 @@ class MattermostActions(Actions):
             print(f'Error downloading attachment: {file_response.status_code}')
             continue
           file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
-          tmp_file_path = f'/tmp/{post_file_id}.{file_type}'
-          async with aiofiles.open(tmp_file_path, 'wb') as tmp_file:
-            await tmp_file.write(file_response.content)
+          file = f'/tmp/{post_file_id}.{file_type}'
+          async with aiofiles.open(file, 'wb') as file:
+            await file.write(file_response.content)
           try:
             if file_type == 'pdf':
-              pdf_pages = extract_pdf_as_images(tmp_file_path)
-              msg_vision['content'].extend([{'type':'image_url','image_url':{'url':image_url,'detail':'high'}} for image_url in pdf_pages])
+              pdf_pages = base64_images_from_pdf_file(file)
+              msg_vision['content'].extend([{'type':'image_url','image_url':{'url':f'data:image/png;base64,{pdf_page_image}','detail':'high'}} for pdf_page_image in pdf_pages])
+              msg_tokens += sum(count_image_tokens(*Image.open(io.BytesIO(base64.b64decode(img))).size) for img in pdf_pages)
+              self.model = 'gpt-4-vision-preview'
             else:
-              with open(tmp_file_path, 'rb') as tmp_file:
-                img_byte = tmp_file.read()
-              base64_image = base64.b64encode(img_byte).decode("utf-8")
-              msg_vision['content'].extend([{'type':'image_url','image_url':{'url':f'data:image/{file_type};base64,{base64_image}','detail':'high'}}])
-            msg_tokens += count_image_tokens(*Image.open(io.BytesIO(base64.b64decode(base64_image))).size)
-            self.model = 'gpt-4-vision-preview'
+              image = base64_image_from_file(file)
+              msg_vision['content'].extend([{'type':'image_url','image_url':{'url':f'data:image/{file_type};base64,{image}','detail':'high'}}])
+              msg_tokens += count_image_tokens(*Image.open(io.BytesIO(base64.b64decode(image))).size)
+              self.model = 'gpt-4-vision-preview'
           except UnidentifiedImageError as err:
             print(f'Error processing attachment: {err}')
           finally:
-            remove(tmp_file_path)
+            remove(file)
       new_tokens = tokens + msg_tokens
       if new_tokens > max_tokens:
         print(f'Token limit reached: {new_tokens} > {max_tokens}')
