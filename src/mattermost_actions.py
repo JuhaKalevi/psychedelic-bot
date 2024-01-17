@@ -28,7 +28,10 @@ class MattermostActions(Actions):
 
   async def process_event(self):
     channel = await self.client.channels.get_channel(self.post['channel_id'])
-    self.instructions[0]['content'] += f" {channel['header']}"
+    if channel['type'] == 'G':
+      self.instructions[0]['content'] += f" {channel['header']}"
+    else:
+      self.instructions[0]['content'] += f" {channel['purpose']}"
     bot_user = await self.client.users.get_user('me')
     self.client.user_id = bot_user['id']
     self.thread = await self.client.posts.get_thread(self.post['id'])
