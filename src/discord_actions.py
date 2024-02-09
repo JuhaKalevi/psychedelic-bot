@@ -14,7 +14,7 @@ class DiscordActions(Actions):
     self.context:list[discord.Message] = []
     self.file_ids = []
     self.instructions[0]['content'] += f" Your name is {environ['DISCORD_BOT_NAME']} or {environ['DISCORD_BOT_ID']}."
-    self.model = 'gpt-3.5-turbo-16k'
+    self.model = environ.get('MODEL_FAST', 'gpt-3.5-turbo-1106')
     self.message = message
     self.content = message.content
 

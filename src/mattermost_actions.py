@@ -1,7 +1,7 @@
 import datetime
 import io
 import json
-from os import path, remove
+from os import environ, path, remove
 from time import ctime, time
 from asyncio import Lock
 import base64
@@ -22,7 +22,7 @@ class MattermostActions(Actions):
     self.client = client
     self.file_ids = []
     self.instructions = [{'role':'system', 'content':f"Current time is {ctime()}. You are a helpful & concise Mattermost chatbot in Finland."}]
-    self.model = 'gpt-4-1106-preview'
+    self.model = environ.get('MODEL_GOOD', 'gpt-4-0125-preview')
     self.post = post
     self.content = post['message']
 
@@ -70,13 +70,13 @@ class MattermostActions(Actions):
               remove(tmp_file_path)
               msg_vision['content'].extend([{'type':'image_url','image_url':{'url':f'data:image/png;base64,{pdf_page_image}','detail':'low'}} for pdf_page_image in pdf_pages])
               msg_tokens += 85
-              self.model = 'gpt-4-vision-preview'
+              self.model = environ.get('MODEL_VISION', 'gpt-4-vision-preview')
             else:
               image = base64_image_from_file(tmp_file_path)
               remove(tmp_file_path)
               msg_vision['content'].extend([{'type':'image_url','image_url':{'url':f'data:image/{file_type};base64,{image}','detail':'high'}}])
               msg_tokens += count_image_tokens(*Image.open(io.BytesIO(base64.b64decode(image))).size)
-              self.model = 'gpt-4-vision-preview'
+              self.model = environ.get('MODEL_VISION', 'gpt-4-vision-preview')
           except UnidentifiedImageError as err:
             print(f'Error processing attachment: {err}')
       new_tokens = tokens + msg_tokens
@@ -88,7 +88,7 @@ class MattermostActions(Actions):
       tokens = new_tokens
     msgs.reverse()
     msgs_vision.reverse()
-    if self.model == 'gpt-4-vision-preview':
+    if self.model == environ.get('MODEL_VISION', 'gpt-4-vision-preview'):
       return self.instructions + msgs_vision
     return self.instructions + msgs
 
