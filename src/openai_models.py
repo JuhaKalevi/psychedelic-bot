@@ -1,12 +1,15 @@
 from json import loads
+from os import environ
 from easynmt import EasyNMT
 from openai import AsyncOpenAI
 from openai_function_schema import generate_images_schema
-
 translator = EasyNMT('opus-mt')
 
 async def chat_completion(kwargs):
-  async for part in await AsyncOpenAI().chat.completions.create(**kwargs, stream=True):
+  openai_api = AsyncOpenAI()
+  if environ.get('OPENAI_API_URL_OVERRIDE'):
+    AsyncOpenAI().base_url = environ['OPENAI_API_URL_OVERRIDE']
+  async for part in await openai_api.chat.completions.create(**kwargs, stream=True):
     yield part.choices[0].delta
 
 async def consider(kwargs):
