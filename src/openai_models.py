@@ -6,10 +6,7 @@ from openai_function_schema import generate_images_schema
 translator = EasyNMT('opus-mt')
 
 async def chat_completion(kwargs):
-  openai_api = AsyncOpenAI()
-  if environ.get('OPENAI_API_URL_OVERRIDE'):
-    openai_api.base_url = environ['OPENAI_API_URL_OVERRIDE']
-  async for part in await openai_api.chat.completions.create(**kwargs, stream=True):
+  async for part in await AsyncOpenAI(base_url=environ['OPENAI_API_URL_OVERRIDE']).chat.completions.create(**kwargs, stream=True):
     yield part.choices[0].delta
 
 async def consider(kwargs):
