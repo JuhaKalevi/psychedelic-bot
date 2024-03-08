@@ -13,7 +13,7 @@ class DiscordActions(Actions):
     self.client = client
     self.context:list[discord.Message] = []
     self.file_ids = []
-    self.instructions[0]['content'] += f" Your name is {environ['DISCORD_BOT_NAME']} or {environ['DISCORD_BOT_ID']}."
+    self.bottom_instructions[0]['content'] += f" Your name is {environ['DISCORD_BOT_NAME']} or {environ['DISCORD_BOT_ID']}."
     self.model = environ.get('MODEL_FAST', 'gpt-3.5-turbo-1106')
     self.message = message
     self.content = message.content
@@ -32,7 +32,7 @@ class DiscordActions(Actions):
     if count:
       self.context = await self.message.for_channel(self.message['channel_id'], params={'per_page':count})
     msgs = []
-    tokens = count_tokens(self.instructions)
+    tokens = count_tokens(self.bottom_instructions)
     for msg_json in self.context:
       if msg_json.author.bot:
         role = 'assistant'
@@ -46,7 +46,7 @@ class DiscordActions(Actions):
       msgs.append(msg_json)
       tokens = new_tokens
     msgs.reverse()
-    return self.instructions+msgs
+    return self.bottom_instructions+msgs
 
   async def stream_reply(self, msgs:list):
     if self.message.reference:
