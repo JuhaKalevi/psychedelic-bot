@@ -22,7 +22,7 @@ class MattermostActions(Actions):
     self.client = client
     self.file_ids = []
     self.top_instructions = [{'role':'system', 'content':f"Current time is {ctime()}. You are a helpful & concise Mattermost chatbot in Finland."}]
-    self.bottom_instructions = [{'role':'system', 'content':''}]
+    self.bottom_instructions = [{'role':'assisant', 'content':''}]
     self.model = environ.get('MODEL_GOOD', 'gpt-4-0125-preview')
     self.post = post
     self.content = post['message']
@@ -30,13 +30,13 @@ class MattermostActions(Actions):
   async def process_event(self):
     channel = await self.client.channels.get_channel(self.post['channel_id'])
     if channel['type'] == 'G' and channel['header']:
-      self.top_instructions[0]['content'] += f"Channel header: {channel['header']}"
+      self.top_instructions[0]['content'] += f"\nChannel name: {channel['name']}\nHeader: {channel['header']}"
     else:
       if channel['purpose']:
-        self.top_instructions[0]['content'] += f"This is your purpose: {channel['purpose']}"
-        self.bottom_instructions[0]['content'] = f" Please remember your purpose!: {channel['purpose']}"
+        self.top_instructions[0]['content'] += f"\nPurpose: {channel['purpose']}"
+        self.bottom_instructions[0]['content'] = f"Ok, sure, I'll read my instructions again: {channel['purpose']}"
       if channel['header']:
-        self.top_instructions[0]['content'] += f"Channel header: {channel['header']}"
+        self.top_instructions[0]['content'] += f"\nChannel name: {channel['name']}\nHeader: {channel['header']}"
     bot_user = await self.client.users.get_user('me')
     self.client.user_id = bot_user['id']
     self.thread = await self.client.posts.get_thread(self.post['id'])
