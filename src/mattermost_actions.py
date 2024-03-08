@@ -21,17 +21,22 @@ class MattermostActions(Actions):
     })
     self.client = client
     self.file_ids = []
-    self.instructions = [{'role':'system', 'content':f"Current time is {ctime()}. You are a helpful & concise Mattermost chatbot in Finland."}]
+    self.top_instructions = [{'role':'system', 'content':f"Current time is {ctime()}. You are a helpful & concise Mattermost chatbot in Finland."}]
+    self.bottom_instructions = [{'role':'user', 'content':None}]
     self.model = environ.get('MODEL_GOOD', 'gpt-4-0125-preview')
     self.post = post
     self.content = post['message']
 
   async def process_event(self):
     channel = await self.client.channels.get_channel(self.post['channel_id'])
-    if channel['type'] == 'G':
-      self.instructions[0]['content'] += f" {channel['header']}"
+    if channel['type'] == 'G' and channel['header']:
+      self.top_instructions[0]['content'] += f"Channel header: {channel['header']}"
     else:
-      self.instructions[0]['content'] += f" {channel['purpose']}"
+      if channel['purpose']:
+        self.top_instructions[0]['content'] += f"This is your purpose: {channel['purpose']}"
+        self.bottom_instructions[0]['content'] = f" Please remember your purpose!: {channel['purpose']}"
+      if channel['header']:
+        self.top_instructions[0]['content'] += f"Channel header: {channel['header']}"
     bot_user = await self.client.users.get_user('me')
     self.client.user_id = bot_user['id']
     self.thread = await self.client.posts.get_thread(self.post['id'])
@@ -45,7 +50,10 @@ class MattermostActions(Actions):
     if 'order' in context:
       context['order'].sort(key=lambda x: context['posts'][x]['create_at'], reverse=True)
     msgs, msgs_vision = [], []
-    tokens = count_tokens(self.instructions)
+    if self.bottom_instructions[0]['content']:
+      tokens = count_tokens(self.top_instructions+self.bottom_instructions)
+    else:
+      tokens = count_tokens(self.top_instructions)
     for p_id in context['order']:
       post = context['posts'][p_id]
       if 'from_bot' in post['props']:
@@ -89,8 +97,12 @@ class MattermostActions(Actions):
     msgs.reverse()
     msgs_vision.reverse()
     if self.model == environ.get('MODEL_VISION', 'gpt-4-vision-preview'):
-      return self.instructions + msgs_vision
-    return self.instructions + msgs
+      if self.bottom_instructions[0]['content']:
+        return self.top_instructions + msgs_vision + self.bottom_instructions
+      return self.top_instructions + msgs_vision
+    if self.bottom_instructions[0]['content']:
+      return self.top_instructions + msgs + self.bottom_instructions
+    return self.top_instructions + msgs
 
   async def stream_reply(self, msgs:list) -> str:
     if self.post['root_id'] == '':
