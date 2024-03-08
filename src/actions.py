@@ -42,5 +42,4 @@ class Actions(ABC):
     await self.stream_reply(await self.recall_context())
 
   async def chat(self):
-    self.bottom_instructions[0]['content'] += f" You have these instant functions available: {[f for f in self.available_functions if f != 'chat']}. Please refrain from mentioning these functions here, you have other modes for that."
     await self.stream_reply(await self.recall_context())
