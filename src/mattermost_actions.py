@@ -22,7 +22,7 @@ class MattermostActions(Actions):
     self.client = client
     self.file_ids = []
     self.top_instructions = [{'role':'system', 'content':f"Current time is {ctime()}. You are a helpful & concise Mattermost chatbot in Finland."}]
-    self.bottom_instructions = [{'role':'assistant', 'content':''}]
+    self.bottom_instructions = [{'role':'system', 'content':''}]
     self.model = environ.get('MODEL_GOOD', 'gpt-4-0125-preview')
     self.post = post
     self.content = post['message']
