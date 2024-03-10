@@ -57,9 +57,10 @@ class MattermostActions(Actions):
       post = context['posts'][p_id]
       if 'from_bot' in post['props']:
         role = 'assistant'
+        user = await self.client.bots.get_bot(post['user_id'])
       else:
         role = 'user'
-      user = await self.client.users.get_user(post['user_id'])
+        user = await self.client.users.get_user(post['user_id'])
       msg, msg_vision = {'role':role, 'name':user['username'], 'content':post['message']}, {'role':role, 'name':user['username'], 'content':[{'type':'text','text':post['message']}]}
       msg_tokens = count_tokens(msg)
       if vision and 'file_ids' in post:
