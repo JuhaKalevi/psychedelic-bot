@@ -59,8 +59,8 @@ class MattermostActions(Actions):
         role = 'assistant'
       else:
         role = 'user'
-      user_name = await self.client.users.get_user(post['user_id'])
-      msg, msg_vision = {'role':role, 'name':user_name, 'content':post['message']}, {'role':role, 'name':user_name, 'content':[{'type':'text','text':post['message']}]}
+      user = await self.client.users.get_user(post['user_id'])
+      msg, msg_vision = {'role':role, 'name':user['username'], 'content':post['message']}, {'role':role, 'name':user['username'], 'content':[{'type':'text','text':post['message']}]}
       msg_tokens = count_tokens(msg)
       if vision and 'file_ids' in post:
         for post_file_id in post['file_ids']:
