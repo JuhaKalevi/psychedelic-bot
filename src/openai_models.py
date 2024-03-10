@@ -1,5 +1,5 @@
 from json import loads
-from os import environ
+from os import environ, path
 from easynmt import EasyNMT
 from openai import AsyncOpenAI
 from openai_function_schema import generate_images_schema
@@ -7,7 +7,12 @@ from openai_function_schema import generate_images_schema
 translator = EasyNMT('opus-mt')
 
 async def chat_completion(kwargs):
-  async for part in await AsyncOpenAI(base_url=environ.get('OPENAI_API_URL_OVERRIDE')).chat.completions.create(**kwargs, stream=True):
+  api_key = environ.get('OPENAI_API_KEY')
+  for message in reversed(kwargs['messages']):
+    if message['role'] == 'user' and path.isfile(f"api_keys/{message['name']}"):
+      with open(f"api_keys/{message['name']}", 'r', encoding='ascii') as api_key_file:
+        api_key = api_key_file.read().strip()
+  async for part in await AsyncOpenAI(api_key=api_key, base_url=environ.get('OPENAI_API_URL_OVERRIDE')).chat.completions.create(**kwargs, stream=True):
     yield part.choices[0].delta
 
 async def consider(kwargs):

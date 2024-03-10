@@ -25,7 +25,6 @@ class MattermostActions(Actions):
     self.bottom_instructions = [{'role':'system', 'content':''}]
     self.model = environ.get('MODEL_GOOD', 'gpt-4-0125-preview')
     self.post = post
-    self.content = post['message']
 
   async def process_event(self):
     channel = await self.client.channels.get_channel(self.post['channel_id'])
@@ -60,8 +59,8 @@ class MattermostActions(Actions):
         role = 'assistant'
       else:
         role = 'user'
-      print(f"Post {post}")
-      msg, msg_vision = {'role':role, 'content':post['message']}, {'role':role, 'content':[{'type':'text','text':post['message']}]}
+      user_name = await self.client.users.get_user(post['user_id'])
+      msg, msg_vision = {'role':role, 'name':user_name, 'content':post['message']}, {'role':role, 'name':user_name, 'content':[{'type':'text','text':post['message']}]}
       msg_tokens = count_tokens(msg)
       if vision and 'file_ids' in post:
         for post_file_id in post['file_ids']:
@@ -69,7 +68,7 @@ class MattermostActions(Actions):
           if file_response.status_code != 200:
             print(f'Error downloading attachment: {file_response.status_code}')
             continue
-          file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:]
+          file_type = path.splitext(file_response.headers["Content-Disposition"])[1][1:].lower()
           tmp_file_path = f'/tmp/{post_file_id}.{file_type}'
           async with aiofiles.open(tmp_file_path, 'wb') as tmp_file:
             await tmp_file.write(file_response.content)
@@ -80,7 +79,7 @@ class MattermostActions(Actions):
               msg_vision['content'].extend([{'type':'image_url','image_url':{'url':f'data:image/png;base64,{pdf_page_image}','detail':'low'}} for pdf_page_image in pdf_pages])
               msg_tokens += 85
               self.model = environ.get('MODEL_VISION', 'gpt-4-vision-preview')
-            else:
+            elif file_type in ['jpg', 'jpeg', 'png']:
               image = base64_image_from_file(tmp_file_path)
               remove(tmp_file_path)
               msg_vision['content'].extend([{'type':'image_url','image_url':{'url':f'data:image/{file_type};base64,{image}','detail':'high'}}])
