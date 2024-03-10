@@ -55,10 +55,10 @@ class MattermostActions(Actions):
       tokens = count_tokens(self.top_instructions)
     for p_id in context['order']:
       post = context['posts'][p_id]
+      print(f'{post}')
       if 'from_bot' in post['props']:
         role = 'assistant'
         user = await self.client.bots.get_bot(post['user_id'])
-        print(f'Bot message: {post["message"]}')
       else:
         role = 'user'
         user = await self.client.users.get_user(post['user_id'])
