@@ -9,7 +9,7 @@ translator = EasyNMT('opus-mt')
 async def chat_completion(kwargs):
   api_key = environ.get('OPENAI_API_KEY')
   for message in reversed(kwargs['messages']):
-    if message['role'] == 'user' and path.isfile(f"api_keys/{message['name']}"):
+    if message['role'] == 'user' and path.isfile(f"api_keys/{message.get('name')}"):
       with open(f"api_keys/{message['name']}", 'r', encoding='ascii') as api_key_file:
         api_key = api_key_file.read().strip()
   async for part in await AsyncOpenAI(api_key=api_key, base_url=environ.get('OPENAI_API_URL_OVERRIDE')).chat.completions.create(**kwargs, stream=True):
