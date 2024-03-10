@@ -58,6 +58,7 @@ class MattermostActions(Actions):
       if 'from_bot' in post['props']:
         role = 'assistant'
         user = await self.client.bots.get_bot(post['user_id'])
+        print(f'Bot message: {post["message"]}')
       else:
         role = 'user'
         user = await self.client.users.get_user(post['user_id'])
