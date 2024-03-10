@@ -60,6 +60,7 @@ class MattermostActions(Actions):
         role = 'assistant'
       else:
         role = 'user'
+      print(f"Post {post}")
       msg, msg_vision = {'role':role, 'content':post['message']}, {'role':role, 'content':[{'type':'text','text':post['message']}]}
       msg_tokens = count_tokens(msg)
       if vision and 'file_ids' in post:
