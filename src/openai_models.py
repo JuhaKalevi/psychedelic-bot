@@ -15,6 +15,7 @@ async def chat_completion(kwargs):
         with open(user_api_key_path, 'r', encoding='ascii') as api_key_file:
           api_key = api_key_file.read().strip()
         print(f"Using {message['name']}'s API key.")
+        break
   async for part in await AsyncOpenAI(api_key=api_key, base_url=environ.get('OPENAI_API_URL_OVERRIDE')).chat.completions.create(**kwargs, stream=True):
     yield part.choices[0].delta
 
