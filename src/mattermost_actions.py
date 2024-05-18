@@ -23,7 +23,7 @@ class MattermostActions(Actions):
     self.file_ids = []
     self.top_instructions = [{'role':'system', 'content':f"Current time is {ctime()}. You are a helpful & concise Mattermost chatbot in Finland."}]
     self.bottom_instructions = [{'role':'system', 'content':''}]
-    self.model = environ.get('MODEL_GOOD', 'gpt-4-turbo-2024-04-09')
+    self.model = environ.get('MODEL_GOOD', 'gpt-4o')
     self.post = post
 
   async def process_event(self):
