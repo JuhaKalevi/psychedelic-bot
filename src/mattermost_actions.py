@@ -149,8 +149,8 @@ class MattermostActions(Actions):
             with io.BytesIO() as output:
               image.save(output, format="PNG")
               output.seek(0)
-              uploaded_file_id = await self.client.upload_file(self.post['channel_id'], {'files':(f'/tmp/image_{total_images_saved}_{datetime.datetime.now().strftime("%Y%m%d-%H%M%S")}.png', output)})
-            await self.client.create_or_update_post({'channel_id':self.post['channel_id'], 'file_ids':[uploaded_file_id], 'root_id':''})
+              uploaded_file_id = await self.client.upload_file(self.thread, {'files':(f'/tmp/image_{total_images_saved}_{datetime.datetime.now().strftime("%Y%m%d-%H%M%S")}.png', output)})
+            await self.client.create_or_update_post({'channel_id':self.thread, 'file_ids':[uploaded_file_id], 'root_id':''})
             if total_images_saved >= payload['batch_size']:
               await websocket.close()
               return
