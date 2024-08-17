@@ -4,7 +4,7 @@ from easynmt import EasyNMT
 from openai import AsyncOpenAI
 from openai_function_schema import generate_images_schema
 
-translator = EasyNMT('opus-mt')
+translator = EasyNMT('opus-mt', device='cpu')
 
 async def chat_completion(kwargs):
   api_key = environ.get('OPENAI_API_KEY')
