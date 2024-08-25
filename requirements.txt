@@ -3,10 +3,12 @@ asyncio
 easynmt
 discord
 git+https://gitlab.psychedelic.fi/ai/python-mattermost-driver.git#egg=mattermostdriver
+langdetect
 numpy
 openai
 opencv-python
 pylint
+sacremoses
 tiktoken
 websockets
 Pillow
