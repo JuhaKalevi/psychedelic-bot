@@ -20,11 +20,11 @@ class MattermostActions(Actions):
       'generate_images': self.generate_images
     })
     self.client = client
-    self.file_ids = []
     self.top_instructions = [{'role':'system', 'content':f"Current time is {ctime()}. You are a helpful & concise Mattermost chatbot in Finland."}]
     self.bottom_instructions = [{'role':'system', 'content':''}]
-    self.model = environ.get('MODEL_GOOD', 'gpt-4-turbo-2024-04-09')
+    self.model = environ.get('MODEL_GOOD', 'gpt-4o')
     self.post = post
+    self.reply_to = self.post['id'] if self.post['root_id'] == '' else self.post['root_id']
 
   async def process_event(self):
     channel = await self.client.channels.get_channel(self.post['channel_id'])
@@ -109,10 +109,6 @@ class MattermostActions(Actions):
     return self.top_instructions + msgs
 
   async def stream_reply(self, msgs:list) -> str:
-    if self.post['root_id'] == '':
-      reply_to = self.post['id']
-    else:
-      reply_to = self.post['root_id']
     reply_id = None
     buffer, chunks_processed = [], []
     start_time = time()
@@ -123,12 +119,12 @@ class MattermostActions(Actions):
         buffer.append(chunk.content)
         if (time() - start_time) * 1000 >= 500:
           joined_chunks = ''.join(buffer)
-          reply_id = await self.client.create_or_update_post({'channel_id':self.post['channel_id'], 'message':''.join(chunks_processed)+joined_chunks, 'file_ids':self.file_ids, 'root_id':reply_to}, reply_id)
+          reply_id = await self.client.create_or_update_post({'channel_id':self.post['channel_id'], 'message':''.join(chunks_processed)+joined_chunks, 'file_ids':[], 'root_id':self.reply_to}, reply_id)
           chunks_processed.append(joined_chunks)
           buffer.clear()
           start_time = time()
       if buffer:
-        reply_id = await self.client.create_or_update_post({'channel_id':self.post['channel_id'], 'message':''.join(chunks_processed)+''.join(buffer), 'file_ids':self.file_ids, 'root_id':reply_to}, reply_id)
+        reply_id = await self.client.create_or_update_post({'channel_id':self.post['channel_id'], 'message':''.join(chunks_processed)+''.join(buffer), 'file_ids':[], 'root_id':self.reply_to}, reply_id)
     return reply_id
 
   async def generate_images(self, prompt:str, negative_prompt='', count=1, resolution='1024x1024', sampling_steps=25):
@@ -150,7 +146,7 @@ class MattermostActions(Actions):
               image.save(output, format="PNG")
               output.seek(0)
               uploaded_file_id = await self.client.upload_file(self.post['channel_id'], {'files':(f'/tmp/image_{total_images_saved}_{datetime.datetime.now().strftime("%Y%m%d-%H%M%S")}.png', output)})
-            await self.client.create_or_update_post({'channel_id':self.post['channel_id'], 'file_ids':[uploaded_file_id], 'root_id':''})
+            await self.client.create_or_update_post({'channel_id':self.post['channel_id'], 'file_ids':[uploaded_file_id], 'root_id':self.reply_to})
             if total_images_saved >= payload['batch_size']:
               await websocket.close()
               return
